@@ -1,0 +1,60 @@
+(() => {
+"use strict";
+const CONFIG={
+middle12:{label:"中1・2",lesson:9900,test:4500,course:12200,pack:{name:"週4パック",monthly:29700,maxLessons:4},unlimited:47520},
+middle3high1:{label:"中3・高1",lesson:11800,test:5800,course:14700,pack:{name:"週6パック",monthly:39600,maxLessons:6},unlimited:56640}
+};
+const ADMIN_ANNUAL=2650*12;
+let grade="middle12",subjects=2,lessons=2,testSubjects=2;
+const yen=n=>n.toLocaleString("ja-JP")+"円";
+function update(){
+ const c=CONFIG[grade];
+ lessons=Math.max(lessons,subjects);
+ testSubjects=Math.max(testSubjects,subjects);
+ const regularMin=c.lesson*lessons;
+ const regularMax=regularMin+c.test*testSubjects;
+ const regularAnnual=c.lesson*lessons*11+subjects*c.course*3+c.test*testSubjects*3+ADMIN_ANNUAL;
+ const packAnnual=c.pack.monthly*12+ADMIN_ANNUAL;
+ const unlimitedAnnual=c.unlimited*12+ADMIN_ANNUAL;
+ document.querySelector("#regularMonthly").textContent=yen(regularMin)+"～"+yen(regularMax);
+ document.querySelector("#regularAnnual").textContent=yen(regularAnnual);
+ document.querySelector("#packMonthly").textContent=yen(c.pack.monthly);
+ document.querySelector("#packAnnual").textContent=yen(packAnnual);
+ document.querySelector("#unlimitedMonthly").textContent=yen(c.unlimited);
+ document.querySelector("#unlimitedAnnual").textContent=yen(unlimitedAnnual);
+ document.querySelector("#regularRange").textContent=yen(regularMin)+"～"+yen(regularMax)+"/月";
+ document.querySelector("#packDetailName").textContent=c.pack.name;
+ document.querySelector("#packDetail").textContent=yen(c.pack.monthly)+"/月";
+ document.querySelector("#unlimitedDetail").textContent=yen(c.unlimited)+"/月";
+ document.querySelector("#packName").textContent=c.pack.name;
+ document.querySelector("#rulesPackName").textContent=c.pack.name;
+ document.querySelector("#regularLessonRule").textContent="週"+lessons+"コマ";
+ document.querySelector("#packLessonRule").textContent="週"+c.pack.maxLessons+"コマまで";
+ document.querySelector("#regularSubjectRule").textContent=subjects+"教科";
+ const packOk=lessons<=c.pack.maxLessons;
+ document.querySelector("#packStatus").textContent=packOk?c.pack.name+"は、現在選択している週"+lessons+"コマの受講に対応しています。":"現在の週"+lessons+"コマでは"+c.pack.name+"の上限を超えるため、通常料金または無制限をご利用ください。";
+ const plans=[{name:"通常料金",annual:regularAnnual},{name:"無制限",annual:unlimitedAnnual}];
+ if(packOk)plans.push({name:c.pack.name,annual:packAnnual});
+ plans.sort((a,b)=>a.annual-b.annual);
+ document.querySelector("#recommendTitle").textContent=plans[0].name;
+ document.querySelector("#recommendText").textContent="年間費用のシミュレーションでは、"+plans[0].name+"が最も低い料金です。";
+ document.querySelector("#subjectCount").textContent=subjects;
+ document.querySelector("#lessonCount").textContent=lessons;
+ document.querySelector("#testSubjectCount").textContent=testSubjects;
+ document.querySelector("#subjectMinus").disabled=subjects<=1;
+ document.querySelector("#subjectPlus").disabled=subjects>=5;
+ document.querySelector("#lessonMinus").disabled=lessons<=subjects;
+ document.querySelector("#lessonPlus").disabled=lessons>=10;
+ document.querySelector("#testSubjectMinus").disabled=testSubjects<=subjects;
+ document.querySelector("#testSubjectPlus").disabled=testSubjects>=5;
+ document.querySelectorAll(".grade-btn").forEach(b=>b.classList.toggle("active",b.dataset.grade===grade));
+}
+document.querySelectorAll(".grade-btn").forEach(b=>b.addEventListener("click",()=>{grade=b.dataset.grade;update()}));
+document.querySelector("#subjectMinus").addEventListener("click",()=>{if(subjects>1){subjects--;update()}});
+document.querySelector("#subjectPlus").addEventListener("click",()=>{if(subjects<5){subjects++;update()}});
+document.querySelector("#lessonMinus").addEventListener("click",()=>{if(lessons>subjects){lessons--;update()}});
+document.querySelector("#lessonPlus").addEventListener("click",()=>{if(lessons<10){lessons++;update()}});
+document.querySelector("#testSubjectMinus").addEventListener("click",()=>{if(testSubjects>subjects){testSubjects--;update()}});
+document.querySelector("#testSubjectPlus").addEventListener("click",()=>{if(testSubjects<5){testSubjects++;update()}});
+update();
+})();
