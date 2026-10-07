@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1f75cb">
+  <title>欠席・振替申請 | RED天王台教室</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <a class="back-link" href="../">← RED天王台教室トップへ</a>
+
+    <section class="card intro-card">
+      <h1>欠席・振替申請</h1>
+      <div class="rule-box">
+        <h2>欠席・振替ルール</h2>
+        <ul>
+          <li><strong>欠席申請〆切：</strong>授業開始5分前まで</li>
+          <li><strong>振替日：</strong>欠席日から4週間以内</li>
+          <li>振替日が未定の場合は「振替日未定」にチェックして、欠席登録のみ申請してください。</li>
+          <li>後日、振替日時が決まったら「欠席登録済み」にチェックして、振替日時を再申請してください。</li>
+          <li><strong>欠席するコマ数と振替するコマ数は同じ</strong>にしてください。</li>
+        </ul>
+      </div>
+    </section>
+
+    <form id="applicationForm" novalidate>
+      <section class="card basic-card">
+        <h2 class="section-title">生徒情報</h2>
+
+        <div class="field">
+          <label for="studentId">生徒番号 <span class="required">必須</span></label>
+          <input id="studentId" name="studentId" type="text" inputmode="numeric" autocomplete="off" placeholder="例：113900000">
+          <p class="help">※LINEのグループで案内されている生徒番号を入力してください。</p>
+          <p id="studentIdError" class="error"></p>
+        </div>
+
+        <div class="field">
+          <label for="studentName">生徒氏名 <span class="required">必須</span></label>
+          <input id="studentName" name="studentName" type="text" autocomplete="name" placeholder="例：山田 太郎">
+          <p id="studentNameError" class="error"></p>
+        </div>
+
+        <div class="field">
+          <label for="email">メールアドレス <span class="required">必須</span></label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="確認メールを受け取るアドレス">
+          <p class="help">受付確認メールを送信します。</p>
+          <p id="emailError" class="error"></p>
+        </div>
+
+        <div class="field">
+          <label for="notes">連絡事項</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="変更・訂正など、伝えておきたいことがあれば入力してください。"></textarea>
+        </div>
+      </section>
+
+      <section class="card absence-card">
+        <div class="section-heading green">
+          <span class="section-number">1</span>
+          <div>
+            <h2>欠席登録</h2>
+            <p>お休みする授業を登録してください。</p>
+          </div>
+        </div>
+
+        <label class="check-row">
+          <input id="registeredAbsence" type="checkbox">
+          <span>
+            <strong>欠席登録済み</strong>
+            <small>※以前、振替日未定で欠席登録済みの場合はチェックを入れてください。</small>
+          </span>
+        </label>
+
+        <div class="field">
+          <label for="absenceDate">欠席日 <span class="required">必須</span></label>
+          <input id="absenceDate" type="date">
+          <p id="absenceDateError" class="error"></p>
+        </div>
+
+        <div class="field">
+          <label>欠席する時間 <span class="required">必須</span></label>
+          <p class="help">複数コマをお休みする場合は、該当するコマをすべて選択してください。</p>
+          <div id="absencePeriods" class="period-grid"></div>
+          <p id="absencePeriodsError" class="error"></p>
+        </div>
+      </section>
+
+      <section class="card makeup-card">
+        <div class="section-heading orange">
+          <span class="section-number">2</span>
+          <div>
+            <h2>振替登録</h2>
+            <p>欠席するコマと同じコマ数を登録してください。</p>
+          </div>
+        </div>
+
+        <label class="check-row">
+          <input id="makeupUndecided" type="checkbox">
+          <span>
+            <strong>振替日未定</strong>
+            <small>振替日がまだ決まっていない場合は、欠席登録だけ先に行えます。</small>
+          </span>
+        </label>
+
+        <div id="makeupFields">
+          <div class="field">
+            <label for="makeupDate">振替日 <span class="required">必須</span></label>
+            <input id="makeupDate" type="date">
+            <p id="makeupDateError" class="error"></p>
+          </div>
+
+          <div class="field">
+            <label>振替希望時間 <span class="required">必須</span></label>
+            <div id="makeupPeriods" class="period-grid"></div>
+            <p id="makeupPeriodsError" class="error"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card submit-card">
+        <p id="formError" class="error form-error"></p>
+        <button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button>
+      </section>
+    </form>
+
+    <section id="confirmation" class="card hidden">
+      <h2 class="section-title">入力内容の確認</h2>
+      <div id="confirmationItems" class="confirmation-list"></div>
+      <div class="confirm-actions">
+        <button id="backButton" class="secondary-button" type="button">入力画面に戻る</button>
+        <button id="submitButton" class="primary-button" type="button">この内容で申請する</button>
+      </div>
+      <p id="loading" class="loading hidden">送信しています。しばらくお待ちください。</p>
+    </section>
+
+    <section id="success" class="card success-card hidden">
+      <div class="success-mark">✓</div>
+      <h2>申請を受け付けました</h2>
+      <p>申請内容を受け付けました。入力いただいたメールアドレスに受付確認メールを送信します。</p>
+      <p>変更・訂正がある場合は、改めて申請し、連絡事項にその旨を記入してください。</p>
+      <a class="primary-button link-button" href="../">RED天王台教室トップへ</a>
+    </section>
+
+    <footer>© RED天王台教室</footer>
+  </main>
+  <script src="./script.js"></script>
+</body>
+</html>
