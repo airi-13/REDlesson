@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="自立学習RED 天王台教室の料金シミュレーション">
+<title>料金シミュレーション | 自立学習RED 天王台教室</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="site-header">
+  <a href="../" class="back">← 教室メニュー</a>
+  <div>
+    <div class="brand">自立学習RED 天王台教室</div>
+    <h1>料金シミュレーション</h1>
+    <p>ご希望の受講内容から料金を比較できます</p>
+  </div>
+</header>
+
+<main class="container">
+<section class="card">
+<h2>① 学年</h2>
+<div class="grade-buttons">
+<button type="button" class="grade-btn active" data-grade="middle12">中1・2</button>
+<button type="button" class="grade-btn" data-grade="middle3high1">中3・高1</button>
+</div>
+</section>
+
+<section class="card">
+<h2>② 通常授業の教科数</h2>
+<div class="counter">
+<button type="button" class="counter-btn" id="subjectMinus" aria-label="教科数を減らす">−</button>
+<div class="counter-value"><span id="subjectCount">2</span><span>教科</span></div>
+<button type="button" class="counter-btn" id="subjectPlus" aria-label="教科数を増やす">＋</button>
+</div>
+<p class="hint">通常授業で受講する教科数。最大5教科です。</p>
+</section>
+
+<section class="card">
+<h2>③ 通常授業の週コマ数</h2>
+<div class="counter">
+<button type="button" class="counter-btn" id="lessonMinus" aria-label="週コマ数を減らす">−</button>
+<div class="counter-value"><span id="lessonCount">2</span><span>コマ</span></div>
+<button type="button" class="counter-btn" id="lessonPlus" aria-label="週コマ数を増やす">＋</button>
+</div>
+<p class="hint">通常授業の教科数以上の週コマ数が必要です。</p>
+</section>
+
+<section class="card">
+<h2>④ テスト対策の教科数</h2>
+<div class="counter">
+<button type="button" class="counter-btn" id="testSubjectMinus" aria-label="テスト対策教科数を減らす">−</button>
+<div class="counter-value"><span id="testSubjectCount">2</span><span>教科</span></div>
+<button type="button" class="counter-btn" id="testSubjectPlus" aria-label="テスト対策教科数を増やす">＋</button>
+</div>
+<p class="hint">通常授業の受講教科数以上、最大5教科です。</p>
+</section>
+
+<section class="card">
+<h2>料金比較</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>比較</th><th>通常料金</th><th id="packName">週4パック</th><th>無制限</th></tr></thead>
+<tbody>
+<tr><th>月額</th><td id="regularMonthly"></td><td id="packMonthly"></td><td id="unlimitedMonthly"></td></tr>
+<tr><th>年間費用</th><td id="regularAnnual"></td><td id="packAnnual"></td><td id="unlimitedAnnual"></td></tr>
+</tbody>
+</table>
+</div>
+<div class="note"><strong>通常料金の年間費用は、授業料・テスト対策料金・講習料金・諸経費を含めたシミュレーションです。</strong></div>
+</section>
+
+<section class="details">
+<div class="detail"><strong>通常料金</strong><b id="regularRange"></b><span>通常授業＋テスト対策</span></div>
+<div class="detail"><strong id="packDetailName"></strong><b id="packDetail"></b><span>テスト対策追加料金なし</span></div>
+<div class="detail"><strong>無制限</strong><b id="unlimitedDetail"></b><span>テスト対策追加料金なし</span></div>
+</section>
+
+<section class="recommend">
+<div>おすすめ</div>
+<h2 id="recommendTitle">—</h2>
+<p id="recommendText">—</p>
+</section>
+
+<section class="status" id="packStatus">—</section>
+
+<section class="card">
+<h2>プラン比較</h2>
+<div class="table-wrap">
+<table class="rules">
+<thead><tr><th>比較項目</th><th>通常料金</th><th id="rulesPackName">週4パック</th><th>無制限</th></tr></thead>
+<tbody>
+<tr><th>通常授業コマ数</th><td id="regularLessonRule"></td><td id="packLessonRule"></td><td>制限なし</td></tr>
+<tr><th>通常授業教科数</th><td id="regularSubjectRule"></td><td>最大5教科</td><td>最大5教科</td></tr>
+<tr><th>振替</th><td>4週間以内なら可</td><td>不可</td><td>不可</td></tr>
+<tr><th>テスト対策</th><td>1教科ごとに料金</td><td>追加料金なし</td><td>追加料金なし</td></tr>
+<tr><th>テキスト</th><td>別途</td><td>別途</td><td>別途</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="card notes">
+<h2>ご注意</h2>
+<ul>
+<li>通常授業の教科数は最大5教科です。</li>
+<li>通常授業は、受講教科数以上の週コマ数が必要です。</li>
+<li>テスト対策は、通常授業の受講教科数以上の教科数から選択できます。</li>
+<li>パック料金は振替不可です。</li>
+<li>パック料金のテスト対策は、テキストをお持ちであれば何教科でも追加料金なしで受講できます。</li>
+<li>通常料金の年間費用には諸経費（月額2,650円×12か月）を含んでいます。</li>
+<li>テキスト代は別途実費となります。</li>
+</ul>
+</section>
+</main>
+<footer>自立学習RED 天王台教室</footer>
+<script src="./script.js"></script>
+</body>
+</html>
