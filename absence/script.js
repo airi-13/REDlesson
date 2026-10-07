@@ -2,7 +2,7 @@
   "use strict";
 
   // GAS側のAPI URL。現在の欠席・振替システムと同じエンドポイントを使用します。
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxwgAcljq6RaHkBWPKpVmbZe7QmOFG03NNlfjimylddJlcPNNHweumPuB06dLgvHmOW/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
 
   const PERIODS = {
     "①":"15:00～15:40","②":"15:45～16:25","③":"16:30～17:10","④":"17:15～17:55",
@@ -147,7 +147,7 @@
       makeupDate:makeupUndecided.checked?"未定":makeupDate.value,
       makeupPeriods:makeupUndecided.checked?["未定"]:selected(makeupPeriods),
       makeupUndecided:makeupUndecided.checked,
-      registeredAbsenceMakeup:registeredAbsence.checked,
+      absenceRegistered:registeredAbsence.checked,
       notes:$("notes").value.trim(),
       email:$("email").value.trim()
     };
@@ -170,20 +170,51 @@
 
   function escapeHtml(v){ return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-  async function submit(){
+  function submit(){
     const data=collect();
     if(errors().length){ alert("入力内容を確認してください。"); return; }
-    $("submitButton").disabled=true; $("backButton").disabled=true; $("loading").classList.remove("hidden");
-    try{
-      // GAS側は JSON の POST を受け取る想定。
-      const response=await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data),mode:"cors"});
-      const result=await response.json();
-      if(!result.success) throw new Error(result.message||"申請処理に失敗しました。");
-      confirmation.classList.add("hidden"); success.classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"});
-    }catch(err){
-      alert("申請の送信に失敗しました。\n\n"+err.message+"\n\n時間をおいてもう一度お試しください。");
-      $("submitButton").disabled=false; $("backButton").disabled=false; $("loading").classList.add("hidden");
-    }
+
+    $("submitButton").disabled=true;
+    $("backButton").disabled=true;
+    $("loading").classList.remove("hidden");
+
+    const callbackName = "redAbsenceCallback_" + Date.now();
+    const script = document.createElement("script");
+    const encodedData = encodeURIComponent(JSON.stringify(data));
+
+    window[callbackName] = function(result){
+      try{
+        if(!result || !result.success){
+          throw new Error((result && result.message) || "申請処理に失敗しました。");
+        }
+        confirmation.classList.add("hidden");
+        success.classList.remove("hidden");
+        window.scrollTo({top:0,behavior:"smooth"});
+      }catch(err){
+        alert("申請の送信に失敗しました。\\n\\n"+err.message+"\\n\\n時間をおいてもう一度お試しください。");
+        $("submitButton").disabled=false;
+        $("backButton").disabled=false;
+        $("loading").classList.add("hidden");
+      }finally{
+        delete window[callbackName];
+        if(script.parentNode) script.parentNode.removeChild(script);
+      }
+    };
+
+    script.onerror = function(){
+      delete window[callbackName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+      alert("申請の送信に失敗しました。\\n\\n通信エラーが発生しました。時間をおいてもう一度お試しください。");
+      $("submitButton").disabled=false;
+      $("backButton").disabled=false;
+      $("loading").classList.add("hidden");
+    };
+
+    script.src = GAS_URL
+      + "?callback=" + encodeURIComponent(callbackName)
+      + "&data=" + encodedData;
+
+    document.body.appendChild(script);
   }
 
   registeredAbsence.addEventListener("change",()=>{ setRanges(); renderPeriods(absencePeriods,absenceDate.value,"absence"); update(); });
