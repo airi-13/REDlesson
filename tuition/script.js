@@ -10,25 +10,13 @@ function update(){
  const c=CONFIG[grade];
  lessons=Math.max(lessons,subjects);
  testSubjects=Math.max(testSubjects,subjects);
- const regularMin=c.lesson*lessons;
- const regularMax=regularMin+c.test*testSubjects;
  const regularAnnual=c.lesson*lessons*11+subjects*c.course*3+c.test*testSubjects*3;
- const packAnnual=c.pack.monthly*12;
- const unlimitedAnnual=c.unlimited*12;
- document.querySelector("#regularMonthly").textContent=yen(regularMin)+"～"+yen(regularMax);
- document.querySelector("#regularAnnual").textContent=yen(regularAnnual);
- document.querySelector("#packMonthly").textContent=yen(c.pack.monthly);
- document.querySelector("#packAnnual").textContent=yen(packAnnual);
- document.querySelector("#unlimitedMonthly").textContent=yen(c.unlimited);
- document.querySelector("#unlimitedAnnual").textContent=yen(unlimitedAnnual);
- document.querySelector("#packName").textContent=c.pack.name;
+
  document.querySelector("#rulesPackName").textContent=c.pack.name;
  document.querySelector("#regularLessonRule").textContent="週"+lessons+"コマ";
  document.querySelector("#packLessonRule").textContent="週"+c.pack.maxLessons+"コマまで";
  document.querySelector("#regularSubjectRule").textContent=subjects+"教科";
  const packOk=lessons<=c.pack.maxLessons;
- const plans=[{name:"通常料金",annual:regularAnnual},{name:"無制限",annual:unlimitedAnnual}];
- if(packOk)plans.push({name:c.pack.name,annual:packAnnual});
  document.querySelector("#subjectCount").textContent=subjects;
  document.querySelector("#lessonCount").textContent=lessons;
  document.querySelector("#testSubjectCount").textContent=testSubjects;
