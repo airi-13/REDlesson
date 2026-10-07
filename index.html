@@ -163,6 +163,18 @@
 
 <body>
 
+  <div id="loginGate" style="position:fixed;inset:0;background:#f5f7f8;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:420px;background:#fff;border-radius:18px;padding:30px 22px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;">
+      <div style="font-size:2.2rem;">🔐</div>
+      <h1 style="font-size:1.35rem;margin:8px 0;">自立学習RED 天王台教室</h1>
+      <p style="color:#666;margin:0 0 18px;">教室専用ページです。<br>生徒番号上5桁を入力してください。</p>
+      <input id="sitePassword" type="password" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="生徒番号上5桁" style="width:100%;padding:14px;border:1px solid #ccc;border-radius:10px;font-size:1.1rem;text-align:center;">
+      <button id="siteLogin" type="button" style="width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:#1f75cb;color:#fff;font-size:1rem;font-weight:700;">入る</button>
+      <p id="siteLoginError" style="color:#c62828;min-height:1.5em;margin:10px 0 0;"></p>
+    </div>
+  </div>
+
+  <div id="siteContent" style="display:none;">
   <header class="header">
     <div class="header-inner">
       <p class="school-name">自立学習RED 天王台教室</p>
@@ -224,5 +236,25 @@
     自立学習RED 天王台教室
   </footer>
 
+  </div>
+  <script>
+    (() => {
+      const PASS = "11391";
+      const gate = document.getElementById("loginGate");
+      const content = document.getElementById("siteContent");
+      const input = document.getElementById("sitePassword");
+      const button = document.getElementById("siteLogin");
+      const error = document.getElementById("siteLoginError");
+      function unlock(){
+        if(input.value.trim() !== PASS){ error.textContent = "生徒番号上5桁が正しくありません。"; return; }
+        gate.style.display = "none"; content.style.display = "block";
+        sessionStorage.setItem("redLessonAuth","ok");
+      }
+      button.addEventListener("click",unlock);
+      input.addEventListener("keydown",e=>{if(e.key==="Enter")unlock();});
+      if(sessionStorage.getItem("redLessonAuth")==="ok"){gate.style.display="none";content.style.display="block";}
+      else setTimeout(()=>input.focus(),100);
+    })();
+  </script>
 </body>
 </html>
