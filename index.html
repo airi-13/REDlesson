@@ -100,6 +100,26 @@
       gap: 12px;
     }
 
+    .application-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .application-buttons .menu-button {
+      aspect-ratio: 1 / 1;
+      min-height: 0;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .application-buttons .menu-button .title {
+      margin-bottom: 5px;
+    }
+
     .menu-button {
       display: block;
       width: 100%;
@@ -186,13 +206,7 @@
 
     <nav class="menu" aria-label="教室メニュー">
 
-      <a class="menu-button" href="./tuition/">
-        <span class="title">💰 料金シミュレーション</span>
-        <span class="description">
-          授業料・講習・テスト対策などの料金を確認
-        </span>
-      </a>
-
+      <div class="application-buttons">
       <a class="menu-button" href="./absence/">
         <span class="title">✏️ 欠席・振替申請</span>
         <span class="description">
@@ -206,11 +220,19 @@
           教材の購入を申請
         </span>
       </a>
+      </div>
 
       <a class="menu-button" href="./calendar/">
         <span class="title">📅 年間カレンダー</span>
         <span class="description">
           教室の年間予定を確認
+        </span>
+      </a>
+
+      <a class="menu-button" href="./tuition/">
+        <span class="title">💰 料金シミュレーション</span>
+        <span class="description">
+          授業料・講習・テスト対策などの料金を確認
         </span>
       </a>
 
