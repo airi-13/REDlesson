@@ -9,12 +9,11 @@
 </head>
 <body>
   <main class="page">
-    <a class="back-link" href="../">← RED天王台教室トップへ</a>
-
-    <section class="card intro-card">
+    <section id="ruleIntro" class="card intro-card">
       <h1>欠席・振替申請</h1>
       <div class="rule-box">
         <h2>欠席・振替ルール</h2>
+        <p>他塾では、振替自体を認めていない場合も多くございますが、REDでは原則として前日までのご連絡で振替を承っております。また、天王台教室では、できる限り柔軟に対応できるよう、授業開始5分前までであれば振替申請を受け付けております。しかし、「決められた時間に通う」「予定通りに学習する」という習慣を身につけることも、大切な「自立学習」の一つであり、学習の効果を最大化するためにも重要です。急な体調不良などやむを得ない場合を除き、安易な欠席はなるべくせず決められた時間に通塾する習慣を身につけていきましょう😊</p>
         <ul>
           <li><strong>欠席申請〆切：</strong>授業開始5分前まで</li>
           <li><strong>振替日：</strong>欠席日から4週間以内</li>
@@ -23,7 +22,11 @@
           <li><strong>欠席するコマ数と振替するコマ数は同じ</strong>にしてください。</li>
         </ul>
       </div>
+      <button id="ruleConfirm" class="primary-button" type="button">確認した</button>
     </section>
+
+    <div id="applicationArea" class="hidden">
+    <a class="back-link" href="../">← RED天王台教室トップへ</a>
 
     <form id="applicationForm" novalidate>
       <section class="card basic-card">
@@ -142,8 +145,16 @@
       <a class="primary-button link-button" href="../">RED天王台教室トップへ</a>
     </section>
 
+    </div>
     <footer>© RED天王台教室</footer>
   </main>
   <script src="./script.js"></script>
+  <script>
+    document.getElementById("ruleConfirm").addEventListener("click",()=>{
+      document.getElementById("ruleIntro").classList.add("hidden");
+      document.getElementById("applicationArea").classList.remove("hidden");
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  </script>
 </body>
 </html>
