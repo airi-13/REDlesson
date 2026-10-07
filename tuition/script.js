@@ -4,7 +4,6 @@ const CONFIG={
 middle12:{label:"中1・2",lesson:9900,test:4500,course:12200,pack:{name:"週4パック",monthly:29700,maxLessons:4},unlimited:47520},
 middle3high1:{label:"中3・高1",lesson:11800,test:5800,course:14700,pack:{name:"週6パック",monthly:39600,maxLessons:6},unlimited:56640}
 };
-const ADMIN_ANNUAL=2650*12;
 let grade="middle12",subjects=2,lessons=2,testSubjects=2;
 const yen=n=>n.toLocaleString("ja-JP")+"円";
 function update(){
@@ -13,9 +12,9 @@ function update(){
  testSubjects=Math.max(testSubjects,subjects);
  const regularMin=c.lesson*lessons;
  const regularMax=regularMin+c.test*testSubjects;
- const regularAnnual=c.lesson*lessons*11+subjects*c.course*3+c.test*testSubjects*3+ADMIN_ANNUAL;
- const packAnnual=c.pack.monthly*12+ADMIN_ANNUAL;
- const unlimitedAnnual=c.unlimited*12+ADMIN_ANNUAL;
+ const regularAnnual=c.lesson*lessons*11+subjects*c.course*3+c.test*testSubjects*3;
+ const packAnnual=c.pack.monthly*12;
+ const unlimitedAnnual=c.unlimited*12;
  document.querySelector("#regularMonthly").textContent=yen(regularMin)+"～"+yen(regularMax);
  document.querySelector("#regularAnnual").textContent=yen(regularAnnual);
  document.querySelector("#packMonthly").textContent=yen(c.pack.monthly);
