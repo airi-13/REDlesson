@@ -40,8 +40,11 @@ function update() {
     c.course * subjects * 3 +
     c.test * testSubjects * 3;
 
-  // 通常料金の月額授業料
-  const regularMonthly = c.lesson * lessons;
+  // 通常料金の月額表示
+  // 「通常授業料」～「通常授業料＋テスト対策料金」で表示
+  const regularMonthlyMin = c.lesson * lessons;
+  const regularMonthlyMax =
+    regularMonthlyMin + c.test * testSubjects;
 
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
@@ -57,7 +60,7 @@ function update() {
     "週" + c.pack.maxLessons + "コマまで";
 
   document.querySelector("#regularMonthly").textContent =
-    yen(regularMonthly);
+    yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
   document.querySelector("#packMonthly").textContent =
     yen(c.pack.monthly);
   document.querySelector("#unlimitedMonthly").textContent =
