@@ -169,19 +169,18 @@
       <h1 style="font-size:1.35rem;margin:8px 0;">自立学習RED 天王台教室</h1>
       <p style="color:#666;margin:0 0 18px;">教室専用ページです。<br>生徒番号上5桁を入力してください。</p>
       <input id="sitePassword" type="password" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="生徒番号上5桁" style="width:100%;padding:14px;border:1px solid #ccc;border-radius:10px;font-size:1.1rem;text-align:center;">
-      <button id="siteLogin" type="button" style="width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:#1f75cb;color:#fff;font-size:1rem;font-weight:700;">入る</button>
+      <button id="siteLogin" type="button" style="width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:#E60012;color:#fff;font-size:1rem;font-weight:700;">入る</button>
       <p id="siteLoginError" style="color:#c62828;min-height:1.5em;margin:10px 0 0;"></p>
     </div>
   </div>
 
   <div id="siteContent" style="display:none;">
-  <header class="header">
-    <div class="header-inner">
-      <p class="school-name">自立学習RED 天王台教室</p>
-      <p class="subtitle">教室専用ページ</p>
-      <div class="header-actions">
-        <button id="siteLogout" class="logout-button" type="button">ログアウト</button>
-      </div>
+  <header class="site-banner">
+    <div class="site-banner-inner">
+      <a class="site-logo-link" href="./" aria-label="自立学習RED 天王台教室トップ">
+        <img class="site-logo" src="./assets/red-logo.svg" alt="自立学習RED">
+      </a>
+      <button class="site-logout" type="button" data-site-logout data-home="./">ログアウト</button>
     </div>
   </header>
 
@@ -249,14 +248,11 @@
         sessionStorage.setItem("redLessonAuth","ok");
       }
       button.addEventListener("click",unlock);
-      document.getElementById("siteLogout").addEventListener("click",()=>{
-        sessionStorage.removeItem("redLessonAuth");
-        location.reload();
-      });
       input.addEventListener("keydown",e=>{if(e.key==="Enter")unlock();});
       if(sessionStorage.getItem("redLessonAuth")==="ok"){gate.style.display="none";content.style.display="block";}
       else setTimeout(()=>input.focus(),100);
     })();
   </script>
+  <script src="./common.js"></script>
 </body>
 </html>
