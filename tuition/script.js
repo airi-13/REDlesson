@@ -52,7 +52,7 @@ function update() {
   document.querySelector("#regularTestLessonRule").innerHTML = "無制限<br>（1科目毎に追加料金）";
   document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
   document.querySelector("#packTestLessonRule").innerHTML = "無制限<br>（追加料金なし）";
-  document.querySelector("#unlimitedTestLessonRule").innerHTML = "制限なし<br>追加料金なし";
+  document.querySelector("#unlimitedTestLessonRule").innerHTML = "無制限<br>（追加料金なし）";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
