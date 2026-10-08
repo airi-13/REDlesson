@@ -61,3 +61,4 @@ input:focus,textarea:focus{outline:0;border-color:#E60012;box-shadow:0 0 0 3px r
 footer{text-align:center;color:#87939b;font-size:12px;padding:10px}
 @media(max-width:520px){.page{padding:12px 8px 35px}.card{border-radius:13px;padding:18px 14px}.intro-card h1{font-size:22px}.rule-box{padding:13px}.period-grid{gap:8px}.period-card label{min-height:72px}.period-number{font-size:22px}}
 @media(min-width:600px){.period-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.confirm-actions{grid-template-columns:1fr 1fr}}
+.fallback-link{text-align:center;font-size:13px;line-height:1.6;margin:12px 0 0;color:#66737d}.fallback-link a{color:#E60012;font-weight:700;word-break:break-all}
