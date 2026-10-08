@@ -98,7 +98,8 @@ function validate(){
     if(ranges.some(x=>Number(x.from)>Number(x.to))){block.querySelector(".subject-error").textContent="ページ番号は開始ページ以下に終了ページを入力してください。";ok=false;}
   });
 
-  if(subjects.some(s=>{const b=document.querySelector('.subject-block[data-subject="'+s+'"]');return ![...b.querySelectorAll(".range-row")].some(r=>r.querySelector(".from").value&&r.querySelector(".to").value)})){ $("formError").textContent="英語・数学・国語・理科・社会の5教科すべてにページ範囲を入力してください。";ok=false;}\n  if(!subjects.some(s=>{const b=document.querySelector('.subject-block[data-subject="'+s+'"]');return b.querySelector(".publisher").value||[...b.querySelectorAll(".range-row")].some(r=>r.querySelector(".from").value||r.querySelector(".to").value)})){
+  if(subjects.some(s=>{const b=document.querySelector('.subject-block[data-subject="'+s+'"]');return ![...b.querySelectorAll(".range-row")].some(r=>r.querySelector(".from").value&&r.querySelector(".to").value)})){ $("formError").textContent="英語・数学・国語・理科・社会の5教科すべてにページ範囲を入力してください。";ok=false;}
+  if(!subjects.some(s=>{const b=document.querySelector('.subject-block[data-subject="'+s+'"]');return b.querySelector(".publisher").value||[...b.querySelectorAll(".range-row")].some(r=>r.querySelector(".from").value||r.querySelector(".to").value)})){
     $("formError").textContent="少なくとも1教科のテスト範囲を入力してください。";ok=false;
   }
   return ok;
