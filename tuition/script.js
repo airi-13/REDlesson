@@ -84,26 +84,28 @@ function update() {
 
     if (currentAnnual >= targetAnnual) {
       return '<div class="recommendation-good">' +
-        '<strong>現在の受講内容ですでにお得！</strong>' +
-        '<span>' + name + 'がおすすめです</span>' +
+        '<div class="recommendation-good-icon">✓</div>' +
+        '<strong>今の受講内容ですでにお得！</strong>' +
+        '<span>' + name + 'を選ぶとお得です</span>' +
         '</div>';
     }
 
     const extraLessons = getExtraLessonsFor(targetAnnual);
     const extraTestSubjects = getExtraTestSubjectsFor(targetAnnual);
 
-    return '<div class="recommendation-lines">' +
-      '<div class="recommendation-line">' +
+    return '<div class="recommendation-content">' +
+      '<div class="recommendation-intro">このくらい受講するなら</div>' +
+      '<div class="recommendation-option">' +
         '<span class="recommendation-label">通常授業</span>' +
-        '<strong>あと週' + (extraLessons === null ? '—' : extraLessons) + 'コマ</strong>' +
+        '<strong>あと <b>' + (extraLessons === null ? '—' : extraLessons) + '</b> コマ／週</strong>' +
       '</div>' +
-      '<div class="recommendation-or">or</div>' +
-      '<div class="recommendation-line">' +
+      '<div class="recommendation-or">または</div>' +
+      '<div class="recommendation-option">' +
         '<span class="recommendation-label">テスト対策教科</span>' +
-        '<strong>あと' + (extraTestSubjects === null ? '—' : extraTestSubjects) + '教科</strong>' +
+        '<strong>あと <b>' + (extraTestSubjects === null ? '—' : extraTestSubjects) + '</b> 教科</strong>' +
       '</div>' +
-      '</div>' +
-      '<p class="recommendation-result">' + name + 'がおすすめ！</p>';
+      '<div class="recommendation-conclusion">→ ' + name + 'がお得！</div>' +
+      '</div>';
   }
 
   document.querySelector("#packRecommendation").innerHTML =
