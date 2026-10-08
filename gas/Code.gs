@@ -558,7 +558,6 @@ function submitTestRangeApplication_(data) {
   const studentName = String(data.studentName || "").trim();
   const school = String(data.school || "").trim();
   const grade = String(data.grade || "").trim();
-  const testDate = String(data.testDate || "").trim();
   const notes = String(data.notes || "").trim();
   const subjects = Array.isArray(data.subjects) ? data.subjects : [];
 
@@ -569,9 +568,6 @@ function submitTestRangeApplication_(data) {
   if (!school) throw new Error("学校名を選択してください。");
   if (!grade) throw new Error("学年を選択してください。");
 
-  const parsedDate = parseDate_(testDate);
-  if (!parsedDate) throw new Error("テストの日付が正しくありません。");
-
   if (!subjects.length) {
     throw new Error("少なくとも1教科のテスト範囲を登録してください。");
   }
@@ -581,12 +577,15 @@ function submitTestRangeApplication_(data) {
 
   subjects.forEach(function(item) {
     const subject = String(item.subject || "").trim();
+    const testDate = String(item.testDate || "").trim();
     const publisher = String(item.publisher || "").trim();
     const ranges = Array.isArray(item.ranges) ? item.ranges : [];
 
     if (!allowedSubjects.includes(subject)) {
       throw new Error("教科が正しくありません。");
     }
+    const parsedDate = parseDate_(testDate);
+    if (!parsedDate) throw new Error(subject + "のテスト日が正しくありません。");
     if (!publisher) {
       throw new Error(subject + "の教科書出版社を選択してください。");
     }
@@ -637,7 +636,7 @@ function submitTestRangeApplication_(data) {
 
   try {
     const itemLines = subjects.map(function(item) {
-      return item.subject + "：" +
+      return item.subject + "（" + formatJapaneseDate_(item.testDate) + "）：" +
         item.ranges.map(function(range) {
           return "P" + range.from + "～P" + range.to;
         }).join("、") +
@@ -652,8 +651,7 @@ function submitTestRangeApplication_(data) {
         "生徒番号：" + studentId + "\n" +
         "氏名：" + studentName + "\n" +
         "学校名：" + school + "\n" +
-        "学年：" + grade + "\n" +
-        "テスト日：" + formatJapaneseDate_(testDate) + "\n\n" +
+        "学年：" + grade + "\n\n" +
         itemLines + "\n\n" +
         "連絡事項：" + (notes || "なし")
     });
