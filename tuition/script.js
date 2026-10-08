@@ -54,6 +54,57 @@ function update() {
   document.querySelector("#packTestLessonRule").textContent = "無制限";
   document.querySelector("#unlimitedTestLessonRule").textContent = "無制限";
 
+  // お得なプラン案内
+  function getExtraLessonsFor(target) {
+    for (let n = 0; n <= 10 - lessons; n++) {
+      if (c.lesson * (lessons + n) + c.test * testSubjects >= target) {
+        return n;
+      }
+    }
+    return null;
+  }
+
+  function getExtraTestSubjectsFor(target) {
+    for (let n = 0; n <= 5 - testSubjects; n++) {
+      if (c.lesson * lessons + c.test * (testSubjects + n) >= target) {
+        return n;
+      }
+    }
+    return null;
+  }
+
+  function makeRecommendation(target, name) {
+    const current = c.lesson * lessons + c.test * testSubjects;
+    if (current >= target) {
+      return "<p><strong>現在の受講内容なら" + name + "のほうがお得です！</strong></p>";
+    }
+
+    const extraLessons = getExtraLessonsFor(target);
+    const extraTestSubjects = getExtraTestSubjectsFor(target);
+    const messages = [];
+
+    if (extraLessons !== null && extraLessons > 0) {
+      messages.push("通常授業をあと週" + extraLessons + "コマ増やす");
+    }
+    if (extraTestSubjects !== null && extraTestSubjects > 0) {
+      messages.push("テスト対策強化をあと" + extraTestSubjects + "教科増やす");
+    }
+
+    if (messages.length === 2) {
+      return "<p>" + messages[0] + " <strong>or</strong> " + messages[1] + "と" + name + "がお得！</p>";
+    }
+    if (messages.length === 1) {
+      return "<p>" + messages[0] + "と" + name + "がお得！</p>";
+    }
+    return "";
+  }
+
+  document.querySelector("#packRecommendation").innerHTML =
+    makeRecommendation(c.pack.monthly, c.pack.name);
+
+  document.querySelector("#unlimitedRecommendation").innerHTML =
+    makeRecommendation(c.unlimited, "通い放題プラン");
+
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
   document.querySelector("#regularSubjectRule").textContent =
