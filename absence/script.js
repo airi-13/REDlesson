@@ -170,7 +170,7 @@
 
   function escapeHtml(v){ return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-  function submit(){
+  async function submit(){
     const data=collect();
     if(errors().length){ alert("入力内容を確認してください。"); return; }
 
@@ -178,43 +178,23 @@
     $("backButton").disabled=true;
     $("loading").classList.remove("hidden");
 
-    const callbackName = "redAbsenceCallback_" + Date.now();
-    const script = document.createElement("script");
-    const encodedData = encodeURIComponent(JSON.stringify(data));
+    try{
+      await fetch(GAS_URL,{
+        method:"POST",
+        mode:"no-cors",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({...data,action:"absence"})
+      });
 
-    window[callbackName] = function(result){
-      try{
-        if(!result || !result.success){
-          throw new Error((result && result.message) || "申請処理に失敗しました。");
-        }
-        confirmation.classList.add("hidden");
-        success.classList.remove("hidden");
-        window.scrollTo({top:0,behavior:"smooth"});
-      }catch(err){
-        alert("申請の送信に失敗しました。\\n\\n"+err.message+"\\n\\n時間をおいてもう一度お試しください。");
-        $("submitButton").disabled=false;
-        $("backButton").disabled=false;
-        $("loading").classList.add("hidden");
-      }finally{
-        delete window[callbackName];
-        if(script.parentNode) script.parentNode.removeChild(script);
-      }
-    };
-
-    script.onerror = function(){
-      delete window[callbackName];
-      if(script.parentNode) script.parentNode.removeChild(script);
+      confirmation.classList.add("hidden");
+      success.classList.remove("hidden");
+      window.scrollTo({top:0,behavior:"smooth"});
+    }catch(err){
       alert("申請の送信に失敗しました。\\n\\n通信エラーが発生しました。時間をおいてもう一度お試しください。");
       $("submitButton").disabled=false;
       $("backButton").disabled=false;
       $("loading").classList.add("hidden");
-    };
-
-    script.src = GAS_URL
-      + "?callback=" + encodeURIComponent(callbackName)
-      + "&data=" + encodedData;
-
-    document.body.appendChild(script);
+    }
   }
 
   registeredAbsence.addEventListener("change",()=>{ setRanges(); renderPeriods(absencePeriods,absenceDate.value,"absence"); update(); });
