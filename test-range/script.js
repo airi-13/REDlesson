@@ -1,13 +1,6 @@
 const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
 
-const SCHOOLS=[
-  "我孫子中学校","湖北中学校","布佐中学校","湖北台中学校","久寺家中学校","白山中学校",
-  "我孫子第一小学校","我孫子第二小学校","我孫子第三小学校","我孫子第四小学校",
-  "根戸小学校","並木小学校","高野山小学校","湖北小学校","湖北台東小学校","湖北台西小学校",
-  "新木小学校","布佐小学校","布佐南小学校",
-  "県立我孫子高等学校","県立我孫子東高等学校","私立我孫子二階堂高等学校","私立中央学院高等学校",
-  "その他"
-];
+const SCHOOLS=["我孫子中","我孫子第二中","我孫子第三中","白山中","湖北台中","湖北中","その他"];
 
 const GRADES=[
   "小学1年","小学2年","小学3年","小学4年","小学5年","小学6年",
@@ -47,7 +40,7 @@ function createSubject(subject){
   block.dataset.subject=subject;
   block.innerHTML='<div class="subject-head"><div class="subject-name">'+esc(subject)+'</div></div>'+
     '<div class="subject-body">'+
-    '<div class="publisher-row"><label>教科書出版社<select class="publisher"><option value="">出版社を選択してください</option>'+PUBLISHERS[subject].map(x=>'<option>'+esc(x)+'</option>').join("")+'</select></label></div>'+
+    '<div class="publisher-row"><label>テスト日<input type="date" class="test-date"></label></div><div class="publisher-row"><label>教科書出版社<select class="publisher"><option value="">出版社を選択してください</option>'+PUBLISHERS[subject].map(x=>'<option>'+esc(x)+'</option>').join("")+'</select></label></div>'+
     '<div class="range-list"></div>'+
     '<button class="add-range" type="button" title="範囲を追加" aria-label="'+esc(subject)+'の範囲を追加">＋</button>'+
     '<p class="error subject-error"></p></div>';
@@ -63,19 +56,20 @@ function collect(){
   const result=[];
   document.querySelectorAll(".subject-block").forEach(block=>{
     const subject=block.dataset.subject;
+    const testDate=block.querySelector(".test-date").value.trim();
     const publisher=block.querySelector(".publisher").value.trim();
     const ranges=[...block.querySelectorAll(".range-row")].map(row=>({
       from:row.querySelector(".from").value.trim(),
       to:row.querySelector(".to").value.trim()
     })).filter(x=>x.from||x.to);
-    if(publisher||ranges.length) result.push({subject,publisher,ranges});
+    if(testDate||publisher||ranges.length) result.push({subject,testDate,publisher,ranges});
   });
   return result;
 }
 
 function validate(){
   let ok=true;
-  const clear=["studentId","studentName","school","grade","testDate"];
+  const clear=["studentId","studentName","school","grade"];
   clear.forEach(id=>$(id+"Error").textContent="");
   $("formError").textContent="";
   document.querySelectorAll(".subject-error").forEach(x=>x.textContent="");
@@ -85,14 +79,15 @@ function validate(){
   if(!$("studentName").value.trim()){ $("studentNameError").textContent="氏名を入力してください。";ok=false; }
   if(!$("school").value){ $("schoolError").textContent="学校名を選択してください。";ok=false; }
   if(!$("grade").value){ $("gradeError").textContent="学年を選択してください。";ok=false; }
-  if(!$("testDate").value){ $("testDateError").textContent="テストの日付を選択してください。";ok=false; }
 
   document.querySelectorAll(".subject-block").forEach(block=>{
+    const testDate=block.querySelector(".test-date").value.trim();
     const publisher=block.querySelector(".publisher").value.trim();
     const rows=[...block.querySelectorAll(".range-row")];
     const ranges=rows.map(row=>({from:row.querySelector(".from").value.trim(),to:row.querySelector(".to").value.trim()}));
     const used=publisher||ranges.some(x=>x.from||x.to);
     if(!used) return;
+    if(!testDate){block.querySelector(".subject-error").textContent="テスト日を選択してください。";ok=false;return;}
     if(!ranges.some(x=>x.from&&x.to)){block.querySelector(".subject-error").textContent="ページ範囲を1つ以上、P○～P○の形で入力してください。";ok=false;return;}
     if(ranges.some(x=>(x.from&&!x.to)||(!x.from&&x.to))){block.querySelector(".subject-error").textContent="開始ページと終了ページを両方入力してください。";ok=false;return;}
     if(ranges.some(x=>Number(x.from)>Number(x.to))){block.querySelector(".subject-error").textContent="ページ番号は開始ページ以下に終了ページを入力してください。";ok=false;}
@@ -114,7 +109,6 @@ $("rangeForm").addEventListener("submit",e=>{
     studentName:$("studentName").value.trim(),
     school:$("school").value,
     grade:$("grade").value,
-    testDate:$("testDate").value,
     subjects:collect(),
     notes:$("notes").value.trim()
   };
@@ -123,7 +117,7 @@ $("rangeForm").addEventListener("submit",e=>{
     '<p><b>学校名</b><br>'+esc(current.school)+'</p>'+
     '<p><b>学年</b><br>'+esc(current.grade)+'</p>'+
     '<p><b>日時</b><br>'+esc(current.testDate)+'</p>'+
-    current.subjects.map(x=>'<div class="subject-confirm"><b>'+esc(x.subject)+'</b><br>出版社：'+esc(x.publisher)+'<br>'+x.ranges.map(r=>'P'+esc(r.from)+'～P'+esc(r.to)).join("<br>")+'</div>').join("")+
+    current.subjects.map(x=>'<div class="subject-confirm"><b>'+esc(x.subject)+'</b><br>テスト日：'+esc(x.testDate)+'<br>出版社：'+esc(x.publisher)+'<br>'+x.ranges.map(r=>'P'+esc(r.from)+'～P'+esc(r.to)).join("<br>")+'</div>').join("")+
     '<p><b>連絡事項</b><br>'+esc(current.notes||"なし")+'</p>';
   $("confirmationItems").innerHTML=html;
   $("rangeForm").classList.add("hidden");
