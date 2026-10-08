@@ -4,3 +4,5 @@
 @media(max-width:600px){.list-actions{justify-content:stretch}.purchase-nav{width:100%;min-height:48px}}
 
 .fallback-link{text-align:center;font-size:13px;line-height:1.6;margin:12px 0 0;color:#66737d}.fallback-link a{color:#E60012;font-weight:700;word-break:break-all}
+
+.textbook-group{margin:0 0 18px}.textbook-group-title{font-size:15px;font-weight:800;color:#555;margin:0 0 8px;padding-left:4px}
