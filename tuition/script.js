@@ -94,15 +94,15 @@ function update() {
     const extraTestSubjects = getExtraTestSubjectsFor(targetAnnual);
 
     return '<div class="recommendation-content">' +
-      '<div class="recommendation-intro">あと</div>' +
+      '' +
       '<div class="recommendation-option">' +
         '<span class="recommendation-label">通常授業</span>' +
-        '<strong><b>' + (extraLessons === null ? '—' : extraLessons) + '</b> コマ／週</strong>' +
+        '<strong>あと <b>' + (extraLessons === null ? '—' : extraLessons) + '</b> コマ／週</strong>' +
       '</div>' +
       '<div class="recommendation-or">または</div>' +
       '<div class="recommendation-option">' +
         '<span class="recommendation-label">テスト対策教科</span>' +
-        '<strong><b>' + (extraTestSubjects === null ? '—' : extraTestSubjects) + '</b> 教科</strong>' +
+        '<strong>あと <b>' + (extraTestSubjects === null ? '—' : extraTestSubjects) + '</b> 教科</strong>' +
       '</div>' +
       '<div class="recommendation-conclusion">→ ' + name + 'がお得！</div>' +
       '</div>';
