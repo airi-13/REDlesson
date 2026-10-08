@@ -3,9 +3,9 @@
 body{margin:0;background:#f4f7fa}
 button,input,textarea{font:inherit}
 .page{width:min(760px,100%);margin:0 auto;padding:18px 12px 44px}
-.back-link{display:inline-block;margin:0 4px 14px;color:#1f75cb;text-decoration:none;font-weight:700}
+.back-link{display:inline-block;margin:0 4px 14px;color:#E60012;text-decoration:none;font-weight:700}
 .card{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 12px rgba(20,50,80,.07)}
-.intro-card h1{margin:0 0 18px;text-align:center;color:#1f5fa8;font-size:25px}
+.intro-card h1{margin:0 0 18px;text-align:center;color:#E60012;font-size:25px}
 .rule-box{border:3px solid #d35400;border-radius:10px;padding:15px 16px;background:#fff}
 .rule-box h2{font-size:17px;margin:0 0 9px;color:#c34700}
 .rule-box ul{margin:0;padding-left:20px;line-height:1.8;font-size:14px}
@@ -16,7 +16,7 @@ button,input,textarea{font:inherit}
 .required{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:4px;background:#e74c3c;color:#fff;font-size:11px;vertical-align:2px}
 input[type=text],input[type=email],input[type=date],textarea{width:100%;border:1px solid #cbd3da;border-radius:9px;background:#fff;padding:12px 13px;font-size:16px;min-height:48px}
 textarea{resize:vertical;min-height:88px}
-input:focus,textarea:focus{outline:0;border-color:#1f75cb;box-shadow:0 0 0 3px rgba(31,117,203,.12)}
+input:focus,textarea:focus{outline:0;border-color:#E60012;box-shadow:0 0 0 3px rgba(230,0,18,.12)}
 .help{margin:6px 0 0;color:#68757f;font-size:13px;line-height:1.55}
 .error{margin:6px 0 0;color:#d93025;font-size:13px;line-height:1.5;min-height:0}
 .section-heading{display:flex;align-items:center;gap:12px;margin-bottom:17px}
@@ -35,8 +35,8 @@ input:focus,textarea:focus{outline:0;border-color:#1f75cb;box-shadow:0 0 0 3px r
 .period-card{position:relative}
 .period-card input{position:absolute;opacity:0;pointer-events:none}
 .period-card label{min-height:78px;border:2px solid #d5dce2;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.15s;padding:8px}
-.period-card label:hover{border-color:#79aee8}
-.period-card input:checked+label{border-color:#1f75cb;background:#e7f2ff;color:#0e579c;box-shadow:0 2px 7px rgba(31,117,203,.12)}
+.period-card label:hover{border-color:#f06b76}
+.period-card input:checked+label{border-color:#1f75cb;background:#e7f2ff;color:#b0000d;box-shadow:0 2px 7px rgba(230,0,18,.12)}
 .period-number{font-size:24px;font-weight:900}
 .period-time{font-size:12px;margin-top:3px}
 .period-disabled{padding:12px;border-radius:9px;background:#f1f3f5;color:#68757f;font-size:14px}
