@@ -2,6 +2,7 @@ const SPREADSHEET_ID = "1apUqDRpkV1leEvYegYv61a22vuf2YdQYe40yzvgOb9Q";
 const ABSENCE_SHEET_NAME = "申請一覧";
 const PURCHASE_SHEET_NAME = "購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
+const PLAN_CHANGE_SHEET_NAME = "プラン変更申請";
 const ADMIN_EMAIL = "tennodai.red@gmail.com";
 const TIME_ZONE = "Asia/Tokyo";
 const PASSWORD = "11391";
@@ -77,6 +78,9 @@ function doPost(e) {
     }
     if (String(data.action || "") === "test_period") {
       return jsonResponse_(submitTestPeriodApplication_(data));
+    }
+    if (String(data.action || "") === "plan_change") {
+      return jsonResponse_(submitPlanChangeApplication_(data));
     }
 
     return jsonResponse_(submitApplication(data));
@@ -714,6 +718,101 @@ function submitTestPeriodApplication_(data) {
   try{MailApp.sendEmail({to:email,subject:"テスト対策コマ登録を受け付けました",body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
   try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策コマ登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
   return {success:true};
+}
+
+/* =====================================================
+   プラン変更申請
+===================================================== */
+
+function submitPlanChangeApplication_(data) {
+  const studentId = String(data.studentId || "").trim();
+  const studentName = String(data.studentName || "").trim();
+  const currentPlan = String(data.currentPlan || "").trim();
+  const nextPlan = String(data.nextPlan || "").trim();
+  const currentSubjects = Array.isArray(data.currentSubjects) ? data.currentSubjects.map(String) : [];
+  const nextSubjects = Array.isArray(data.nextSubjects) ? data.nextSubjects.map(String) : [];
+  const notes = String(data.notes || "").trim();
+  const email = String(data.email || "").trim();
+
+  const allowedPlans = ["通い放題","週4/6プラン","週1","週2","週3","週4","週5","週6"];
+  const allowedSubjects = ["英語","数学","国語","理科","社会"];
+
+  if (!/^\d+$/.test(studentId)) throw new Error("生徒番号は半角数字で入力してください。");
+  if (!studentName) throw new Error("氏名を入力してください。");
+  if (!allowedPlans.includes(currentPlan) || !allowedPlans.includes(nextPlan)) {
+    throw new Error("プランの選択内容を確認してください。");
+  }
+  if (!currentSubjects.length || !currentSubjects.every(s => allowedSubjects.includes(s))) {
+    throw new Error("現在の受講教科を確認してください。");
+  }
+  if (!nextSubjects.length || !nextSubjects.every(s => allowedSubjects.includes(s))) {
+    throw new Error("来月以降の受講教科を確認してください。");
+  }
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(PLAN_CHANGE_SHEET_NAME);
+
+  if (!sh) {
+    sh = ss.insertSheet(PLAN_CHANGE_SHEET_NAME);
+    sh.appendRow([
+      "受付日時","生徒番号","氏名","現在のプラン","現在の受講教科",
+      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス"
+    ]);
+  }
+
+  sh.appendRow([
+    new Date(),
+    studentId,
+    studentName,
+    currentPlan,
+    currentSubjects.join("、"),
+    nextPlan,
+    nextSubjects.join("、"),
+    notes,
+    email
+  ]);
+  sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
+
+  let mailSuccess = true;
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "プラン変更申請を受け付けました",
+      body:
+        "プラン変更申請を受け付けました。\n\n" +
+        "【生徒番号】\n" + studentId + "\n\n" +
+        "【氏名】\n" + studentName + "\n\n" +
+        "【現在のプラン】\n" + currentPlan + "\n\n" +
+        "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
+        "【来月以降のプラン】\n" + nextPlan + "\n\n" +
+        "【来月以降の受講教科】\n" + nextSubjects.join("、") + "\n\n" +
+        "【連絡事項】\n" + (notes || "なし") + "\n\n" +
+        "自立学習RED 天王台教室"
+    });
+  } catch (e) {
+    mailSuccess = false;
+  }
+
+  try {
+    MailApp.sendEmail({
+      to: ADMIN_EMAIL,
+      subject: "新しいプラン変更申請があります",
+      body:
+        "プラン変更申請を受け付けました。\n\n" +
+        "生徒番号：" + studentId + "\n" +
+        "氏名：" + studentName + "\n" +
+        "現在のプラン：" + currentPlan + "\n" +
+        "現在の受講教科：" + currentSubjects.join("、") + "\n" +
+        "来月以降のプラン：" + nextPlan + "\n" +
+        "来月以降の受講教科：" + nextSubjects.join("、") + "\n" +
+        "連絡事項：" + (notes || "なし") + "\n" +
+        "確認メール送付先：" + email
+    });
+  } catch (e) {}
+
+  return { success: true, mailSuccess: mailSuccess };
 }
 
 /* =====================================================
