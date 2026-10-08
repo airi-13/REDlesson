@@ -55,42 +55,42 @@ function update() {
   document.querySelector("#unlimitedTestLessonRule").textContent = "無制限";
 
   // お得なプラン案内
-  // 「通常授業をあと何コマ」または「テスト対策をあと何教科」で
-  // 各プランの料金に届くかを自動計算します。
-  function getExtraLessonsFor(target) {
-    const current = c.lesson * lessons + c.test * testSubjects;
-    if (current >= target) return 0;
-    for (let n = 1; n <= 10 - lessons; n++) {
-      if (c.lesson * (lessons + n) + c.test * testSubjects >= target) {
-        return n;
-      }
+  // 判定は「年間授業料」で行います。
+  const packAnnual = c.pack.monthly * 12;
+  const unlimitedAnnual = c.unlimited * 12;
+
+  function calculateRegularAnnual(extraLessons, extraTestSubjects) {
+    return c.lesson * (lessons + extraLessons) * 11 +
+      c.course * subjects * 3 +
+      c.test * (testSubjects + extraTestSubjects) * 3;
+  }
+
+  function getExtraLessonsFor(targetAnnual) {
+    for (let n = 0; n <= 10 - lessons; n++) {
+      if (calculateRegularAnnual(n, 0) >= targetAnnual) return n;
     }
     return null;
   }
 
-  function getExtraTestSubjectsFor(target) {
-    const current = c.lesson * lessons + c.test * testSubjects;
-    if (current >= target) return 0;
-    for (let n = 1; n <= 5 - testSubjects; n++) {
-      if (c.lesson * lessons + c.test * (testSubjects + n) >= target) {
-        return n;
-      }
+  function getExtraTestSubjectsFor(targetAnnual) {
+    for (let n = 0; n <= 5 - testSubjects; n++) {
+      if (calculateRegularAnnual(0, n) >= targetAnnual) return n;
     }
     return null;
   }
 
-  function makeRecommendation(target, name) {
-    const current = c.lesson * lessons + c.test * testSubjects;
+  function makeRecommendation(targetAnnual, name) {
+    const currentAnnual = calculateRegularAnnual(0, 0);
 
-    if (current >= target) {
+    if (currentAnnual >= targetAnnual) {
       return '<div class="recommendation-good">' +
         '<strong>現在の受講内容ですでにお得！</strong>' +
         '<span>' + name + 'がおすすめです</span>' +
         '</div>';
     }
 
-    const extraLessons = getExtraLessonsFor(target);
-    const extraTestSubjects = getExtraTestSubjectsFor(target);
+    const extraLessons = getExtraLessonsFor(targetAnnual);
+    const extraTestSubjects = getExtraTestSubjectsFor(targetAnnual);
 
     return '<div class="recommendation-lines">' +
       '<div class="recommendation-line">' +
@@ -107,10 +107,10 @@ function update() {
   }
 
   document.querySelector("#packRecommendation").innerHTML =
-    makeRecommendation(c.pack.monthly, c.pack.name);
+    makeRecommendation(packAnnual, c.pack.name);
 
   document.querySelector("#unlimitedRecommendation").innerHTML =
-    makeRecommendation(c.unlimited, "通い放題");
+    makeRecommendation(unlimitedAnnual, "通い放題");
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
