@@ -15,7 +15,14 @@ $("gradeFilter").onchange=renderBooks;
 
 const SUBJECT_ORDER={"英語":1,"数学":2,"英語・数学":2,"国語":3,"理科":4,"社会":5};
 const SERIES_ORDER={"フォレスタ":1,"iワーク":2,"フォレスタステップ":3,"フォレスタゴール":4,"フォレスタドリル":5};
-function gradeNumber(value){const m=String(value).match(/(?:新)?(?:中|高)?([1-6])/);return m?Number(m[1]):99;}
+function gradeNumber(value){
+ const s=String(value);
+ if(s==="全学年")return 0;
+ const m=s.match(/(?:中|高)?([1-6])/);
+ if(m)return Number(m[1]);
+ if(s.includes("新"))return 90;
+ return 99;
+}
 function seriesRank(title){for(const key of Object.keys(SERIES_ORDER)){if(title.startsWith(key))return SERIES_ORDER[key];}return 99;}
 function textbookNumber(title){const m=String(title).match(/(?:中|算数|数学|英語)?\s*(\d+)/);return m?Number(m[1]):99;}
 function compareBooks(a,b){
