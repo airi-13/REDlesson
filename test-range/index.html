@@ -65,6 +65,11 @@
         <label for="notes">連絡事項</label>
         <textarea id="notes" rows="4" placeholder="テストについて伝えておきたいことがあれば入力してください。"></textarea>
       </div>
+      <div class="field">
+        <label for="email">メールアドレス <span class="required">必須</span></label>
+        <input id="email" type="email" autocomplete="email" placeholder="確認メールを受け取るアドレス">
+        <p id="emailError" class="error"></p>
+      </div>
     </section>
 
     <section class="card submit-card">
