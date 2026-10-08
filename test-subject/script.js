@@ -1,9 +1,9 @@
-const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+const GAS_URL=RED.GAS_URL;
 const subjects=["英語","数学","国語","理科","社会"];
 const $=id=>document.getElementById(id);
 $("subjects").innerHTML=subjects.map(s=>'<label class="check"><input type="checkbox" value="'+s+'">'+s+'</label>').join("");
 let current=null;
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+const esc=RED.escapeHtml;
 
 $("form").addEventListener("submit",e=>{
   e.preventDefault();
