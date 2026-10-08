@@ -8,8 +8,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 
 $("levelFilter").onchange=()=>{
   refreshFilterOptions();
-  refreshFilterOptions();
-renderBooks();
+  renderBooks();
 };
 $("subjectFilter").onchange=renderBooks;
 $("gradeFilter").onchange=renderBooks;
@@ -166,4 +165,5 @@ $("submit").onclick=async()=>{
  }
 };
 
+refreshFilterOptions();
 renderBooks();
