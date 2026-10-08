@@ -49,9 +49,9 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
-  document.querySelector("#regularTestLessonRule").innerHTML = "無制限<br>（1科目毎に追加料金）";
-  document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
-  document.querySelector("#packTestLessonRule").innerHTML = "無制限<br>（追加料金なし）";
+  document.querySelector("#regularTestLessonRule").textContent = "無制限";
+  document.querySelector("#regularTestSubjectRule").innerHTML = testSubjects + "教科<br>（1科目毎に追加料金）";
+  document.querySelector("#packTestLessonRule").textContent = "無制限";
   document.querySelector("#unlimitedTestLessonRule").textContent = "無制限";
 
   // プラン比較
