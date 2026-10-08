@@ -1,4 +1,4 @@
-const GAS_URL="https://script.google.com/macros/s/AKfycbx_PLACEHOLDER/exec";
+const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
 
 const SCHOOLS=[
   "我孫子中学校","湖北中学校","布佐中学校","湖北台中学校","久寺家中学校","白山中学校",
