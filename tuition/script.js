@@ -59,7 +59,7 @@ function update() {
   document.querySelector("#regularLessonRule").textContent =
     "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
-    "〜" + subjects + "教科";
+    "1〜" + subjects + "教科";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
   document.querySelector("#packSubjectRule").textContent = "1〜3教科";
