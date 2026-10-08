@@ -2,3 +2,5 @@
 
 .list-actions{margin:0 0 12px;display:flex;justify-content:flex-end}.purchase-nav{border:0;border-radius:10px;background:#E60012;color:#fff;padding:11px 16px;font-weight:800;font-size:.92rem;cursor:pointer;box-shadow:0 2px 7px rgba(230,0,18,.18)}.purchase-nav:active{background:#c90010;transform:scale(.98)}
 @media(max-width:600px){.list-actions{justify-content:stretch}.purchase-nav{width:100%;min-height:48px}}
+
+.fallback-link{text-align:center;font-size:13px;line-height:1.6;margin:12px 0 0;color:#66737d}.fallback-link a{color:#E60012;font-weight:700;word-break:break-all}
