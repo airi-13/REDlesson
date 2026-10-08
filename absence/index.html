@@ -8,15 +8,8 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="../common.css">
 </head>
-<body>
-  <header class="site-banner">
-    <div class="site-banner-inner">
-      <a class="site-logo-link" href="../" aria-label="自立学習RED 天王台教室トップ">
-        <img class="site-logo" src="../assets/red-logo.png" alt="自立学習RED">
-      </a>
-      <button class="site-logout" type="button" data-site-logout data-home="../">ログアウト</button>
-    </div>
-  </header>
+<body data-site-home="../">
+  <div data-site-header></div>
   <main class="page">
     <section id="ruleIntro" class="card intro-card">
       <h1>欠席・振替申請</h1>
@@ -44,8 +37,6 @@
     </section>
 
     <div id="applicationArea" class="hidden">
-    <a class="back-link" href="../">← RED天王台教室トップへ</a>
-
     <form id="applicationForm" novalidate>
       <section class="card basic-card">
         <h2 class="section-title">生徒情報</h2>
