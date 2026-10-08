@@ -59,10 +59,10 @@ function update() {
   document.querySelector("#regularLessonRule").textContent =
     "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
-    Math.min(lessons, 5) + "教科まで";
+    subjects + "教科";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
-  document.querySelector("#packSubjectRule").textContent = "5教科まで";
+  document.querySelector("#packSubjectRule").textContent = "3教科まで";
 
   document.querySelector("#regularMonthly").textContent =
     yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
