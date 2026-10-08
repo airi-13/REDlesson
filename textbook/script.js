@@ -8,9 +8,26 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 
 ["levelFilter","subjectFilter","gradeFilter"].forEach(id=>$(id).onchange=renderBooks);
 
+const SUBJECT_ORDER={"英語":1,"数学":2,"英語・数学":2,"国語":3,"理科":4,"社会":5};
+const SERIES_ORDER={"フォレスタ":1,"フォレスタステップ":2,"フォレスタゴール":3,"フォレスタドリル":4};
+function gradeNumber(value){const m=String(value).match(/(?:新)?(?:中|高)?([1-6])/);return m?Number(m[1]):99;}
+function seriesRank(title){for(const key of Object.keys(SERIES_ORDER)){if(title.startsWith(key))return SERIES_ORDER[key];}return 99;}
+function textbookNumber(title){const m=String(title).match(/(?:中|算数|数学|英語)?\s*(\d+)/);return m?Number(m[1]):99;}
+function compareBooks(a,b){
+ const subjectA=SUBJECT_ORDER[a[1]]??99,subjectB=SUBJECT_ORDER[b[1]]??99;
+ if(subjectA!==subjectB)return subjectA-subjectB;
+ const seriesA=seriesRank(a[3]),seriesB=seriesRank(b[3]);
+ if(seriesA!==seriesB)return seriesA-seriesB;
+ const gradeA=gradeNumber(a[2]),gradeB=gradeNumber(b[2]);
+ if(gradeA!==gradeB)return gradeA-gradeB;
+ const numA=textbookNumber(a[3]),numB=textbookNumber(b[3]);
+ if(numA!==numB)return numA-numB;
+ return a[3].localeCompare(b[3],"ja");
+}
+
 function renderBooks(){
  const lv=$("levelFilter").value,su=$("subjectFilter").value,gr=$("gradeFilter").value;
- const filtered=TEXTBOOKS.filter(b=>(!lv||b[0]===lv)&&(!su||b[1]===su)&&(!gr||b[2]===gr));
+ const filtered=TEXTBOOKS.filter(b=>(!lv||b[0]===lv)&&(!su||b[1]===su)&&(!gr||b[2]===gr)).sort(compareBooks);
 
  const notice=$("textbookNotice");
  let noticeHtml="テキストを持っている教科のみ受講できます。";
@@ -25,7 +42,9 @@ function renderBooks(){
  notice.classList.toggle("hidden",!noticeHtml);
  const groups={};
  filtered.forEach(b=>{let s=b[1];if(b[0]==="小学生"&&s==="数学")s="数学・算数";(groups[s]??=[]).push(b)});
- $("textbooks").innerHTML=Object.keys(groups).map(s=>`<section class="subject-section"><div class="subject-title">${esc(s)}</div><div class="textbook-grid">${groups[s].map(b=>`<div class="textbook-card"><div class="textbook-name">${esc(b[3])}</div><div class="meta"><span class="tag">${esc(b[0])}</span><span class="tag">${esc(b[2])}</span></div></div>`).join("")}</div></section>`).join("")||"<div class='notice'>該当するテキストはありません。</div>";
+ const groupOrder={"英語":1,"数学・算数":2,"数学":2,"国語":3,"理科":4,"社会":5,"英語・数学":6};
+ const groupNames=Object.keys(groups).sort((a,b)=>(groupOrder[a]??99)-(groupOrder[b]??99));
+ $("textbooks").innerHTML=groupNames.map(s=>`<section class="subject-section"><div class="subject-title">${esc(s)}</div><div class="textbook-grid">${groups[s].map(b=>`<div class="textbook-card"><div class="textbook-name">${esc(b[3])}</div><div class="meta"><span class="tag">${esc(b[0])}</span><span class="tag">${esc(b[2])}</span></div></div>`).join("")}</div></section>`).join("")||"<div class='notice'>該当するテキストはありません。</div>";
 }
 $("purchaseNav").onclick=()=>{show("purchasePage");if(!$("items").children.length)addItem()};
 $("backList").onclick=()=>show("listPage");
@@ -74,3 +93,5 @@ $("submit").onclick=()=>{
  script.src=GAS_URL+"?action=purchase&callback="+encodeURIComponent(cb)+"&data="+encodeURIComponent(JSON.stringify(current));
  document.body.appendChild(script);
 };
+
+renderBooks();
