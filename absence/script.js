@@ -68,6 +68,12 @@
 
   function selected(container){ return [...container.querySelectorAll("input:checked")].map(x=>x.value); }
 
+  function isConsecutive(periods){
+    if(periods.length<=1) return true;
+    const numbers=periods.map(p=>Array.from("①②③④⑤⑥⑦⑧").indexOf(p)+1).sort((a,b)=>a-b);
+    return numbers.every((n,i)=>i===0 || n===numbers[i-1]+1);
+  }
+
   function startTime(p){
     return {"①":[15,0],"②":[15,45],"③":[16,30],"④":[17,15],"⑤":[18,0],"⑥":[18,45],"⑦":[19,30],"⑧":[20,15]}[p];
   }
@@ -113,6 +119,7 @@
 
     if(!ap.length){ $("absencePeriodsError").textContent="欠席する時間を選択してください。"; e.push("absencePeriods"); }
     else if(!registeredAbsence.checked && ap.some(p=>!passesFiveMinuteRule(absenceDate.value,p))){ $("absencePeriodsError").textContent="授業開始5分前を過ぎたコマは欠席申請できません。"; e.push("absencePeriods"); }
+    else if(!isConsecutive(ap)){ $("absencePeriodsError").textContent="複数のコマを選択する場合は、連続するコマを選択してください。"; e.push("absencePeriods"); }
     else $("absencePeriodsError").textContent="";
 
     if(makeupUndecided.checked){
@@ -126,6 +133,9 @@
       else $("makeupDateError").textContent="";
       if(mp.length!==ap.length || !mp.length){
         $("makeupPeriodsError").textContent=`欠席するコマ数と振替するコマ数を同じにしてください。（欠席：${ap.length}コマ／振替：${mp.length}コマ）`;
+        e.push("makeupPeriods");
+      }else if(!isConsecutive(mp)){
+        $("makeupPeriodsError").textContent="複数のコマを選択する場合は、連続するコマを選択してください。";
         e.push("makeupPeriods");
       }else $("makeupPeriodsError").textContent="";
     }
