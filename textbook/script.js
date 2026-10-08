@@ -11,6 +11,18 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 function renderBooks(){
  const lv=$("levelFilter").value,su=$("subjectFilter").value,gr=$("gradeFilter").value;
  const filtered=TEXTBOOKS.filter(b=>(!lv||b[0]===lv)&&(!su||b[1]===su)&&(!gr||b[2]===gr));
+
+ const notice=$("textbookNotice");
+ let noticeHtml="";
+ if((lv==="小学生"&&(su==="英語"||su==="国語"))||lv==="高校生"||(lv==="中学生"&&!su)){
+   noticeHtml="テキストを持っている教科のみ受講できます。";
+ }else if(lv==="中学生"&&su==="国語"){
+   noticeHtml="iワーク（予習用）＋フォレスタステップ（復習用）を持っている場合のみ受講できます。<br>その他教材は任意購入となります。";
+ }else if((lv==="中学生"&&["英語","数学","理科","社会"].includes(su))||(lv==="小学生"&&su==="数学")){
+   noticeHtml="フォレスタ（予習用）＋フォレスタステップ（復習用）を持っている場合のみ受講できます。<br>その他教材は任意購入となります。";
+ }
+ notice.innerHTML=noticeHtml;
+ notice.classList.toggle("hidden",!noticeHtml);
  const groups={};
  filtered.forEach(b=>{let s=b[1];if(b[0]==="小学生"&&s==="数学")s="数学・算数";(groups[s]??=[]).push(b)});
  $("textbooks").innerHTML=Object.keys(groups).map(s=>`<section class="subject-section"><div class="subject-title">${esc(s)}</div><div class="textbook-grid">${groups[s].map(b=>`<div class="textbook-card"><div class="textbook-name">${esc(b[3])}</div><div class="meta"><span class="tag">${esc(b[0])}</span><span class="tag">${esc(b[2])}</span></div></div>`).join("")}</div></section>`).join("")||"<div class='notice'>該当するテキストはありません。</div>";
