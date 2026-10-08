@@ -78,6 +78,10 @@ function validate(){
   if(!$("studentName").value.trim()){ $("studentNameError").textContent="氏名を入力してください。";ok=false; }
   if(!$("school").value){ $("schoolError").textContent="学校名を選択してください。";ok=false; }
   if(!$("grade").value){ $("gradeError").textContent="学年を選択してください。";ok=false; }
+  const email=$("email").value.trim();
+  $("emailError").textContent=/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)?"":"メールアドレスの形式が正しくありません。";
+  if(!email){ $("emailError").textContent="メールアドレスを入力してください。";ok=false; }
+  else if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) ok=false;
 
   document.querySelectorAll(".subject-block").forEach(block=>{
     const testDate=block.querySelector(".test-date").value.trim();
@@ -109,14 +113,16 @@ $("rangeForm").addEventListener("submit",e=>{
     school:$("school").value,
     grade:$("grade").value,
     subjects:collect(),
-    notes:$("notes").value.trim()
+    notes:$("notes").value.trim(),
+    email:$("email").value.trim()
   };
   const html='<p><b>生徒番号</b><br>'+esc(current.studentId)+'</p>'+
     '<p><b>氏名</b><br>'+esc(current.studentName)+'</p>'+
     '<p><b>学校名</b><br>'+esc(current.school)+'</p>'+
     '<p><b>学年</b><br>'+esc(current.grade)+'</p>'+
     current.subjects.map(x=>'<div class="subject-confirm"><b>'+esc(x.subject)+'</b><br>テスト日：'+esc(x.testDate)+'<br>出版社：'+esc(x.publisher)+'<br>'+x.ranges.map(r=>'P'+esc(r.from)+'～P'+esc(r.to)).join("<br>")+'</div>').join("")+
-    '<p><b>連絡事項</b><br>'+esc(current.notes||"なし")+'</p>';
+    '<p><b>連絡事項</b><br>'+esc(current.notes||"なし")+'</p>'+
+    '<p><b>メールアドレス</b><br>'+esc(current.email)+'</p>';
   $("confirmationItems").innerHTML=html;
   $("rangeForm").classList.add("hidden");
   $("confirmation").classList.remove("hidden");
