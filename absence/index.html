@@ -38,23 +38,7 @@
 
     <div id="applicationArea" class="hidden">
     <form id="applicationForm" novalidate>
-      <section class="card basic-card">
-        
-
-        <div class="field">
-          <label for="studentId">生徒番号 <span class="required">必須</span></label>
-          <input id="studentId" name="studentId" type="text" inputmode="numeric" autocomplete="off" placeholder="例：113900000">
-          <p class="help">※LINEのグループで案内されている生徒番号を入力してください。</p>
-          <p id="studentIdError" class="error"></p>
-        </div>
-
-        <div class="field">
-          <label for="studentName">氏名 <span class="required">必須</span></label>
-          <input id="studentName" name="studentName" type="text" autocomplete="name" placeholder="例：山田 太郎">
-          <p id="studentNameError" class="error"></p>
-        </div>
-
-      </section>
+      <div data-common-block="student-info"></div>
 
       <section class="card absence-card">
         <div class="section-heading green">
@@ -119,19 +103,7 @@
         </div>
       </section>
 
-      <section class="card contact-card">
-        
-        <div class="field">
-          <label for="notes">連絡事項</label>
-          <textarea id="notes" name="notes" rows="3" placeholder="変更・訂正など、伝えておきたいことがあれば入力してください。"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="email">メールアドレス <span class="required">必須</span></label>
-          <input id="email" name="email" type="email" autocomplete="email" placeholder="確認メールを受け取るアドレス">
-          <p id="emailError" class="error"></p>
-        </div>
-      </section>
+      <div data-common-block="other"></div>
       <section class="card submit-card">
         <p id="formError" class="error form-error"></p>
         <button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button>
