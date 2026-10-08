@@ -9,6 +9,40 @@
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[char]));
 
+
+  function renderCommonFormBlocks(){
+    const studentHtml =
+      '<div class="field">'+
+        '<label for="studentId">生徒番号 <span class="required">必須</span></label>'+
+        '<input id="studentId" name="studentId" type="text" inputmode="numeric" autocomplete="off" placeholder="1139で始まる９桁の数字">'+
+        '<p id="studentIdError" class="error"></p>'+
+      '</div>'+
+      '<div class="field">'+
+        '<label for="studentName">生徒氏名 <span class="required">必須</span></label>'+
+        '<input id="studentName" name="studentName" type="text" autocomplete="name" placeholder="生徒氏名">'+
+        '<p id="studentNameError" class="error"></p>'+
+      '</div>';
+
+    const otherHtml =
+      '<div class="field">'+
+        '<label for="notes">連絡事項</label>'+
+        '<textarea id="notes" name="notes" rows="4" placeholder="連絡事項があれば入力してください"></textarea>'+
+      '</div>'+
+      '<div class="field">'+
+        '<label for="email">メールアドレス <span class="required">必須</span></label>'+
+        '<input id="email" name="email" type="email" autocomplete="email" placeholder="確認メールを受け取るメールアドレス">'+
+        '<p id="emailError" class="error"></p>'+
+      '</div>';
+
+    document.querySelectorAll("[data-common-block]").forEach(block=>{
+      if(block.dataset.rendered==="1") return;
+      const type=block.dataset.commonBlock;
+      block.classList.add("common-form-block");
+      block.innerHTML=type==="student-info"?studentHtml:otherHtml;
+      block.dataset.rendered="1";
+    });
+  }
+
   function renderSiteHeader(){
     const placeholder=document.querySelector("[data-site-header]");
     if(!placeholder || placeholder.dataset.rendered==="1") return;
@@ -33,6 +67,7 @@
   }
 
   document.addEventListener("DOMContentLoaded",()=>{
+    renderCommonFormBlocks();
     renderSiteHeader();
     bindLogout();
   });
