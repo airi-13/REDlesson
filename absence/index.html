@@ -44,56 +44,38 @@
       <section class="card">
         <div class="section-heading green">
           <span class="section-number">1</span>
-          <div>
-            <h2>欠席登録</h2>
-            <p>お休みする授業を登録してください。</p>
-          </div>
+          <div><h2>欠席登録</h2></div>
         </div>
-
         <label class="check-row">
           <input id="registeredAbsence" type="checkbox">
-          <span>
-            <strong>欠席登録済み</strong>
-            <small>※以前、振替日未定で欠席登録済みの場合はチェックを入れてください。</small>
-          </span>
+          <span><strong>欠席登録済み</strong><small>※以前、振替日未定で欠席登録済みの場合はチェックを入れてください。</small></span>
         </label>
-
         <div class="field">
           <label for="absenceDate">欠席日 <span class="required">必須</span></label>
           <input id="absenceDate" type="date">
           <p id="absenceDateError" class="error"></p>
         </div>
-
         <div class="field">
           <label>欠席する時間 <span class="required">必須</span></label>
           <p class="help">複数コマをお休みする場合は、該当するコマをすべて選択してください。</p>
           <div id="absencePeriods" class="period-grid"></div>
           <p id="absencePeriodsError" class="error"></p>
         </div>
-      <section class="makeup-card">
+
         <div class="section-heading orange">
           <span class="section-number">2</span>
-          <div>
-            <h2>振替登録</h2>
-            <p>欠席するコマと同じコマ数を登録してください。</p>
-          </div>
+          <div><h2>振替登録</h2></div>
         </div>
-
         <label class="check-row">
           <input id="makeupUndecided" type="checkbox">
-          <span>
-            <strong>振替日未定</strong>
-            <small>振替日がまだ決まっていない場合は、欠席登録だけ先に行えます。</small>
-          </span>
+          <span><strong>振替日未定</strong><small>振替日がまだ決まっていない場合は、欠席登録だけ先に行えます。</small></span>
         </label>
-
         <div id="makeupFields">
           <div class="field">
             <label for="makeupDate">振替日 <span class="required">必須</span></label>
             <input id="makeupDate" type="date">
             <p id="makeupDateError" class="error"></p>
           </div>
-
           <div class="field">
             <label>振替希望時間 <span class="required">必須</span></label>
             <div id="makeupPeriods" class="period-grid"></div>
@@ -101,17 +83,10 @@
           </div>
         </div>
       </section>
-      </section>
 
       <div data-common-block="other"></div>
       <div class="buttons"><button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button></div>
-      </form>
-      <section class="hidden" id="dummy-submit-never"></section>
-      <!-- submit area is intentionally kept outside the common blocks -->
-      <section class="card submit-card hidden">
-
-        <p id="formError" class="error form-error"></p>
-      </section>
+    </form>
 
     <section id="confirmation" class="card hidden">
       <h2 class="section-title">入力内容の確認</h2>
