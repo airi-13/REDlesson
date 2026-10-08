@@ -4,11 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>使用テキスト一覧・購入申請</title>
-<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./style.css">\n<link rel="stylesheet" href="../common.css">
 </head>
 <body>
 <div id="app">
-<header><div class="header-inner"><div class="brand">📘 使用テキスト一覧</div><div><button id="purchaseNav">🛒 購入申請</button></div></div></header>
+<header class="site-banner">
+  <div class="site-banner-inner">
+    <a class="site-logo-link" href="../" aria-label="自立学習RED 天王台教室トップ">
+      <img class="site-logo" src="../assets/red-logo.svg" alt="自立学習RED">
+    </a>
+    <button class="site-logout" type="button" data-site-logout data-home="../">ログアウト</button>
+  </div>
+</header>
 
 <main id="listPage" class="content">
   <div class="notice">フォレスタ（予習用）＋フォレスタステップ（復習用）を持っている教科のみ受講できます。<br>その他教材は任意購入となります。</div>
@@ -55,6 +62,6 @@
   <button id="completeBack" class="primary">使用テキスト一覧へ戻る</button></section>
 </main>
 </div>
-<script src="./script.js"></script>
+<script src="../common.js"></script>\n<script src="./script.js"></script>
 </body>
 </html>
