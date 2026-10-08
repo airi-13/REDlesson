@@ -13,7 +13,7 @@ function renderBooks(){
  const filtered=TEXTBOOKS.filter(b=>(!lv||b[0]===lv)&&(!su||b[1]===su)&&(!gr||b[2]===gr));
 
  const notice=$("textbookNotice");
- let noticeHtml="";
+ let noticeHtml="テキストを持っている教科のみ受講できます。";
  if((lv==="小学生"&&(su==="英語"||su==="国語"))||lv==="高校生"||(lv==="中学生"&&!su)){
    noticeHtml="テキストを持っている教科のみ受講できます。";
  }else if(lv==="中学生"&&su==="国語"){
