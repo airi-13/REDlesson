@@ -49,17 +49,17 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
-  document.querySelector("#regularTestLessonRule").innerHTML = "1〜5教科<br>1科目毎に追加料金";
-  document.querySelector("#regularTestSubjectRule").textContent = subjects + "教科以上";
-  document.querySelector("#packTestLessonRule").innerHTML = "1〜5教科<br>追加料金なし";
-  document.querySelector("#unlimitedTestLessonRule").innerHTML = "1〜5教科<br>追加料金なし";
+  document.querySelector("#regularTestLessonRule").innerHTML = "制限なし<br>1科目毎に追加料金";
+  document.querySelector("#regularTestSubjectRule").textContent = "〜" + testSubjects + "教科";
+  document.querySelector("#packTestLessonRule").innerHTML = "制限なし<br>追加料金なし";
+  document.querySelector("#unlimitedTestLessonRule").innerHTML = "制限なし<br>追加料金なし";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
   document.querySelector("#regularLessonRule").textContent =
     "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
-    "1〜" + subjects + "教科";
+    "1〜" + Math.min(lessons, 5) + "教科";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
   document.querySelector("#packSubjectRule").textContent = "1〜3教科";
