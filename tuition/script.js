@@ -52,7 +52,7 @@ function update() {
   document.querySelector("#regularTestLessonRule").innerHTML = "1〜5教科<br>1科目毎に追加料金";
   document.querySelector("#regularTestSubjectRule").textContent = subjects + "教科以上";
   document.querySelector("#packTestLessonRule").innerHTML = "1〜5教科<br>追加料金なし";
-  document.querySelector("#unlimitedTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
+  document.querySelector("#unlimitedTestLessonRule").innerHTML = "1〜5教科<br>追加料金なし";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
