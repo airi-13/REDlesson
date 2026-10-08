@@ -168,7 +168,15 @@
   <script src="../common.js"></script>
   <script src="./script.js"></script>
   <script>
-    document.getElementById("ruleConfirm").addEventListener("click",()=>{
+    const ruleAcknowledged = document.getElementById("ruleAcknowledged");
+    const ruleConfirm = document.getElementById("ruleConfirm");
+
+    ruleAcknowledged.addEventListener("change",()=>{
+      ruleConfirm.disabled = !ruleAcknowledged.checked;
+    });
+
+    ruleConfirm.addEventListener("click",()=>{
+      if(!ruleAcknowledged.checked) return;
       document.getElementById("ruleIntro").classList.add("hidden");
       document.getElementById("applicationArea").classList.remove("hidden");
       window.scrollTo({top:0,behavior:"smooth"});
