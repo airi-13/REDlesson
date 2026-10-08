@@ -18,40 +18,7 @@
   </section>
 
   <form id="rangeForm" novalidate>
-    <section class="card">
-      
-
-      <div class="field">
-        <label for="studentId">生徒番号 <span class="required">必須</span></label>
-        <input id="studentId" type="text" inputmode="numeric" autocomplete="off" placeholder="例：113900000">
-        <p id="studentIdError" class="error"></p>
-      </div>
-
-      <div class="field">
-        <label for="studentName">氏名 <span class="required">必須</span></label>
-        <input id="studentName" type="text" autocomplete="name" placeholder="例：山田 太郎">
-        <p id="studentNameError" class="error"></p>
-      </div>
-
-      <div class="two-column">
-        <div class="field">
-          <label for="school">学校名 <span class="required">必須</span></label>
-          <select id="school">
-            <option value="">学校を選択してください</option>
-          </select>
-          <p id="schoolError" class="error"></p>
-        </div>
-
-        <div class="field">
-          <label for="grade">学年 <span class="required">必須</span></label>
-          <select id="grade">
-            <option value="">学年を選択してください</option>
-          </select>
-          <p id="gradeError" class="error"></p>
-        </div>
-      </div>
-
-  </section>
+    <section class="card"><div data-common-block="student-info"></div><div class="two-column"><div class="field"><label for="school">学校名 <span class="required">必須</span></label><select id="school"><option value="">学校を選択してください</option></select><p id="schoolError" class="error"></p></div><div class="field"><label for="grade">学年 <span class="required">必須</span></label><select id="grade"><option value="">学年を選択してください</option></select><p id="gradeError" class="error"></p></div></div></section>
 
     <section class="card">
       <h2 class="section-title">テスト範囲</h2>
@@ -60,17 +27,7 @@
       <div id="subjects"></div>
     </section>
 
-    <section class="card">
-      <div class="field">
-        <label for="notes">連絡事項</label>
-        <textarea id="notes" rows="4" placeholder="テストについて伝えておきたいことがあれば入力してください。"></textarea>
-      </div>
-      <div class="field">
-        <label for="email">メールアドレス <span class="required">必須</span></label>
-        <input id="email" type="email" autocomplete="email" placeholder="確認メールを受け取るアドレス">
-        <p id="emailError" class="error"></p>
-      </div>
-    </section>
+    <section class="card"><div data-common-block="other"></div></section>
 
     <section class="card submit-card">
       <p id="formError" class="error form-error"></p>
