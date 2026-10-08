@@ -2,7 +2,7 @@
   "use strict";
 
   // GAS側のAPI URL。現在の欠席・振替システムと同じエンドポイントを使用します。
-  const GAS_URL = "https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+  const GAS_URL=RED.GAS_URL;
 
   const PERIODS = {
     "①":"15:00～15:40","②":"15:45～16:25","③":"16:30～17:10","④":"17:15～17:55",
