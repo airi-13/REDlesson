@@ -48,7 +48,6 @@ $("form").addEventListener("submit",e=>{
 
   $("form").classList.add("hidden");
   $("confirm").classList.remove("hidden");
-  $("purchaseLink").classList.toggle("hidden",purchase!=="あり");
   window.scrollTo(0,0);
 });
 
@@ -71,6 +70,7 @@ $("submit").onclick=async()=>{
 
     $("confirm").classList.add("hidden");
     $("success").classList.remove("hidden");
+    $("purchaseLinkAfter").classList.toggle("hidden",current.textbookPurchase!=="あり");
   }catch(e){
     alert("通信エラーが発生しました。時間をおいて再度お試しください。");
     $("submit").disabled=false;
