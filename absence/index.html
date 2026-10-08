@@ -37,10 +37,11 @@
     </section>
 
     <div id="applicationArea" class="hidden">
+    <h2>欠席・振替申請</h2>
     <form id="applicationForm" novalidate>
       <div data-common-block="student-info"></div>
 
-      <section class="card absence-card">
+      <section class="card">
         <div class="section-heading green">
           <span class="section-number">1</span>
           <div>
@@ -69,9 +70,7 @@
           <div id="absencePeriods" class="period-grid"></div>
           <p id="absencePeriodsError" class="error"></p>
         </div>
-      </section>
-
-      <section class="card makeup-card">
+      <section class="makeup-card">
         <div class="section-heading orange">
           <span class="section-number">2</span>
           <div>
@@ -102,13 +101,17 @@
           </div>
         </div>
       </section>
+      </section>
 
       <div data-common-block="other"></div>
-      <section class="card submit-card">
+      <div class="buttons"><button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button></div>
+      </form>
+      <section class="hidden" id="dummy-submit-never"></section>
+      <!-- submit area is intentionally kept outside the common blocks -->
+      <section class="card submit-card hidden">
+
         <p id="formError" class="error form-error"></p>
-        <button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button>
       </section>
-    </form>
 
     <section id="confirmation" class="card hidden">
       <h2 class="section-title">入力内容の確認</h2>
