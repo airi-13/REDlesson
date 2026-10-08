@@ -72,6 +72,12 @@ function doPost(e) {
     if (String(data.action || "") === "test_range") {
       return jsonResponse_(submitTestRangeApplication_(data));
     }
+    if (String(data.action || "") === "test_subject") {
+      return jsonResponse_(submitTestSubjectApplication_(data));
+    }
+    if (String(data.action || "") === "test_period") {
+      return jsonResponse_(submitTestPeriodApplication_(data));
+    }
 
     return jsonResponse_(submitApplication(data));
 
@@ -652,6 +658,62 @@ function submitTestRangeApplication_(data) {
   }
 
   return { success: true };
+}
+
+/* =====================================================
+   テスト対策教科・コマ
+===================================================== */
+
+function submitTestSubjectApplication_(data) {
+  const studentId=String(data.studentId||"").trim();
+  const studentName=String(data.studentName||"").trim();
+  const count=Number(data.normalSubjectCount);
+  const subjects=Array.isArray(data.subjects)?data.subjects:[];
+  const purchase=String(data.textbookPurchase||"").trim();
+  const notes=String(data.notes||"").trim();
+  const email=String(data.email||"").trim();
+  if(!/^\d+$/.test(studentId)||!studentName) throw new Error("生徒情報を確認してください。");
+  if(!Number.isInteger(count)||count<1||count>5) throw new Error("通常授業受講教科数を確認してください。");
+  if(!subjects.length) throw new Error("テスト対策受講希望科目を1つ以上選択してください。");
+  if(!["あり","なし"].includes(purchase)) throw new Error("テキスト追加購入の選択を確認してください。");
+  if(!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+  const name="テスト対策教科";
+  let sh=ss.getSheetByName(name);
+  if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
+  sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
+  sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
+  try{MailApp.sendEmail({to:email,subject:"テスト対策教科登録を受け付けました",body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
+  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策教科登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
+  return {success:true};
+}
+
+function submitTestPeriodApplication_(data) {
+  const studentId=String(data.studentId||"").trim();
+  const studentName=String(data.studentName||"").trim();
+  const school=String(data.school||"").trim();
+  const grade=String(data.grade||"").trim();
+  const startDate=String(data.startDate||"").trim();
+  const periods=Array.isArray(data.periods)?data.periods:[];
+  const notes=String(data.notes||"").trim();
+  const email=String(data.email||"").trim();
+  if(!/^\d+$/.test(studentId)||!studentName||!school||!grade||!parseDate_(startDate)) throw new Error("入力内容を確認してください。");
+  if(!periods.length) throw new Error("受講コマを1つ以上選択してください。");
+  if(!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+  const name="テスト対策コマ";
+  let sh=ss.getSheetByName(name);
+  if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","学校名","学年","日付","コマ","時間","連絡事項","メールアドレス"]); }
+  periods.forEach(p=>{
+    if(!parseDate_(p.date)||!p.period) throw new Error("受講コマの入力内容が正しくありません。");
+    const d=parseDate_(p.date);
+    if(!getAvailablePeriods_(d.getDay()).includes(String(p.period))) throw new Error("選択できないコマが含まれています。");
+    sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
+    sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
+  });
+  try{MailApp.sendEmail({to:email,subject:"テスト対策コマ登録を受け付けました",body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
+  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策コマ登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
+  return {success:true};
 }
 
 /* =====================================================
