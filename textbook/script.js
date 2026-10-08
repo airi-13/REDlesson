@@ -59,11 +59,14 @@ function renderBooks(){
  }
  notice.innerHTML=noticeHtml;
  notice.classList.toggle("hidden",!noticeHtml);
- const groups={};
- filtered.forEach(b=>{let s=b[1];if(b[0]==="小学生"&&s==="数学")s="数学・算数";(groups[s]??=[]).push(b)});
  const groupOrder={"英語":1,"数学・算数":2,"数学":2,"国語":3,"理科":4,"社会":5,"英語・数学":6};
- const groupNames=Object.keys(groups).sort((a,b)=>(groupOrder[a]??99)-(groupOrder[b]??99));
- $("textbooks").innerHTML=groupNames.map(s=>{
+ const levelOrder={"小学生":1,"中学生":2,"高校生":3};
+
+ function renderSubjectGroups(levelBooks){
+   const groups={};
+   levelBooks.forEach(b=>{let s=b[1];if(b[0]==="小学生"&&s==="数学")s="数学・算数";(groups[s]??=[]).push(b)});
+   const groupNames=Object.keys(groups).sort((a,b)=>(groupOrder[a]??99)-(groupOrder[b]??99));
+   return groupNames.map(s=>{
    const seriesGroups={};
    groups[s].forEach(b=>{
      const key=b[3].startsWith("iワーク")?"iワーク":
@@ -98,7 +101,24 @@ function renderBooks(){
        </div>`).join("")}</div>
      </div>`).join("")}
    </section>`;
- }).join("")||"<div class='notice'>該当するテキストはありません。</div>";
+ }).join("");
+ }
+
+ let rendered="";
+ if(!lv){
+   const levels=["小学生","中学生","高校生"];
+   rendered=levels.map(level=>{
+     const levelBooks=filtered.filter(b=>b[0]===level);
+     if(!levelBooks.length)return "";
+     return `<section class="level-section">
+       <div class="level-title">${level}</div>
+       ${renderSubjectGroups(levelBooks).join("")}
+     </section>`;
+   }).join("");
+ }else{
+   rendered=renderSubjectGroups(filtered).join("");
+ }
+ $("textbooks").innerHTML=rendered||"<div class='notice'>該当するテキストはありません。</div>";
 }
 $("purchaseNav").onclick=()=>{show("purchasePage");if(!$("items").children.length)addItem()};
 $("backList").onclick=()=>show("listPage");
