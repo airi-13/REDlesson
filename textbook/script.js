@@ -21,13 +21,12 @@ function textbookNumber(title){const m=String(title).match(/(?:中|算数|数学
 function compareBooks(a,b){
  const subjectA=SUBJECT_ORDER[a[1]]??99,subjectB=SUBJECT_ORDER[b[1]]??99;
  if(subjectA!==subjectB)return subjectA-subjectB;
- const seriesA=seriesRank(a[3]),seriesB=seriesRank(b[3]);
- if(seriesA!==seriesB)return seriesA-seriesB;
+ const titleA=a[3],titleB=b[3];
+ const titleCompare=titleA.localeCompare(titleB,"ja");
+ if(titleCompare!==0)return titleCompare;
  const gradeA=gradeNumber(a[2]),gradeB=gradeNumber(b[2]);
  if(gradeA!==gradeB)return gradeA-gradeB;
- const numA=textbookNumber(a[3]),numB=textbookNumber(b[3]);
- if(numA!==numB)return numA-numB;
- return a[3].localeCompare(b[3],"ja");
+ return a[0].localeCompare(b[0],"ja");
 }
 
 function renderBooks(){
