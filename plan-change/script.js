@@ -83,7 +83,7 @@ $("form").addEventListener("submit",e=>{
     '<p><span class="summary-label">来月以降のプラン</span><br>'+esc(nextPlan)+'</p>'+
     '<p><span class="summary-label">来月以降の受講教科</span><br>'+esc(nextSubjects.join("、"))+'</p>'+
     '<p><span class="summary-label">連絡事項</span><br>'+esc(notes||"なし")+'</p>'+
-    '<p><span class="summary-label">確認メール送付先</span><br>'+esc(email)+'</p>';
+    '<p><span class="summary-label">メールアドレス</span><br>'+esc(email)+'</p>';
 
   $("form").classList.add("hidden");
   $("confirm").classList.remove("hidden");
