@@ -98,7 +98,7 @@
     const id=$("studentId").value.trim(), name=$("studentName").value.trim(), mail=$("email").value.trim();
     $("studentIdError").textContent = /^\d+$/.test(id) ? "" : "生徒番号は半角数字で入力してください。";
     if(!id) $("studentIdError").textContent="生徒番号を入力してください。";
-    $("studentNameError").textContent = name ? "" : "生徒氏名を入力してください。";
+    $("studentNameError").textContent = name ? "" : "氏名を入力してください。";
     $("emailError").textContent = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail) ? "" : "メールアドレスの形式が正しくありません。";
     if(!mail) $("emailError").textContent="メールアドレスを入力してください。";
     if(!/^\d+$/.test(id)) e.push("id");
@@ -157,7 +157,7 @@
     const data=collect();
     const rows=[
       ["申請区分",registeredAbsence.checked?"欠席登録済みの授業の振替":"通常の欠席・振替申請"],
-      ["生徒番号",data.studentId],["生徒氏名",data.studentName],
+      ["生徒番号",data.studentId],["氏名",data.studentName],
       ["欠席日",formatDate(data.absenceDate)],
       ["欠席時間",data.absencePeriods.map(p=>`${p} ${PERIODS[p]}`).join("、")],
       ["振替日",data.makeupDate==="未定"?"未定":formatDate(data.makeupDate)],
