@@ -6,7 +6,13 @@ const $=id=>document.getElementById(id);
 function show(id){["listPage","purchasePage","previewPage","completePage"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden");window.scrollTo(0,0)}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 
-["levelFilter","subjectFilter","gradeFilter"].forEach(id=>$(id).onchange=renderBooks);
+$("levelFilter").onchange=()=>{
+  refreshFilterOptions();
+  refreshFilterOptions();
+renderBooks();
+};
+$("subjectFilter").onchange=renderBooks;
+$("gradeFilter").onchange=renderBooks;
 
 const SUBJECT_ORDER={"英語":1,"数学":2,"英語・数学":2,"国語":3,"理科":4,"社会":5};
 const SERIES_ORDER={"フォレスタ":1,"フォレスタステップ":2,"フォレスタゴール":3,"フォレスタドリル":4};
@@ -27,7 +33,12 @@ function compareBooks(a,b){
 
 function renderBooks(){
  const lv=$("levelFilter").value,su=$("subjectFilter").value,gr=$("gradeFilter").value;
- const filtered=TEXTBOOKS.filter(b=>(!lv||b[0]===lv)&&(!su||b[1]===su)&&(!gr||b[2]===gr)).sort(compareBooks);
+ const filtered=TEXTBOOKS.filter(b=>{
+   if(lv && b[0]!==lv) return false;
+   if(su && b[1]!==su) return false;
+   if(gr && b[2]!==gr && b[2]!=="全学年") return false;
+   return true;
+ }).sort(compareBooks);
 
  const notice=$("textbookNotice");
  let noticeHtml="テキストを持っている教科のみ受講できます。";
@@ -44,7 +55,31 @@ function renderBooks(){
  filtered.forEach(b=>{let s=b[1];if(b[0]==="小学生"&&s==="数学")s="数学・算数";(groups[s]??=[]).push(b)});
  const groupOrder={"英語":1,"数学・算数":2,"数学":2,"国語":3,"理科":4,"社会":5,"英語・数学":6};
  const groupNames=Object.keys(groups).sort((a,b)=>(groupOrder[a]??99)-(groupOrder[b]??99));
- $("textbooks").innerHTML=groupNames.map(s=>`<section class="subject-section"><div class="subject-title">${esc(s)}</div><div class="textbook-grid">${groups[s].map(b=>`<div class="textbook-card"><div class="textbook-name">${esc(b[3])}</div><div class="meta"><span class="tag">${esc(b[0])}</span><span class="tag">${esc(b[2])}</span></div></div>`).join("")}</div></section>`).join("")||"<div class='notice'>該当するテキストはありません。</div>";
+ $("textbooks").innerHTML=groupNames.map(s=>{
+   const seriesGroups={};
+   groups[s].forEach(b=>{
+     const key=seriesRank(b[3])===1?"フォレスタ":
+       seriesRank(b[3])===2?"フォレスタステップ":
+       seriesRank(b[3])===3?"フォレスタゴール":
+       seriesRank(b[3])===4?"フォレスタドリル":
+       b[3].replace(/(?:中|算数|数学|英語)?\\s*[1-6](?:年|級)?/g,"").trim();
+     (seriesGroups[key]??=[]).push(b);
+   });
+   const seriesNames=Object.keys(seriesGroups).sort((a,b)=>{
+     const ra=SERIES_ORDER[a]??99,rb=SERIES_ORDER[b]??99;
+     return ra!==rb?ra-rb:a.localeCompare(b,"ja");
+   });
+   return `<section class="subject-section">
+     <div class="subject-title">${esc(s)}</div>
+     ${seriesNames.map(name=>`<div class="textbook-group">
+       <div class="textbook-group-title">${esc(name)}</div>
+       <div class="textbook-grid">${seriesGroups[name].sort((a,b)=>gradeNumber(a[2])-gradeNumber(b[2])).map(b=>`<div class="textbook-card">
+         <div class="textbook-name">${esc(b[3])}</div>
+         <div class="meta"><span class="tag">${esc(b[0])}</span><span class="tag">${esc(b[2])}</span></div>
+       </div>`).join("")}</div>
+     </div>`).join("")}
+   </section>`;
+ }).join("")||"<div class='notice'>該当するテキストはありません。</div>";
 }
 $("purchaseNav").onclick=()=>{show("purchasePage");if(!$("items").children.length)addItem()};
 $("backList").onclick=()=>show("listPage");
@@ -52,7 +87,32 @@ $("completeBack").onclick=()=>show("listPage");
 $("edit").onclick=()=>show("purchasePage");
 $("addItem").onclick=addItem;
 
-function options(type){if(type==="level")return["小学生","中学生","高校生"];if(type==="subject")return["国語","数学","英語","理科","社会","英語・数学"];return["全学年","1年","2年","3年","4年","5年","6年","新中1","新高1"]}
+const LEVEL_SUBJECTS={
+  "小学生":["英語","数学","国語"],
+  "中学生":["英語","数学","国語","理科","社会","英語・数学"],
+  "高校生":["英語","数学","国語","理科","社会"]
+};
+
+const LEVEL_GRADES={
+  "小学生":["1年","2年","3年","4年","5年","6年","新中1"],
+  "中学生":["1年","2年","3年","新高1"],
+  "高校生":["1年","2年","3年"]
+};
+
+function setSelectOptions(select, values, allLabel){
+  const current=select.value;
+  select.innerHTML=`<option value="">${allLabel}</option>`+
+    values.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+  if(values.includes(current)) select.value=current;
+}
+
+function refreshFilterOptions(){
+  const level=$("levelFilter").value;
+  const subjects=level ? LEVEL_SUBJECTS[level] : ["英語","数学","国語","理科","社会","英語・数学"];
+  const grades=level ? LEVEL_GRADES[level] : ["1年","2年","3年","4年","5年","6年","新中1","新高1"];
+  setSelectOptions($("subjectFilter"),subjects,"すべての科目");
+  setSelectOptions($("gradeFilter"),grades,"すべての学年");
+}
 
 function addItem(){
  const n=$("items").children.length+1,d=document.createElement("div");d.className="purchase-item";
@@ -80,18 +140,24 @@ $("preview").onclick=()=>{
  show("previewPage");
 };
 
-$("submit").onclick=()=>{
+$("submit").onclick=async()=>{
  if(!current)return;
- $("submit").disabled=true;$("loading").classList.remove("hidden");
- const cb="redTextPurchase_"+Date.now(),script=document.createElement("script");
- window[cb]=result=>{
-   try{if(!result?.success)throw new Error(result?.message||"申請に失敗しました。");show("completePage")}
-   catch(e){alert(e.message);$("submit").disabled=false}
-   finally{delete window[cb];script.remove()}
- };
- script.onerror=()=>{alert("通信エラーが発生しました。時間をおいて再度お試しください。");$("submit").disabled=false;$("loading").classList.add("hidden");delete window[cb];script.remove()};
- script.src=GAS_URL+"?action=purchase&callback="+encodeURIComponent(cb)+"&data="+encodeURIComponent(JSON.stringify(current));
- document.body.appendChild(script);
+ $("submit").disabled=true;
+ $("loading").classList.remove("hidden");
+
+ try{
+   await fetch(GAS_URL,{
+     method:"POST",
+     mode:"no-cors",
+     headers:{"Content-Type":"text/plain;charset=utf-8"},
+     body:JSON.stringify({...current,action:"purchase"})
+   });
+   show("completePage");
+ }catch(e){
+   alert("通信エラーが発生しました。時間をおいて再度お試しください。");
+   $("submit").disabled=false;
+   $("loading").classList.add("hidden");
+ }
 };
 
 renderBooks();
