@@ -199,6 +199,9 @@
     <div class="header-inner">
       <p class="school-name">自立学習RED 天王台教室</p>
       <p class="subtitle">教室専用ページ</p>
+      <div class="header-actions">
+        <button id="siteLogout" class="logout-button" type="button">ログアウト</button>
+      </div>
     </div>
   </header>
 
@@ -266,6 +269,10 @@
         sessionStorage.setItem("redLessonAuth","ok");
       }
       button.addEventListener("click",unlock);
+      document.getElementById("siteLogout").addEventListener("click",()=>{
+        sessionStorage.removeItem("redLessonAuth");
+        location.reload();
+      });
       input.addEventListener("keydown",e=>{if(e.key==="Enter")unlock();});
       if(sessionStorage.getItem("redLessonAuth")==="ok"){gate.style.display="none";content.style.display="block";}
       else setTimeout(()=>input.focus(),100);
