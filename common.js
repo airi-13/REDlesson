@@ -15,7 +15,7 @@
       '<div class="field">'+
         '<label for="studentId">生徒番号 <span class="required">必須</span></label>'+
         '<input id="studentId" name="studentId" type="text" inputmode="numeric" autocomplete="off" placeholder="1139で始まる９桁の数字">'+
-        '<p id="studentIdError" class="error"></p>'+
+        '<p class="help">※生徒番号は各家庭のLINEグループにて案内されています</p><p id="studentIdError" class="error"></p>'+
       '</div>'+
       '<div class="field">'+
         '<label for="studentName">生徒氏名 <span class="required">必須</span></label>'+
