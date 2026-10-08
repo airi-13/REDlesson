@@ -55,8 +55,12 @@ function update() {
   document.querySelector("#unlimitedTestLessonRule").textContent = "無制限";
 
   // お得なプラン案内
+  // 「通常授業をあと何コマ」または「テスト対策をあと何教科」で
+  // 各プランの料金に届くかを自動計算します。
   function getExtraLessonsFor(target) {
-    for (let n = 0; n <= 10 - lessons; n++) {
+    const current = c.lesson * lessons + c.test * testSubjects;
+    if (current >= target) return 0;
+    for (let n = 1; n <= 10 - lessons; n++) {
       if (c.lesson * (lessons + n) + c.test * testSubjects >= target) {
         return n;
       }
@@ -65,7 +69,9 @@ function update() {
   }
 
   function getExtraTestSubjectsFor(target) {
-    for (let n = 0; n <= 5 - testSubjects; n++) {
+    const current = c.lesson * lessons + c.test * testSubjects;
+    if (current >= target) return 0;
+    for (let n = 1; n <= 5 - testSubjects; n++) {
       if (c.lesson * lessons + c.test * (testSubjects + n) >= target) {
         return n;
       }
@@ -75,35 +81,36 @@ function update() {
 
   function makeRecommendation(target, name) {
     const current = c.lesson * lessons + c.test * testSubjects;
+
     if (current >= target) {
-      return "<p><strong>現在の受講内容なら" + name + "のほうがお得です！</strong></p>";
+      return '<div class="recommendation-good">' +
+        '<strong>現在の受講内容ですでにお得！</strong>' +
+        '<span>' + name + 'がおすすめです</span>' +
+        '</div>';
     }
 
     const extraLessons = getExtraLessonsFor(target);
     const extraTestSubjects = getExtraTestSubjectsFor(target);
-    const messages = [];
 
-    if (extraLessons !== null && extraLessons > 0) {
-      messages.push("通常授業をあと週" + extraLessons + "コマ増やす");
-    }
-    if (extraTestSubjects !== null && extraTestSubjects > 0) {
-      messages.push("テスト対策強化をあと" + extraTestSubjects + "教科増やす");
-    }
-
-    if (messages.length === 2) {
-      return "<p>" + messages[0] + " <strong>or</strong> " + messages[1] + "と" + name + "がお得！</p>";
-    }
-    if (messages.length === 1) {
-      return "<p>" + messages[0] + "と" + name + "がお得！</p>";
-    }
-    return "";
+    return '<div class="recommendation-lines">' +
+      '<div class="recommendation-line">' +
+        '<span class="recommendation-label">通常授業</span>' +
+        '<strong>あと週' + (extraLessons === null ? '—' : extraLessons) + 'コマ</strong>' +
+      '</div>' +
+      '<div class="recommendation-or">or</div>' +
+      '<div class="recommendation-line">' +
+        '<span class="recommendation-label">テスト対策教科</span>' +
+        '<strong>あと' + (extraTestSubjects === null ? '—' : extraTestSubjects) + '教科</strong>' +
+      '</div>' +
+      '</div>' +
+      '<p class="recommendation-result">' + name + 'がおすすめ！</p>';
   }
 
   document.querySelector("#packRecommendation").innerHTML =
     makeRecommendation(c.pack.monthly, c.pack.name);
 
   document.querySelector("#unlimitedRecommendation").innerHTML =
-    makeRecommendation(c.unlimited, "通い放題プラン");
+    makeRecommendation(c.unlimited, "通い放題");
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
