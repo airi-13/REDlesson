@@ -746,6 +746,21 @@ function submitPlanChangeApplication_(data) {
   if (!nextSubjects.length || !nextSubjects.every(s => allowedSubjects.includes(s))) {
     throw new Error("来月以降の受講教科を確認してください。");
   }
+
+  const planMaxSubjects = function(plan) {
+    if (plan === "通い放題") return 5;
+    if (plan === "週4/6プラン") return 3;
+    const match = plan.match(/^週([1-6])$/);
+    return match ? Number(match[1]) : 0;
+  };
+
+  if (currentSubjects.length > planMaxSubjects(currentPlan)) {
+    throw new Error("現在のプランで選択できる受講教科数を超えています。");
+  }
+  if (nextSubjects.length > planMaxSubjects(nextPlan)) {
+    throw new Error("来月以降のプランで選択できる受講教科数を超えています。");
+  }
+
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
