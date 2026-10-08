@@ -11,3 +11,31 @@ th,td{border:1px solid #dbe3eb;padding:11px 9px;text-align:center;white-space:no
 .recommend{background:#fff0f2;border:2px solid var(--red);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px}.recommend>div{display:inline-block;background:var(--red);color:#fff;border-radius:20px;padding:2px 13px;font-size:.78rem;font-weight:700}.recommend h2{margin:7px 0 0}.recommend p{margin:5px 0 0;font-size:.88rem}
 .status{text-align:center;font-size:.88rem}.notes li{margin-bottom:6px;font-size:.84rem}.formula-note{margin:14px 0 0;font-size:.84rem;line-height:1.7;color:#555}
 @media(max-width:600px){.details{grid-template-columns:1fr}.counter-btn{width:52px;height:52px}.counter-value{min-width:85px;font-size:1.8rem}}
+
+
+.recommendation-grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:12px;
+margin-bottom:16px
+}
+.recommendation-card{
+padding:18px;
+border:1px solid #dbe3eb;
+border-radius:12px;
+background:#fff;
+text-align:center
+}
+.recommendation-card h2{
+margin:0 0 12px;
+font-size:1.05rem
+}
+.recommendation-card p{
+margin:0;
+line-height:1.7
+}
+@media(max-width:700px){
+.recommendation-grid{
+grid-template-columns:1fr
+}
+}
