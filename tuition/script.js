@@ -84,9 +84,8 @@ function update() {
 
     if (currentAnnual >= targetAnnual) {
       return '<div class="recommendation-good">' +
-        '<div class="recommendation-good-icon">✓</div>' +
-        '<strong>今の受講内容ですでにお得！</strong>' +
-        '<span>' + name + 'を選ぶとお得です</span>' +
+        '<div class="recommendation-good-label">今のプランなら</div>' +
+        '<strong>' + name + 'がお得！</strong>' +
         '</div>';
     }
 
