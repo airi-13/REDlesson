@@ -69,7 +69,17 @@ function renderBooks(){
    });
    const seriesNames=Object.keys(seriesGroups).sort((a,b)=>{
      const ra=SERIES_ORDER[a]??99,rb=SERIES_ORDER[b]??99;
-     return ra!==rb?ra-rb:a.localeCompare(b,"ja");
+     if(ra!==rb)return ra-rb;
+     return a.localeCompare(b,"ja");
+   });
+
+   // 各教材シリーズ内は「学年順」に固定
+   Object.keys(seriesGroups).forEach(name=>{
+     seriesGroups[name].sort((a,b)=>{
+       const ga=gradeNumber(a[2]),gb=gradeNumber(b[2]);
+       if(ga!==gb)return ga-gb;
+       return a[3].localeCompare(b[3],"ja");
+     });
    });
    return `<section class="subject-section">
      <div class="subject-title">${esc(s)}</div>
