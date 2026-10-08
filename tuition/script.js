@@ -49,9 +49,9 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
-  document.querySelector("#regularTestLessonRule").innerHTML = "最大5教科<br>1科目毎に追加料金";
+  document.querySelector("#regularTestLessonRule").innerHTML = "1〜5教科<br>1科目毎に追加料金";
   document.querySelector("#regularTestSubjectRule").textContent = subjects + "教科以上";
-  document.querySelector("#packTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
+  document.querySelector("#packTestLessonRule").innerHTML = "1〜5教科<br>追加料金なし";
   document.querySelector("#unlimitedTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
 
   // プラン比較
@@ -59,10 +59,10 @@ function update() {
   document.querySelector("#regularLessonRule").textContent =
     "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
-    subjects + "教科まで";
+    "〜" + subjects + "教科";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
-  document.querySelector("#packSubjectRule").textContent = "最大3教科";
+  document.querySelector("#packSubjectRule").textContent = "1〜3教科";
 
   document.querySelector("#regularMonthly").textContent =
     yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
