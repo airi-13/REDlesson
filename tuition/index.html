@@ -29,7 +29,7 @@
 </section>
 
 <section class="card">
-<h2>② 通常授業の教科数</h2>
+<h2>③ 通常授業の教科数</h2>
 <div class="counter">
 <button type="button" class="counter-btn" id="subjectMinus" aria-label="教科数を減らす">−</button>
 <div class="counter-value"><span id="subjectCount">2</span><span>教科</span></div>
@@ -39,7 +39,7 @@
 </section>
 
 <section class="card">
-<h2>③ 通常授業の週コマ数</h2>
+<h2>② 通常授業コマ数</h2>
 <div class="counter">
 <button type="button" class="counter-btn" id="lessonMinus" aria-label="週コマ数を減らす">−</button>
 <div class="counter-value"><span id="lessonCount">2</span><span>コマ</span></div>
@@ -49,7 +49,7 @@
 </section>
 
 <section class="card">
-<h2>④ テスト対策の教科数</h2>
+<h2>⑤ テスト対策の教科数</h2>
 <div class="counter">
 <button type="button" class="counter-btn" id="testSubjectMinus" aria-label="テスト対策教科数を減らす">−</button>
 <div class="counter-value"><span id="testSubjectCount">2</span><span>教科</span></div>
@@ -68,10 +68,12 @@
 <th>通常授業コマ数</th>
 <th>通常授業教科数</th>
 <th>振替</th>
-<th>テスト対策</th>
+<th>テスト対策コマ数</th>
+<th>テスト対策教科数</th>
 <th>月額授業料</th>
 <th>年間授業料</th>
 <th>テキスト代</th>
+<th>プラン変更</th>
 </tr>
 </thead>
 <tbody>
@@ -80,30 +82,36 @@
 <td id="regularLessonRule">週2コマ</td>
 <td id="regularSubjectRule">2教科</td>
 <td>4週間以内なら可</td>
-<td>1教科ごとに追加料金</td>
+<td id="regularTestLessonRule">年6コマ</td>
+<td id="regularTestSubjectRule">2教科</td>
 <td id="regularMonthly">19,800円</td>
 <td id="regularAnnual">—</td>
 <td>別途</td>
+<td>通常授業：随時変更可</td>
 </tr>
 <tr>
 <th class="plan-col" id="rulesPackName">週4パック</th>
 <td id="packLessonRule">週4コマまで</td>
 <td>最大5教科</td>
 <td>不可</td>
-<td>追加料金なし</td>
+<td id="packTestLessonRule">年6コマ</td>
+<td>最大5教科</td>
 <td id="packMonthly">29,700円</td>
 <td id="packAnnual">—</td>
 <td>別途</td>
+<td>年度内変更不可<br><small>※通い放題プランへの変更のみ可</small></td>
 </tr>
 <tr>
 <th class="plan-col">通い放題プラン</th>
 <td>制限なし</td>
 <td>最大5教科</td>
 <td>不可</td>
-<td>追加料金なし</td>
+<td id="unlimitedTestLessonRule">制限なし</td>
+<td>最大5教科</td>
 <td id="unlimitedMonthly">47,520円</td>
 <td id="unlimitedAnnual">—</td>
 <td>別途</td>
+<td>年度内変更不可</td>
 </tr>
 </tbody>
 </table>
@@ -119,7 +127,7 @@
 <ul>
 <li>受講は、テキストを持っている教科のみ可能です。</li>
 <li>テスト対策は、通常授業の受講教科数以上の教科数から選択できます。</li>
-<li>パックの場合、振替はありませんが、テキストをお持ちであれば、テスト対策期間も何教科でも追加料金はかかりません。</li>
+<li>通常授業の振替は4週間以内なら可能です。パックの場合、振替はありません。</li>
 <li>テキスト代・模試代・諸経費は別途発生します。</li>
 <li>料金改定された場合はこの限りではありません。このシミュレーションは料金を保証するものではありません。</li>
 </ul>
