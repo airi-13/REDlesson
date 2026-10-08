@@ -1,6 +1,7 @@
 const SPREADSHEET_ID = "1_luEJMbc6jKwaMppPGTHTwWpEpgJSCT5NuPgUKaAhr8";
 const ABSENCE_SHEET_NAME = "申請一覧";
 const PURCHASE_SHEET_NAME = "購入申請";
+const TEST_RANGE_SHEET_NAME = "テスト範囲";
 const ADMIN_EMAIL = "tennodai.red@gmail.com";
 const TIME_ZONE = "Asia/Tokyo";
 const PASSWORD = "11391";
@@ -67,6 +68,11 @@ function doPost(e) {
     if (String(data.action || "") === "purchase") {
       return jsonResponse_(submitPurchaseApplication_(data));
     }
+
+    if (String(data.action || "") === "test_range") {
+      return jsonResponse_(submitTestRangeApplication_(data));
+    }
+
     return jsonResponse_(submitApplication(data));
 
   } catch (error) {
@@ -529,6 +535,123 @@ function savePurchaseApplication_(data) {
 
     sheet.getRange(row, 3).setNumberFormat("@");
   });
+}
+
+/* =====================================================
+   テスト範囲登録
+===================================================== */
+
+function submitTestRangeApplication_(data) {
+  if (!data) throw new Error("登録内容がありません。");
+
+  const studentId = String(data.studentId || "").trim();
+  const studentName = String(data.studentName || "").trim();
+  const school = String(data.school || "").trim();
+  const grade = String(data.grade || "").trim();
+  const testDate = String(data.testDate || "").trim();
+  const notes = String(data.notes || "").trim();
+  const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+
+  if (!/^\d+$/.test(studentId)) {
+    throw new Error("生徒番号は半角数字で入力してください。");
+  }
+  if (!studentName) throw new Error("氏名を入力してください。");
+  if (!school) throw new Error("学校名を選択してください。");
+  if (!grade) throw new Error("学年を選択してください。");
+
+  const parsedDate = parseDate_(testDate);
+  if (!parsedDate) throw new Error("テストの日付が正しくありません。");
+
+  if (!subjects.length) {
+    throw new Error("少なくとも1教科のテスト範囲を登録してください。");
+  }
+
+  const allowedSubjects = ["英語","数学","国語","理科","社会"];
+  const rows = [];
+
+  subjects.forEach(function(item) {
+    const subject = String(item.subject || "").trim();
+    const publisher = String(item.publisher || "").trim();
+    const ranges = Array.isArray(item.ranges) ? item.ranges : [];
+
+    if (!allowedSubjects.includes(subject)) {
+      throw new Error("教科が正しくありません。");
+    }
+    if (!publisher) {
+      throw new Error(subject + "の教科書出版社を選択してください。");
+    }
+    if (!ranges.length) {
+      throw new Error(subject + "のページ範囲を入力してください。");
+    }
+
+    ranges.forEach(function(range) {
+      const from = String(range.from || "").trim();
+      const to = String(range.to || "").trim();
+
+      if (!/^\d+$/.test(from) || !/^\d+$/.test(to)) {
+        throw new Error(subject + "のページ番号は半角数字で入力してください。");
+      }
+      if (Number(from) > Number(to)) {
+        throw new Error(subject + "のページ範囲が正しくありません。");
+      }
+
+      rows.push([
+        new Date(),
+        studentId,
+        studentName,
+        school,
+        grade,
+        formatJapaneseDate_(testDate),
+        subject,
+        "P" + from + "～P" + to,
+        publisher,
+        notes
+      ]);
+    });
+  });
+
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(TEST_RANGE_SHEET_NAME);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(TEST_RANGE_SHEET_NAME);
+    sheet.appendRow([
+      "受付日時","生徒番号","氏名","学校名","学年","テスト日",
+      "教科","教科書ページ数","教科書出版社","連絡事項"
+    ]);
+  }
+
+  const startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
+  sheet.getRange(startRow, 2, rows.length, 1).setNumberFormat("@");
+
+  try {
+    const itemLines = subjects.map(function(item) {
+      return item.subject + "：" +
+        item.ranges.map(function(range) {
+          return "P" + range.from + "～P" + range.to;
+        }).join("、") +
+        "（" + item.publisher + "）";
+    }).join("\n");
+
+    MailApp.sendEmail({
+      to: ADMIN_EMAIL,
+      subject: "新しいテスト範囲登録があります",
+      body:
+        "テスト範囲登録を受け付けました。\n\n" +
+        "生徒番号：" + studentId + "\n" +
+        "氏名：" + studentName + "\n" +
+        "学校名：" + school + "\n" +
+        "学年：" + grade + "\n" +
+        "テスト日：" + formatJapaneseDate_(testDate) + "\n\n" +
+        itemLines + "\n\n" +
+        "連絡事項：" + (notes || "なし")
+    });
+  } catch (error) {
+    // 教室宛メールが失敗してもスプレッドシート登録は成功
+  }
+
+  return { success: true };
 }
 
 /* =====================================================
