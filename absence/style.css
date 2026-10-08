@@ -7,9 +7,9 @@ button,input,textarea{font:inherit}
 .card{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 12px rgba(20,50,80,.07)}
 .intro-card h1{margin:0 0 18px;text-align:center;color:#E60012;font-size:25px}
 .rule-box{border:3px solid #d35400;border-radius:10px;padding:15px 16px;background:#fff}
-.rule-box h2{font-size:17px;margin:0 0 9px;color:#c34700}
+.rule-box h2{font-size:17px;margin:0 0 9px;color:#c34700;text-align:center}
 .rule-box ul{margin:0;padding-left:20px;line-height:1.8;font-size:14px}
-.section-title{font-size:20px;margin:0 0 20px;color:#E60012}
+.rule-confirm{margin-top:20px;text-align:center}.rule-check{display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px}.rule-check input{width:20px;height:20px;margin:0}.rule-confirm .primary-button{max-width:360px;margin:0 auto;display:block}.section-title{font-size:20px;margin:0 0 20px;color:#E60012}
 .field{margin:0 0 20px}
 .field:last-child{margin-bottom:0}
 .field label{display:block;font-weight:800;font-size:16px;margin-bottom:8px}
