@@ -90,7 +90,10 @@ function update() {
     }
 
     const extraLessons = getExtraLessonsFor(targetAnnual);
-    const extraTestSubjects = getExtraTestSubjectsFor(targetAnnual);
+    const extraTestSubjects =
+      name === "通い放題"
+        ? Math.max(0, 4 - testSubjects)
+        : getExtraTestSubjectsFor(targetAnnual);
 
     return '<div class="recommendation-content">' +
       '' +
