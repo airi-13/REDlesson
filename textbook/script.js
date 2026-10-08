@@ -6,7 +6,6 @@ const $=id=>document.getElementById(id);
 function show(id){["listPage","purchasePage","previewPage","completePage"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden");window.scrollTo(0,0)}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 
-$("logout").onclick=()=>location.href="../";
 ["levelFilter","subjectFilter","gradeFilter"].forEach(id=>$(id).onchange=renderBooks);
 
 function renderBooks(){
