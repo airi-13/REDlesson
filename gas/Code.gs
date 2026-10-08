@@ -64,6 +64,9 @@ function doPost(e) {
     }
 
     const data = JSON.parse(e.postData.contents);
+    if (String(data.action || "") === "purchase") {
+      return jsonResponse_(submitPurchaseApplication_(data));
+    }
     return jsonResponse_(submitApplication(data));
 
   } catch (error) {
