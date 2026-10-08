@@ -57,13 +57,13 @@ function update() {
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
-  document.querySelector("#regularLessonRule").textContent =
-    "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
     subjects + "教科";
+  document.querySelector("#regularLessonRule").textContent =
+    "週" + lessons + "コマ";
+  document.querySelector("#packSubjectRule").textContent = "3教科まで";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
-  document.querySelector("#packSubjectRule").textContent = "3教科まで";
 
   document.querySelector("#regularMonthly").textContent =
     yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
