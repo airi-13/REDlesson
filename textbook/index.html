@@ -26,21 +26,13 @@
 
 <main id="purchasePage" class="content hidden">
   <h2>🛒 テキスト購入申請</h2>
-  <section class="card">
-    
-    <label>生徒番号 <b>必須</b><input id="studentId" inputmode="numeric" placeholder="生徒番号"></label>
-    <label>生徒氏名 <b>必須</b><input id="studentName" placeholder="生徒氏名"></label>
-  </section>
+  <div data-common-block="student-info"></div>
   <section class="card">
     <h3>購入するテキスト</h3>
     <div id="items"></div>
     <button id="addItem" class="outline">＋ テキストを追加する</button>
   </section>
-  <section class="card">
-    <h3>その他</h3>
-    <label>連絡事項<textarea id="notes" placeholder="連絡事項があれば入力してください。"></textarea></label>
-    <label>メールアドレス <b>必須</b><input id="email" type="email" placeholder="example@example.com"></label>
-  </section>
+  <div data-common-block="other"></div>
   <div class="buttons"><button id="backList" class="secondary">戻る</button><button id="preview" class="primary">確認</button></div>
 </main>
 
