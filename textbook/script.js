@@ -112,11 +112,11 @@ function renderBooks(){
      if(!levelBooks.length)return "";
      return `<section class="level-section">
        <div class="level-title">${level}</div>
-       ${renderSubjectGroups(levelBooks).join("")}
+       ${renderSubjectGroups(levelBooks)}
      </section>`;
    }).join("");
  }else{
-   rendered=renderSubjectGroups(filtered).join("");
+   rendered=renderSubjectGroups(filtered);
  }
  $("textbooks").innerHTML=rendered||"<div class='notice'>該当するテキストはありません。</div>";
 }
