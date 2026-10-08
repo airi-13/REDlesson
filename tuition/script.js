@@ -52,6 +52,7 @@ function update() {
   document.querySelector("#regularTestLessonRule").textContent = "制限なし";
   document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
   document.querySelector("#packTestLessonRule").textContent = "制限なし";
+  document.querySelector("#unlimitedTestLessonRule").textContent = "制限なし";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
