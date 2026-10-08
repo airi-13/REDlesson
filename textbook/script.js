@@ -62,7 +62,7 @@ function renderBooks(){
        seriesRank(b[3])===2?"フォレスタステップ":
        seriesRank(b[3])===3?"フォレスタゴール":
        seriesRank(b[3])===4?"フォレスタドリル":
-       b[3].replace(/(?:中|算数|数学|英語)?\\s*[1-6](?:年|級)?/g,"").trim();
+       b[3].replace(/(?:中|算数|数学|英語)?\s*[1-6](?:年|級)?/g,"").trim();
      (seriesGroups[key]??=[]).push(b);
    });
    const seriesNames=Object.keys(seriesGroups).sort((a,b)=>{
@@ -112,6 +112,12 @@ function refreshFilterOptions(){
   const grades=level ? LEVEL_GRADES[level] : ["1年","2年","3年","4年","5年","6年","新中1","新高1"];
   setSelectOptions($("subjectFilter"),subjects,"すべての科目");
   setSelectOptions($("gradeFilter"),grades,"すべての学年");
+}
+
+function options(type){
+  if(type==="level") return ["小学生","中学生","高校生"];
+  if(type==="subject") return ["国語","数学","英語","理科","社会","英語・数学"];
+  return ["1年","2年","3年","4年","5年","6年","新中1","新高1"];
 }
 
 function addItem(){
