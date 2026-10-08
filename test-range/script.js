@@ -116,7 +116,6 @@ $("rangeForm").addEventListener("submit",e=>{
     '<p><b>氏名</b><br>'+esc(current.studentName)+'</p>'+
     '<p><b>学校名</b><br>'+esc(current.school)+'</p>'+
     '<p><b>学年</b><br>'+esc(current.grade)+'</p>'+
-    '<p><b>日時</b><br>'+esc(current.testDate)+'</p>'+
     current.subjects.map(x=>'<div class="subject-confirm"><b>'+esc(x.subject)+'</b><br>テスト日：'+esc(x.testDate)+'<br>出版社：'+esc(x.publisher)+'<br>'+x.ranges.map(r=>'P'+esc(r.from)+'～P'+esc(r.to)).join("<br>")+'</div>').join("")+
     '<p><b>連絡事項</b><br>'+esc(current.notes||"なし")+'</p>';
   $("confirmationItems").innerHTML=html;
