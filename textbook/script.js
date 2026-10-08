@@ -14,7 +14,7 @@ $("subjectFilter").onchange=renderBooks;
 $("gradeFilter").onchange=renderBooks;
 
 const SUBJECT_ORDER={"英語":1,"数学":2,"英語・数学":2,"国語":3,"理科":4,"社会":5};
-const SERIES_ORDER={"フォレスタ":1,"フォレスタステップ":2,"フォレスタゴール":3,"フォレスタドリル":4};
+const SERIES_ORDER={"フォレスタ":1,"iワーク":2,"フォレスタステップ":3,"フォレスタゴール":4,"フォレスタドリル":5};
 function gradeNumber(value){const m=String(value).match(/(?:新)?(?:中|高)?([1-6])/);return m?Number(m[1]):99;}
 function seriesRank(title){for(const key of Object.keys(SERIES_ORDER)){if(title.startsWith(key))return SERIES_ORDER[key];}return 99;}
 function textbookNumber(title){const m=String(title).match(/(?:中|算数|数学|英語)?\s*(\d+)/);return m?Number(m[1]):99;}
@@ -59,10 +59,11 @@ function renderBooks(){
  $("textbooks").innerHTML=groupNames.map(s=>{
    const seriesGroups={};
    groups[s].forEach(b=>{
-     const key=seriesRank(b[3])===1?"フォレスタ":
-       seriesRank(b[3])===2?"フォレスタステップ":
-       seriesRank(b[3])===3?"フォレスタゴール":
-       seriesRank(b[3])===4?"フォレスタドリル":
+     const key=b[3].startsWith("iワーク")?"iワーク":
+       b[3].startsWith("フォレスタステップ")?"フォレスタステップ":
+       b[3].startsWith("フォレスタゴール")?"フォレスタゴール":
+       b[3].startsWith("フォレスタドリル")?"フォレスタドリル":
+       b[3].startsWith("フォレスタ")?"フォレスタ":
        b[3].replace(/(?:中|算数|数学|英語)?\s*[1-6](?:年|級)?/g,"").trim();
      (seriesGroups[key]??=[]).push(b);
    });
