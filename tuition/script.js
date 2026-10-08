@@ -49,9 +49,9 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
-  document.querySelector("#regularTestLessonRule").textContent = "年" + (testSubjects * 3) + "コマ";
+  document.querySelector("#regularTestLessonRule").textContent = "制限なし";
   document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
-  document.querySelector("#packTestLessonRule").textContent = "年" + (testSubjects * 3) + "コマ";
+  document.querySelector("#packTestLessonRule").textContent = "制限なし";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
@@ -61,6 +61,7 @@ function update() {
     subjects + "教科";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
+  document.querySelector("#packSubjectRule").textContent = "最大3教科";
 
   document.querySelector("#regularMonthly").textContent =
     yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
