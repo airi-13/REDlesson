@@ -31,7 +31,6 @@ function update() {
   const c = CONFIG[grade];
 
   // 教科数以上の週コマ数・テスト対策教科数になるよう自動調整
-  subjects = lessons;
   lessons = Math.max(lessons, subjects);
   testSubjects = Math.max(testSubjects, subjects);
 
