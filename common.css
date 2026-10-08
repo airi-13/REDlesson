@@ -67,3 +67,15 @@ footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
   .page,.content,.container{padding:18px 12px 40px}
   .actions,.confirm-actions{grid-template-columns:1fr}
 }
+
+.menu{display:grid;grid-template-columns:1fr;gap:12px}
+.application-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.menu-section{margin-bottom:18px}
+.menu-section h2{margin:0 0 10px;font-size:1.1rem}
+.menu-button{display:block;width:100%;min-height:72px;margin:0;padding:18px 20px;background:#fff;border:1px solid #ead0d3;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.04);font-size:1rem;font-weight:700;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s ease,background-color .1s ease}
+.menu-button:active{transform:scale(.98);background:#fff5f6}
+.menu-button .title{display:block;margin-bottom:3px}
+.menu-button .description{display:block;color:#777;font-size:.82rem;font-weight:400}
+.footer{padding:24px 16px 40px;text-align:center;color:#777;font-size:.8rem}
+@media(min-width:600px){.menu{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.application-buttons{grid-template-columns:1fr 1fr}}
