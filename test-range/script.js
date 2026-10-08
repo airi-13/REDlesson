@@ -17,12 +17,11 @@ const PUBLISHERS={
 
 const subjects=["英語","数学","国語","理科","社会"];
 const $=id=>document.getElementById(id);
+const esc=RED.escapeHtml;
 let current=null;
 
 $("school").innerHTML='<option value="">学校を選択してください</option>'+SCHOOLS.map(x=>'<option>'+esc(x)+'</option>').join("");
 $("grade").innerHTML='<option value="">学年を選択してください</option>'+GRADES.map(x=>'<option>'+esc(x)+'</option>').join("");
-
-const esc=RED.escapeHtml;
 
 function createRangeRow(subject,index){
   const row=document.createElement("div");
