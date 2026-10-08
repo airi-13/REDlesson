@@ -44,7 +44,7 @@ $("form").addEventListener("submit",e=>{
     '<p><b>テスト対策受講希望科目</b><br>'+selected.join("、")+'</p>'+
     '<p><b>テキスト追加購入</b><br>'+purchase+'</p>'+
     '<p><b>連絡事項</b><br>'+esc(current.notes||"なし")+'</p>'+
-    '<p><b>確認メール</b><br>'+esc(email)+'</p>';
+    '<p><b>メールアドレス</b><br>'+esc(email)+'</p>';
 
   $("form").classList.add("hidden");
   $("confirm").classList.remove("hidden");
