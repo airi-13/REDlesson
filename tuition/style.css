@@ -91,20 +91,18 @@ flex-direction:column;
 align-items:center;
 justify-content:center;
 min-height:108px;
-gap:3px;
+gap:5px;
 }
-.recommendation-good-icon{
-font-size:1.25rem;
-font-weight:900;
+.recommendation-good-label{
+font-size:.9rem;
+font-weight:800;
 }
 .recommendation-good strong{
-font-size:.95rem;
-line-height:1.35;
+font-size:1.45rem;
+line-height:1.25;
+font-weight:900;
 }
-.recommendation-good span{
-font-size:.76rem;
-font-weight:700;
-}
+
 @media(max-width:700px){
 .recommendation-grid{
 grid-template-columns:repeat(2,minmax(0,1fr));
@@ -140,13 +138,11 @@ font-size:.72rem;
 .recommendation-good{
 min-height:100px;
 }
-.recommendation-good-icon{
-font-size:1.05rem;
+.recommendation-good-label{
+font-size:.68rem;
 }
 .recommendation-good strong{
-font-size:.76rem;
+font-size:1.05rem;
 }
-.recommendation-good span{
-font-size:.62rem;
-}
+
 }
