@@ -81,3 +81,7 @@ footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
 
 
 @media(max-width:560px){.application-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.common-form-block-standalone{background:var(--card);border-radius:16px;padding:22px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.common-form-block .field{margin-bottom:16px}
+.common-form-block .field:last-child{margin-bottom:0}
