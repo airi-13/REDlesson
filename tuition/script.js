@@ -49,6 +49,9 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
+  document.querySelector("#regularTestLessonRule").textContent = "年" + (testSubjects * 3) + "コマ";
+  document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
+  document.querySelector("#packTestLessonRule").textContent = "年" + (testSubjects * 3) + "コマ";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
