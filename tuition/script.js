@@ -50,7 +50,7 @@ function update() {
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
   document.querySelector("#regularTestLessonRule").innerHTML = "制限なし<br>1科目毎に追加料金";
-  document.querySelector("#regularTestSubjectRule").textContent = "〜" + testSubjects + "教科";
+  document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
   document.querySelector("#packTestLessonRule").innerHTML = "制限なし<br>追加料金なし";
   document.querySelector("#unlimitedTestLessonRule").innerHTML = "制限なし<br>追加料金なし";
 
@@ -59,10 +59,10 @@ function update() {
   document.querySelector("#regularLessonRule").textContent =
     "週" + lessons + "コマ";
   document.querySelector("#regularSubjectRule").textContent =
-    "1〜" + Math.min(lessons, 5) + "教科";
+    Math.min(lessons, 5) + "教科まで";
   document.querySelector("#packLessonRule").textContent =
     "週" + c.pack.maxLessons + "コマまで";
-  document.querySelector("#packSubjectRule").textContent = "1〜3教科";
+  document.querySelector("#packSubjectRule").textContent = "5教科まで";
 
   document.querySelector("#regularMonthly").textContent =
     yen(regularMonthlyMin) + "～" + yen(regularMonthlyMax);
