@@ -176,12 +176,12 @@ function renumber(){[...$("items").children].forEach((d,i)=>d.querySelector(".it
 $("preview").onclick=()=>{
  const sid=$("studentId").value.trim(),name=$("studentName").value.trim(),email=$("email").value.trim(),notes=$("notes").value.trim();
  if(!/^\d+$/.test(sid)){alert("生徒番号を数字で入力してください。");return}
- if(!name){alert("生徒氏名を入力してください。");return}
+ if(!name){alert("氏名を入力してください。");return}
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert("メールアドレスの形式が正しくありません。");return}
  const items=[...$("items").children].map(d=>({level:d.querySelector(".level").value,subject:d.querySelector(".subject").value,grade:d.querySelector(".grade").value,title:d.querySelector(".title").value,quantity:Number(d.querySelector(".qty").value)}));
  if(!items.length||items.some(x=>!x.title||!Number.isInteger(x.quantity)||x.quantity<1)){alert("購入するテキストと数量を確認してください。");return}
  current={studentId:sid,studentName:name,email,notes,items};
- $("previewBox").innerHTML=`<div class="preview"><p><b>生徒番号</b><br>${esc(sid)}</p><p><b>生徒氏名</b><br>${esc(name)}</p><hr><b>購入テキスト</b>${items.map(x=>`<p>・${esc(x.title)} × ${x.quantity}<br><small>${esc(x.level)} / ${esc(x.subject)}</small></p>`).join("")}<hr><p><b>連絡事項</b><br>${esc(notes||"なし")}</p><p><b>確認メール</b><br>${esc(email)}</p></div>`;
+ $("previewBox").innerHTML=`<div class="preview"><p><b>生徒番号</b><br>${esc(sid)}</p><p><b>氏名</b><br>${esc(name)}</p><hr><b>購入テキスト</b>${items.map(x=>`<p>・${esc(x.title)} × ${x.quantity}<br><small>${esc(x.level)} / ${esc(x.subject)}</small></p>`).join("")}<hr><p><b>連絡事項</b><br>${esc(notes||"なし")}</p><p><b>メールアドレス</b><br>${esc(email)}</p></div>`;
  show("previewPage");
 };
 
