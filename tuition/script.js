@@ -50,7 +50,7 @@ function update() {
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
   document.querySelector("#regularTestLessonRule").innerHTML = "最大5教科<br>1科目毎に追加料金";
-  document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
+  document.querySelector("#regularTestSubjectRule").textContent = subjects + "教科以上";
   document.querySelector("#packTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
   document.querySelector("#unlimitedTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
 
