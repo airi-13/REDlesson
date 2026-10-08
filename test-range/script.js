@@ -1,4 +1,4 @@
-const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+const GAS_URL=RED.GAS_URL;
 
 const SCHOOLS=["我孫子中","我孫子第二中","我孫子第三中","白山中","湖北台中","湖北中","その他"];
 
@@ -22,7 +22,7 @@ let current=null;
 $("school").innerHTML='<option value="">学校を選択してください</option>'+SCHOOLS.map(x=>'<option>'+esc(x)+'</option>').join("");
 $("grade").innerHTML='<option value="">学年を選択してください</option>'+GRADES.map(x=>'<option>'+esc(x)+'</option>').join("");
 
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+const esc=RED.escapeHtml;
 
 function createRangeRow(subject,index){
   const row=document.createElement("div");
