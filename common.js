@@ -37,8 +37,7 @@
     document.querySelectorAll("[data-common-block]").forEach(block=>{
       if(block.dataset.rendered==="1") return;
       const type=block.dataset.commonBlock;
-      block.classList.add("common-form-block");
-      if(!block.closest(".card")) block.classList.add("common-form-block-standalone");
+      block.classList.add("common-form-block","card");
       block.innerHTML=type==="student-info"?studentHtml:otherHtml;
       block.dataset.rendered="1";
     });
