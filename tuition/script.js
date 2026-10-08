@@ -49,10 +49,10 @@ function update() {
   document.querySelector("#subjectCount").textContent = subjects;
   document.querySelector("#lessonCount").textContent = lessons;
   document.querySelector("#testSubjectCount").textContent = testSubjects;
-  document.querySelector("#regularTestLessonRule").textContent = "制限なし";
+  document.querySelector("#regularTestLessonRule").innerHTML = "1科目毎に追加費用";
   document.querySelector("#regularTestSubjectRule").textContent = testSubjects + "教科";
-  document.querySelector("#packTestLessonRule").textContent = "制限なし";
-  document.querySelector("#unlimitedTestLessonRule").textContent = "制限なし";
+  document.querySelector("#packTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
+  document.querySelector("#unlimitedTestLessonRule").innerHTML = "最大5教科<br>追加料金なし";
 
   // プラン比較
   document.querySelector("#rulesPackName").textContent = c.pack.name;
