@@ -1,4 +1,4 @@
-const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+const GAS_URL=RED.GAS_URL;
 const subjects=["英語","数学","国語","理科","社会"];
 const plans=["通い放題","週4/6プラン","週1","週2","週3","週4","週5","週6"];
 const $=id=>document.getElementById(id);
