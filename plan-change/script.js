@@ -50,6 +50,29 @@ function updatePlanNotice() {
 
 $("nextPlan").addEventListener("change", updatePlanNotice);
 
+function updatePackPlanRestriction() {
+  const currentPlan = $("currentPlan").value;
+  const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
+  const nextPlanSelect = $("nextPlan");
+  const notice = $("packLockNotice");
+  const weeklyOptions = [...nextPlanSelect.options].filter(option => /^週[1-6]$/.test(option.value));
+
+  weeklyOptions.forEach(option => {
+    option.disabled = currentIsPack;
+  });
+
+  notice.classList.toggle("hidden", !currentIsPack);
+
+  if (currentIsPack && /^週[1-6]$/.test(nextPlanSelect.value)) {
+    nextPlanSelect.value = currentPlan;
+    updatePlanNotice();
+    updateSubjectLimits("nextPlan", "nextSubjects");
+  }
+}
+
+$("currentPlan").addEventListener("change", updatePackPlanRestriction);
+updatePackPlanRestriction();
+
 
 function updateSubjectLimits(planId,subjectId){
   const max=planMaxSubjects($(planId).value);
@@ -106,6 +129,12 @@ $("form").addEventListener("submit",e=>{
     return;
   }
   $("planNoticeError").textContent="";
+
+  const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
+  if (currentIsPack && /^週[1-6]$/.test(nextPlan)) {
+    $("error").textContent = "パックは年度内変更することができません。来月以降もパックを選択してください。";
+    return;
+  }
 
   if(currentSubjects.length>currentMax){
     $("error").textContent="現在のプランで選択できる受講教科数を超えています。";
