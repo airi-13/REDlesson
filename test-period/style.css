@@ -2,3 +2,12 @@
 @media(max-width:600px){.two{grid-template-columns:1fr}}
 .date-cell{white-space:nowrap;min-width:3.4rem}.date-number,.date-weekday{display:block;line-height:1.25}.date-number{font-weight:700}.date-weekday{font-size:.8rem;font-weight:400}
 @media(max-width:600px){.calendar th,.calendar td{padding:5px 3px}.date-cell{min-width:2.8rem}.date-number{font-size:.85rem}.date-weekday{font-size:.72rem}}
+
+.two>label{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.two>label b{display:inline-block;color:#c62828;font-size:.75rem}
+.two input[readonly]{background:#f5f7f8;color:#374151}
+#configMessage,#calendarWrap{grid-column:1/-1;min-width:0}
+.config-message{margin:0;padding:8px 10px;border-radius:8px;background:#f4f7f5;color:#4b5563;font-size:.88rem;line-height:1.5}
+.config-message.error{background:#fff4f4;color:#b42318}
+#calendarWrap:empty{display:none}
+.unavailable{color:#c6cbd1}
