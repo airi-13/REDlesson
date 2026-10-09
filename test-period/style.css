@@ -1,2 +1,4 @@
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.calendar{overflow-x:auto}.calendar table{border-collapse:collapse;width:100%;min-width:720px}.calendar th,.calendar td{border:1px solid #d9dee3;text-align:center;padding:7px}.calendar th{background:#f4f6f8}.period-cell{min-width:82px}.period-cell input{display:block;margin:4px auto;width:20px;height:20px}.period-time{font-size:.75rem;color:#666}
 @media(max-width:600px){.two{grid-template-columns:1fr}}
+.date-cell{white-space:nowrap;min-width:3.4rem}.date-number,.date-weekday{display:block;line-height:1.25}.date-number{font-weight:700}.date-weekday{font-size:.8rem;font-weight:400}
+@media(max-width:600px){.calendar th,.calendar td{padding:5px 3px}.date-cell{min-width:2.8rem}.date-number{font-size:.85rem}.date-weekday{font-size:.72rem}}
