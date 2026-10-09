@@ -42,3 +42,51 @@
   .day-row{grid-template-columns:44px minmax(0,1fr);gap:4px}
   .day-period-time{font-size:.48rem}
 }
+
+
+/* スマートフォンで日付入力欄や日別コマ枠が横にはみ出さないようにする */
+.two,
+.two > label,
+#testDateDisplay,
+#startDate,
+#calendarWrap,
+.calendar-days,
+.day-row,
+.day-date,
+.day-periods,
+.day-period {
+  min-width: 0;
+  max-width: 100%;
+}
+.two > label input[type="date"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+.day-row {
+  width: 100%;
+  box-sizing: border-box;
+}
+.day-periods {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+@media (max-width: 560px) {
+  .day-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+  .day-periods {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .day-period-time {
+    font-size: clamp(.42rem, 1.9vw, .5rem);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    transform: none;
+    letter-spacing: -.04em;
+    text-align: center;
+  }
+}
