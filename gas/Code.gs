@@ -668,8 +668,32 @@ function submitTestRangeApplication_(data) {
 /* =====================================================
    テスト対策コマの期間設定
    シート「テスト期間設定」
-   A列: 学校名 / B列: 学年 / C列: テスト日
+   A列: 学校名 / B列: 学年 / C列: テスト開始日
+   D列: テスト最終日 / E列: 対策期間開始日（最終日の13日前）
 ===================================================== */
+
+const TEST_PERIOD_SCHOOLS_ = ["我孫子中","我孫子第二中","我孫子第三中","白山中","湖北台中","湖北中","その他"];
+const TEST_PERIOD_GRADES_ = ["中学1年","中学2年","中学3年"];
+
+function setupTestPeriodConfigSheet_(sh) {
+  sh.getRange(1, 1, 1, 5).setValues([[
+    "学校名", "学年", "テスト開始日", "テスト最終日", "対策期間開始日（自動計算）"
+  ]]);
+  sh.setFrozenRows(1);
+  sh.getRange("C:D").setNumberFormat("yyyy/mm/dd");
+  sh.getRange("E:E").setNumberFormat("yyyy/mm/dd");
+
+  const schoolRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(TEST_PERIOD_SCHOOLS_, true)
+    .setAllowInvalid(false)
+    .build();
+  const gradeRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(TEST_PERIOD_GRADES_, true)
+    .setAllowInvalid(false)
+    .build();
+  sh.getRange("A2:A500").setDataValidation(schoolRule);
+  sh.getRange("B2:B500").setDataValidation(gradeRule);
+}
 
 function getTestPeriodConfig_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -677,36 +701,47 @@ function getTestPeriodConfig_() {
 
   if (!sh) {
     sh = ss.insertSheet(TEST_PERIOD_CONFIG_SHEET_NAME);
-    sh.getRange(1, 1, 1, 4).setValues([[
-      "学校名", "学年", "テスト日", "2週間の開始日（自動計算）"
-    ]]);
-    sh.setFrozenRows(1);
-    sh.getRange("C:C").setNumberFormat("yyyy/mm/dd");
-    sh.getRange("D:D").setNumberFormat("yyyy/mm/dd");
+    setupTestPeriodConfigSheet_(sh);
+  } else {
+    const header = String(sh.getRange(1, 3).getDisplayValue() || "").trim();
+    if (header === "テスト日") {
+      // 旧形式のテスト日を、移行時の暫定値としてテスト最終日に移す。
+      // 開始日は未設定にして、教室側で実際の日付を入力できるようにする。
+      const last = sh.getLastRow();
+      if (last >= 2) {
+        const oldDates = sh.getRange(2, 3, last - 1, 1).getValues();
+        sh.getRange(2, 4, last - 1, 1).setValues(oldDates);
+        sh.getRange(2, 3, last - 1, 1).clearContent();
+      }
+    }
+    setupTestPeriodConfigSheet_(sh);
   }
 
   const lastRow = sh.getLastRow();
-  if (lastRow < 2) {
-    return { success: true, configs: [] };
-  }
+  if (lastRow < 2) return { success: true, configs: [] };
 
-  const values = sh.getRange(2, 1, lastRow - 1, Math.max(4, sh.getLastColumn())).getValues();
+  const values = sh.getRange(2, 1, lastRow - 1, 5).getValues();
   const configs = [];
 
   values.forEach(function(row, index) {
     const school = String(row[0] || "").trim();
     const grade = String(row[1] || "").trim();
-    const testDate = normalizeSheetDate_(row[2]);
-    if (!school || !grade || !testDate) return;
+    const testStartDate = normalizeSheetDate_(row[2]);
+    const testEndDate = normalizeSheetDate_(row[3]);
+    if (!school || !grade || !testStartDate || !testEndDate) return;
 
-    const startDate = shiftIsoDate_(testDate, -14);
+    if (parseDate_(testStartDate) > parseDate_(testEndDate)) return;
+
+    // テスト最終日を含む14日間（最終日の13日前～最終日）
+    const startDate = shiftIsoDate_(testEndDate, -13);
     const sheetRow = index + 2;
-    sh.getRange(sheetRow, 4).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
+    sh.getRange(sheetRow, 5).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
 
     configs.push({
       school: school,
       grade: grade,
-      testDate: testDate,
+      testStartDate: testStartDate,
+      testEndDate: testEndDate,
       startDate: startDate
     });
   });
