@@ -21,11 +21,13 @@ const noticeItems = {
   "週4/6プラン": [
     "欠席した授業の振替はできないことを確認しました。",
     "通常授業は最大3教科まで選択できることを確認しました。テスト期間中の対策教科数に制限はありませんが、該当教科のテキストを保有している場合に限ります。",
+    "テキストを保有している教科のみ受講できることを確認しました.",
     "一度パックに変更すると、年度内は通常料金のプランに戻せないことを確認しました。"
   ],
   "通い放題": [
     "欠席した授業の振替はできないことを確認しました。",
     "通常授業は最大5教科まで選択できることを確認しました。テスト期間中の対策教科数に制限はありませんが、該当教科のテキストを保有している場合に限ります。",
+    "テキストを保有している教科のみ受講できることを確認しました.",
     "一度パックに変更すると、年度内は通常料金のプランに戻せないことを確認しました。"
   ]
 };
@@ -106,6 +108,7 @@ $("form").addEventListener("submit",e=>{
   const nextSubjects=[...document.querySelectorAll("#nextSubjects input:checked")].map(x=>x.value);
   const notes=$("notes").value.trim();
   const email=$("email").value.trim();
+  const needsTextbookPurchase=document.querySelector('input[name="needsTextbookPurchase"]:checked')?.value || "";
   const nextPlanNoticeChecks = [...document.querySelectorAll("#planNoticeItems input:checked")];
   const needsPlanNotice = Object.prototype.hasOwnProperty.call(noticeItems, nextPlan);
 
@@ -113,7 +116,7 @@ $("form").addEventListener("submit",e=>{
   const currentMax=planMaxSubjects(currentPlan);
   const nextMax=planMaxSubjects(nextPlan);
 
-  if(!/^\d+$/.test(studentId)||!studentName||!plans.includes(currentPlan)||!plans.includes(nextPlan)||!currentSubjects.length||!nextSubjects.length||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+  if(!/^\d+$/.test(studentId)||!studentName||!plans.includes(currentPlan)||!plans.includes(nextPlan)||!currentSubjects.length||!nextSubjects.length||!needsTextbookPurchase||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     $("error").textContent="必須項目を正しく入力してください。";
     return;
   }
@@ -142,7 +145,7 @@ $("form").addEventListener("submit",e=>{
     return;
   }
 
-  current={action:"plan_change",studentId,studentName,currentPlan,currentSubjects,nextPlan,nextSubjects,notes,email};
+  current={action:"plan_change",studentId,studentName,currentPlan,currentSubjects,nextPlan,nextSubjects,needsTextbookPurchase,notes,email};
 
   $("summary").innerHTML=
     '<p><span class="summary-label">生徒番号</span><br>'+esc(studentId)+'</p>'+
@@ -151,6 +154,7 @@ $("form").addEventListener("submit",e=>{
     '<p><span class="summary-label">現在の受講教科</span><br>'+esc(currentSubjects.join("、"))+'</p>'+
     '<p><span class="summary-label">来月以降のプラン</span><br>'+esc(nextPlan)+'</p>'+
     '<p><span class="summary-label">来月以降の受講教科</span><br>'+esc(nextSubjects.join("、"))+'</p>'+
+    '<p><span class="summary-label">テキストの追加購入</span><br>'+esc(needsTextbookPurchase)+'</p>'+
     (needsPlanNotice ? '<p><span class="summary-label">注意事項の確認</span><br>'+noticeItems[nextPlan].map((item,i)=>'✓ '+esc(item)).join("<br>")+'</p>' : '')+
     '<p><span class="summary-label">連絡事項</span><br>'+esc(notes||"なし")+'</p>'+
     '<p><span class="summary-label">メールアドレス</span><br>'+esc(email)+'</p>';
@@ -178,9 +182,11 @@ $("submit").onclick=async()=>{
     });
     $("confirm").classList.add("hidden");
     $("success").classList.remove("hidden");
+    $("textbookPurchaseNext").classList.toggle("hidden", current.needsTextbookPurchase !== "あり");
   }catch(e){
     alert("通信エラーが発生しました。時間をおいて再度お試しください。");
     $("submit").disabled=false;
     $("loading").classList.add("hidden");
   }
 };
+$("goTextbookPurchase").addEventListener("click",()=>{ window.location.href="../textbook/"; });
