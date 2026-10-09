@@ -86,7 +86,7 @@ function validateNextSchedule(schedule, grade){
     periods.sort((a,b)=>a-b);
     if(periods.length%2!==0) return day+"曜日の受講コマは偶数個になるように選択してください。";
     for(let i=1;i<periods.length;i++){
-      if(periods[i]!==periods[i-1]+1) return day+"曜日の受講コマが連続していません。飛び飛びにならないよう、連続するコマを選択してください。";
+      if(periods[i]!==periods[i-1]+1) return day+"曜日の受講コマが連続していません。連続するコマを選択してください";
     }
   }
   return "";
