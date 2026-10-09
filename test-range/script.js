@@ -80,9 +80,9 @@ function validate(){
   if(!$("school").value){ $("schoolError").textContent="学校名を選択してください。";ok=false; }
   if(!$("grade").value){ $("gradeError").textContent="学年を選択してください。";ok=false; }
   const email=$("email").value.trim();
-  $("emailError").textContent=/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)?"":"メールアドレスの形式が正しくありません。";
+  $("emailError").textContent=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?"":"メールアドレスの形式が正しくありません。";
   if(!email){ $("emailError").textContent="メールアドレスを入力してください。";ok=false; }
-  else if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) ok=false;
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ok=false;
 
   document.querySelectorAll(".subject-block").forEach(block=>{
     const testDate=block.querySelector(".test-date").value.trim();
