@@ -873,6 +873,7 @@ function submitPlanChangeApplication_(data) {
   const nextPlan = String(data.nextPlan || "").trim();
   const currentSubjects = Array.isArray(data.currentSubjects) ? data.currentSubjects.map(String) : [];
   const nextSubjects = Array.isArray(data.nextSubjects) ? data.nextSubjects.map(String) : [];
+  const needsTextbookPurchase = String(data.needsTextbookPurchase || "").trim();
   const notes = String(data.notes || "").trim();
   const email = String(data.email || "").trim();
 
@@ -905,6 +906,7 @@ function submitPlanChangeApplication_(data) {
     throw new Error("来月以降のプランで選択できる受講教科数を超えています。");
   }
 
+  if (!["あり", "なし"].includes(needsTextbookPurchase)) throw new Error("テキスト追加購入の有無を選択してください。");
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -914,10 +916,14 @@ function submitPlanChangeApplication_(data) {
     sh = ss.insertSheet(PLAN_CHANGE_SHEET_NAME);
     sh.appendRow([
       "受付日時","生徒番号","氏名","現在のプラン","現在の受講教科",
-      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス"
+      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス","テキスト追加購入"
     ]);
   }
 
+  // 既存シートにも購入有無の列を追加し、過去の申請データは保持する。
+  if (sh.getLastColumn() < 10 || String(sh.getRange(1, 10).getDisplayValue() || "").trim() === "") {
+    sh.getRange(1, 10).setValue("テキスト追加購入");
+  }
   sh.appendRow([
     new Date(),
     studentId,
@@ -927,7 +933,8 @@ function submitPlanChangeApplication_(data) {
     nextPlan,
     nextSubjects.join("、"),
     notes,
-    email
+    email,
+    needsTextbookPurchase
   ]);
   sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
 
@@ -945,6 +952,7 @@ function submitPlanChangeApplication_(data) {
         "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
         "【来月以降のプラン】\n" + nextPlan + "\n\n" +
         "【来月以降の受講教科】\n" + nextSubjects.join("、") + "\n\n" +
+        "【テキスト追加購入】\n" + needsTextbookPurchase + "\n\n" +
         "【連絡事項】\n" + (notes || "なし") + "\n\n" +
         "自立学習RED 天王台教室"
     });
@@ -964,6 +972,7 @@ function submitPlanChangeApplication_(data) {
         "現在の受講教科：" + currentSubjects.join("、") + "\n" +
         "来月以降のプラン：" + nextPlan + "\n" +
         "来月以降の受講教科：" + nextSubjects.join("、") + "\n" +
+        "テキスト追加購入：" + needsTextbookPurchase + "\n" +
         "連絡事項：" + (notes || "なし") + "\n" +
         "確認メール送付先：" + email
     });
