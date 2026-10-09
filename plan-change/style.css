@@ -17,3 +17,11 @@ fieldset{border:1px solid #dfe5eb;border-radius:10px;padding:14px}.checks{displa
 .textbook-caution{margin:10px 0 0;color:#b42318;font-weight:700;line-height:1.55}.purchase-question{margin-top:16px}.purchase-question>p{margin:4px 0 12px}.purchase-options{display:flex;gap:20px;flex-wrap:wrap}.purchase-options label{display:flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #ccd4de;border-radius:9px}.purchase-options input{width:auto;margin:0}.textbook-purchase-next{margin-top:16px;padding:14px;border:1px solid #d5e3d5;border-radius:10px;background:#f7fbf7}.textbook-purchase-next button{margin-top:8px}
 
 .schedule-fieldset{margin-top:14px}.schedule-help{margin:0 0 10px;color:#5b6672;font-size:.9rem}.schedule-grid-wrap{width:100%;overflow-x:auto}.schedule-table{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed;min-width:520px}.schedule-table th,.schedule-table td{padding:5px 3px;text-align:center}.schedule-table thead th{font-size:.9rem;color:#3b4652;font-weight:800}.schedule-table tbody th{width:42px;background:#f1f4f7;border-radius:7px;font-weight:800}.schedule-table td{border:1px solid #d9e1e8;border-radius:8px;background:#fff}.schedule-table td.schedule-unavailable{background:#eceff2;border-color:#e1e5e9;color:#a4abb3;font-weight:800}.schedule-select{width:100%;min-width:0;padding:9px 2px;border:0;border-radius:6px;background:#eef5ff;color:#174ea6;font-weight:800;font-size:.86rem;cursor:pointer}.schedule-select:disabled{background:#f1f3f5;color:#aab2ba;cursor:not-allowed}@media(max-width:600px){.schedule-table{min-width:500px}.schedule-table th,.schedule-table td{padding:4px 2px}.schedule-select{font-size:.8rem;padding:9px 1px}}
+
+/* 平日と土曜を分け、スマートフォンでも横スクロールなしで表示 */
+.schedule-grid-wrap{width:100%;display:grid;gap:14px;overflow-x:visible}
+.schedule-group{width:100%;min-width:0}
+.schedule-group h4{margin:0 0 5px;font-size:.9rem;color:#3b4652}
+.schedule-table{width:100%;min-width:0;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.schedule-select{display:block;width:100%;min-width:0;box-sizing:border-box;padding:9px 1px}
+@media(max-width:600px){.schedule-table{min-width:0;border-spacing:3px}.schedule-table th,.schedule-table td{padding:5px 1px}.schedule-table thead th{font-size:.8rem}.schedule-table tbody th{width:32px}.schedule-select{font-size:.75rem;padding:10px 0}}
