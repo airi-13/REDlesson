@@ -32,9 +32,13 @@
   margin:0;
 }
 #listPage .notice{
-  border:1px solid #f0c5ca;
-  border-left:4px solid var(--red);
-  border-radius:10px;
+  margin:0 0 12px;
+  padding:12px 14px;
+  background:#fff0f2;
+  border:0;
+  border-left:0;
+  border-radius:8px;
+  color:var(--text);
   line-height:1.65;
 }
 #listPage .level-title{
@@ -63,7 +67,7 @@
 #listPage .page-title{margin:0 0 16px}
 #listPage .page-title h1{
   margin:0;
-  color:var(--red);
+  color:var(--text);
   font-size:1.55rem;
   line-height:1.35;
 }
@@ -82,3 +86,17 @@
   #listPage .purchase-nav{width:100%;min-height:48px}
 }
 
+
+
+/* 一覧ページの注意文は背景のみ。左ラインは付けず、購入ボタンの直前に表示 */
+#listPage #textbookNotice{
+  margin:0 0 12px;
+  padding:12px 14px;
+  background:#fff0f2;
+  border:0 !important;
+  border-left:0 !important;
+  border-radius:8px;
+  color:var(--text);
+  line-height:1.65;
+}
+#listPage .page-title h1{color:var(--text)}
