@@ -84,5 +84,5 @@ footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
 
 .common-form-block .field{margin-bottom:16px}
 .common-form-block .field:last-child{margin-bottom:0}
-
-
+/* 申請完了時は、完了カードの外にページ見出しを表示しない */
+body:has(#success:not(.hidden)) .page-title{display:none!important}
