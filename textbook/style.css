@@ -100,3 +100,26 @@
   line-height:1.65;
 }
 #listPage .page-title h1{color:var(--text)}
+
+
+/* 該当テキストがない場合は、注意文の赤系背景と区別した空状態表示にする */
+#listPage .empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:4px 0 18px;
+  padding:28px 16px;
+  color:var(--muted);
+  text-align:center;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  border-radius:12px;
+  font-size:.92rem;
+}
+#listPage .empty-state-icon{
+  font-size:1.6rem;
+  line-height:1.2;
+  filter:grayscale(1);
+}
