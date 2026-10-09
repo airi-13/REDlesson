@@ -198,3 +198,31 @@ font-size:clamp(.88rem, 3.7vw, 1.08rem);
 padding:10px 1px;
 }
 }
+
+/* 「あと○コマ／○教科」の目安が表示される場合は、結論を控えめにする */
+.recommendation-content .recommendation-conclusion{
+  margin-top:8px;
+  padding:7px 6px;
+  color:#475569;
+  background:#fff;
+  border:1px solid #d8e0e8;
+  border-radius:8px;
+  box-shadow:none;
+  font-size:1rem;
+  font-weight:700;
+  letter-spacing:0;
+}
+.recommendation-card:last-child .recommendation-content .recommendation-conclusion{
+  color:#475569;
+  background:#fff;
+  border-color:#d8e0e8;
+}
+@media(max-width:700px){
+  .recommendation-content .recommendation-conclusion{
+    margin-top:6px;
+    padding:6px 3px;
+    font-size:.78rem;
+    border-width:1px;
+  }
+}
+
