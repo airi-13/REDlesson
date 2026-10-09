@@ -13,3 +13,48 @@
 .textbook-group{margin:0 0 18px}.textbook-group-title{font-size:15px;font-weight:800;color:#555;margin:0 0 8px;padding-left:4px}.level-section{margin-bottom:30px}.level-title{font-size:22px;font-weight:900;border-left:5px solid var(--red);padding:7px 10px;margin:0 0 14px;background:#fff;border-radius:6px}
 @media(max-width:650px){.filters,.textbook-grid,.item-grid{grid-template-columns:1fr}.buttons{flex-direction:column}.buttons button{width:100%}}
 @media(max-width:600px){.list-actions{justify-content:stretch}.purchase-nav{width:100%;min-height:48px}}
+
+
+/* 共通ページデザインに合わせた一覧画面 */
+#listPage .page-title{margin:0 0 20px}
+#listPage .list-actions{margin:0 0 14px}
+#listPage .purchase-nav{min-height:46px}
+#listPage .filters{
+  padding:16px;
+  margin:0 0 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+}
+#listPage .filters select{
+  min-height:46px;
+  margin:0;
+}
+#listPage .notice{
+  border:1px solid #f0c5ca;
+  border-left:4px solid var(--red);
+  border-radius:10px;
+  line-height:1.65;
+}
+#listPage .level-title{
+  font-size:1.15rem;
+  border-left:4px solid var(--red);
+  padding:9px 12px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+#listPage .subject-title{
+  color:var(--text);
+  border-bottom-color:#ead0d3;
+}
+#listPage .textbook-card{
+  border:1px solid #e3e8ed;
+  transition:box-shadow .15s ease;
+}
+#listPage .textbook-card:active{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+@media(max-width:650px){
+  #listPage .filters{padding:12px;gap:8px}
+  #listPage .purchase-nav{width:100%;min-height:48px}
+  #listPage .textbook-grid{grid-template-columns:1fr}
+}
