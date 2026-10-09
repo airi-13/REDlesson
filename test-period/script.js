@@ -86,15 +86,15 @@ function applySelectedConfig() {
     return;
   }
 
-  const calculatedStart = addDays(config.testDate, -14);
-  if (!calculatedStart || config.startDate !== calculatedStart) {
-    setConfigMessage("テスト日の設定が正しくありません。スプレッドシートの日付を確認してください。", true);
+  const calculatedStart = addDays(config.testEndDate, -13);
+  if (!calculatedStart || config.startDate !== calculatedStart || !config.testStartDate || config.testStartDate > config.testEndDate) {
+    setConfigMessage("テスト期間の設定が正しくありません。開始日・最終日を確認してください。", true);
     return;
   }
 
-  $("testDateDisplay").value = config.testDate;
+  $("testDateDisplay").value = config.testStartDate + " ～ " + config.testEndDate;
   $("startDate").value = calculatedStart;
-  setConfigMessage("テスト日の14日前から14日間の予定を表示しています。");
+  setConfigMessage("テスト最終日を含む14日間（最終日の13日前から）の予定を表示しています。");
   render();
 }
 
@@ -173,7 +173,7 @@ $("form").addEventListener("submit", e => {
     '<p><b>生徒番号</b><br>'+esc(id)+'</p>' +
     '<p><b>氏名</b><br>'+esc(name)+'</p>' +
     '<p><b>学校名・学年</b><br>'+esc(school)+'・'+esc(grade)+'</p>' +
-    '<p><b>テスト日・2週間の開始日</b><br>'+esc($("testDateDisplay").value)+'・'+esc(startDate)+'</p>' +
+    '<p><b>テスト期間</b><br>'+esc($("testDateDisplay").value)+'</p>' + '<p><b>対策期間</b><br>'+esc(startDate)+' ～ '+esc(addDays(startDate,13))+'（14日間）</p>' +
     '<p><b>受講コマ</b><br>'+selected.map(x => esc(x.date)+' '+esc(x.period)+' '+TIMES[x.period]).join("<br>")+'</p>' +
     '<p><b>連絡事項</b><br>'+esc(current.notes || "なし")+'</p>' +
     '<p><b>メールアドレス</b><br>'+esc(email)+'</p>';
