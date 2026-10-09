@@ -133,11 +133,18 @@
   window.RED.sendApplicationEmails = async function(requestId) {
     // 完了画面が描画されてから、登録済みデータを使ってメールを送信する。
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    try {
-      return await window.RED.jsonp({action:"send_submission_email", requestId:requestId}, 15000);
-    } catch (_) {
-      // 申請登録は成功済み。メール通信エラーで再申請させない。
-      return {success:false, message:"メール送信結果を確認できませんでした。"};
+    let result = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        result = await window.RED.jsonp({action:"send_submission_email", requestId:requestId}, 15000);
+        if (result && result.success === true) return result;
+      } catch (_) {
+        result = {success:false, message:"メール送信結果を確認できませんでした。"};
+      }
+      // GASの受付ログで送信済みの宛先は記録されるため、失敗した宛先だけ再試行される。
+      if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1200));
     }
+    alert("申請の登録は完了していますが、メール送信を確認できませんでした。申請を再送信せず、教室へご連絡ください。");
+    return result || {success:false, message:"メール送信結果を確認できませんでした。"};
   };
 })();
