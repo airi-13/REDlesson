@@ -90,3 +90,14 @@
     text-align: center;
   }
 }
+
+
+/* テスト登録ページのタイトルをテキスト一覧と同じ落ち着いた色に統一 */
+.content > .page-title h1 {
+  color: var(--text);
+}
+.content > .page-title p {
+  color: var(--muted);
+  font-size: .9rem;
+  margin: 5px 0 0;
+}
