@@ -941,6 +941,7 @@ function submitTestPeriodApplication_(data) {
 function submitPlanChangeApplication_(data) {
   const studentId = String(data.studentId || "").trim();
   const studentName = String(data.studentName || "").trim();
+  const grade = String(data.grade || "").trim();
   const currentPlan = String(data.currentPlan || "").trim();
   const nextPlan = String(data.nextPlan || "").trim();
   const currentSubjects = Array.isArray(data.currentSubjects) ? data.currentSubjects.map(String) : [];
@@ -951,11 +952,12 @@ function submitPlanChangeApplication_(data) {
   const notes = String(data.notes || "").trim();
   const email = String(data.email || "").trim();
 
-  const allowedPlans = ["通い放題","週4/6プラン","週1","週2","週3","週4","週5","週6"];
+  const allowedPlans = ["通い放題","週4パック","週6パック","週1","週2","週3","週4","週5","週6"];
   const allowedSubjects = ["英語","数学","国語","理科","社会"];
 
   if (!/^\d+$/.test(studentId)) throw new Error("生徒番号は半角数字で入力してください。");
   if (!studentName) throw new Error("氏名を入力してください。");
+  if (!["小4以下","小5・6","中1","中2","中3","高1","高2","高3"].includes(grade)) throw new Error("学年を選択してください。");
   if (!allowedPlans.includes(currentPlan) || !allowedPlans.includes(nextPlan)) {
     throw new Error("プランの選択内容を確認してください。");
   }
@@ -966,9 +968,12 @@ function submitPlanChangeApplication_(data) {
     throw new Error("来月以降の受講教科を確認してください。");
   }
 
+  const packGradeAllowed = function(plan) { if (plan === "週4パック") return grade === "中1" || grade === "中2"; if (plan === "週6パック") return grade === "中3"; return true; };
+  if (!packGradeAllowed(currentPlan) || !packGradeAllowed(nextPlan)) throw new Error("週4パックは中1・2、週6パックは中3のみ選択できます。");
+  const planMaxSlots = function(plan) { if (plan === "通い放題") return Infinity; if (plan === "週4パック") return 8; if (plan === "週6パック") return 12; const match=String(plan||"").match(/^週([1-6])$/); return match ? Number(match[1])*2 : 0; };
   const planMaxSubjects = function(plan) {
     if (plan === "通い放題") return 5;
-    if (plan === "週4/6プラン") return 3;
+    if (plan === "週4パック" || plan === "週6パック") return 3;
     const match = plan.match(/^週([1-6])$/);
     return match ? Number(match[1]) : 0;
   };
@@ -989,6 +994,8 @@ function submitPlanChangeApplication_(data) {
   };
   if (!validSchedule(currentSchedule, currentSubjects)) throw new Error("現在の受講コマを確認してください。");
   if (!validSchedule(nextSchedule, nextSubjects)) throw new Error("来月以降の受講コマを確認してください。");
+  if (currentSchedule.length > planMaxSlots(currentPlan)) throw new Error("現在のプランで選択できる受講コマ数を超えています。");
+  if (nextSchedule.length > planMaxSlots(nextPlan)) throw new Error("来月以降のプランで選択できる受講コマ数を超えています。");
   const formatScheduleForMail = function(schedule) {
     return schedule.map(function(item) { return String(item.day) + "曜 " + ["","①","②","③","④","⑤","⑥","⑦","⑧"][Number(item.period)] + " " + String(item.subject); }).join("、");
   };
@@ -1010,6 +1017,7 @@ function submitPlanChangeApplication_(data) {
   if (!String(sh.getRange(1, 10).getDisplayValue() || "").trim()) sh.getRange(1, 10).setValue("テキスト追加購入");
   if (!String(sh.getRange(1, 11).getDisplayValue() || "").trim()) sh.getRange(1, 11).setValue("現在の受講コマ");
   if (!String(sh.getRange(1, 12).getDisplayValue() || "").trim()) sh.getRange(1, 12).setValue("来月以降の受講コマ");
+  if (!String(sh.getRange(1, 13).getDisplayValue() || "").trim()) sh.getRange(1, 13).setValue("学年");
   sh.appendRow([
     new Date(),
     studentId,
@@ -1022,7 +1030,8 @@ function submitPlanChangeApplication_(data) {
     email,
     needsTextbookPurchase,
     formatScheduleForMail(currentSchedule),
-    formatScheduleForMail(nextSchedule)
+    formatScheduleForMail(nextSchedule),
+    grade
   ]);
   sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
 
@@ -1036,6 +1045,7 @@ function submitPlanChangeApplication_(data) {
         "プラン変更申請を受け付けました。\n\n" +
         "【生徒番号】\n" + studentId + "\n\n" +
         "【氏名】\n" + studentName + "\n\n" +
+        "【学年】\n" + grade + "\n\n" +
         "【現在のプラン】\n" + currentPlan + "\n\n" +
         "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
         "【来月以降のプラン】\n" + nextPlan + "\n\n" +
@@ -1058,6 +1068,7 @@ function submitPlanChangeApplication_(data) {
         "プラン変更申請を受け付けました。\n\n" +
         "生徒番号：" + studentId + "\n" +
         "氏名：" + studentName + "\n" +
+        "学年：" + grade + "\n" +
         "現在のプラン：" + currentPlan + "\n" +
         "現在の受講教科：" + currentSubjects.join("、") + "\n" +
         "来月以降のプラン：" + nextPlan + "\n" +
