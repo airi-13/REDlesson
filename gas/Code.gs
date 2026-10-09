@@ -740,10 +740,11 @@ function getTestPeriodConfig_() {
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return { success: true, configs: [] };
 
-  // F列が「有効」の行だけ対象。重複した学校・学年は、下にある最新の有効行を採用する。
-  // 過去行は削除も自動変更もしないため、誤設定時はシート上で有効／無効を切り替えられる。
+  // F列が「有効」の行だけ対象。同じ学校・学年に複数の有効行があれば、最新行を残して古い行を無効化する。
+  // 履歴行自体は削除しない。誤設定時はシートで最新行を無効、戻したい行を有効に変更できる。
   const values = sh.getRange(2, 1, lastRow - 1, 6).getValues();
   const configsByKey = {};
+  const activeRowsByKey = {};
 
   values.forEach(function(row, index) {
     const school = String(row[0] || "").trim();
@@ -759,6 +760,8 @@ function getTestPeriodConfig_() {
     sh.getRange(sheetRow, 5).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
 
     const key = school + "｜" + grade;
+    if (!activeRowsByKey[key]) activeRowsByKey[key] = [];
+    activeRowsByKey[key].push(sheetRow);
     configsByKey[key] = {
       school: school,
       grade: grade,
@@ -766,6 +769,15 @@ function getTestPeriodConfig_() {
       testEndDate: testEndDate,
       startDate: startDate
     };
+  });
+
+  // 同一学校・学年の有効行が複数ある場合、下にある最新の行以外は状態を「無効」にする。
+  Object.keys(activeRowsByKey).forEach(function(key) {
+    const rows = activeRowsByKey[key];
+    if (rows.length <= 1) return;
+    rows.slice(0, -1).forEach(function(rowNumber) {
+      sh.getRange(rowNumber, 6).setValue("無効");
+    });
   });
 
   return { success: true, configs: Object.keys(configsByKey).map(function(key) {
