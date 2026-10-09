@@ -31,7 +31,7 @@ function planMaxSlots(plan){if(plan==="通い放題")return Infinity;if(plan==="
 function isPackPlan(plan){return plan==="週4パック"||plan==="週6パック";}
 function packGradeAllowed(plan,grade){if(plan==="週4パック")return grade==="中1"||grade==="中2";if(plan==="週6パック")return grade==="中3";return true;}
 function updatePackOptions(){const grade=$("grade").value;["currentPlan","nextPlan"].forEach(id=>{const select=$(id);[...select.options].forEach(option=>{if(option.value==="週4パック"||option.value==="週6パック")option.disabled=!packGradeAllowed(option.value,grade);});if(select.value&&isPackPlan(select.value)&&!packGradeAllowed(select.value,grade))select.value="";});updatePackAnnotations();updateSubjectLimits("currentPlan","currentSubjects");updateSubjectLimits("nextPlan","nextSubjects");refreshScheduleOptions("currentSchedule","currentSubjects");refreshScheduleOptions("nextSchedule","nextSubjects");}
-function updatePackAnnotations(){["currentPlan","nextPlan"].forEach(id=>{const note=$(id+"PackNote");if(!note)return;const plan=$(id).value;note.textContent=plan==="週4パック"?"※週4パックは中1・2限定プランです。":plan==="週6パック"?"※週6パックは中3限定プランです。":"";note.classList.toggle("hidden",!isPackPlan(plan));});}
+function updatePackAnnotations(){}
 function buildScheduleTable(days, periods) {
   let table = '<table class="schedule-table"><thead><tr><th>曜日</th>' + periods.map(period => '<th>' + periodMarks[period - 1] + '</th>').join('') + '</tr></thead><tbody>';
   days.forEach(row => {
@@ -60,6 +60,30 @@ function refreshScheduleOptions(containerId, subjectContainerId) {
   selects.forEach(select=>{const oldValue=select.value;select.innerHTML='<option value="">未選択</option>'+selected.map(subject=>'<option value="'+esc(subject)+'">'+esc(subject)+'</option>').join("");if(selected.includes(oldValue))select.value=oldValue;select.closest("td").classList.toggle("is-selected",!!select.value);select.disabled=selected.length===0;});
   const chosen=selects.filter(select=>select.value).length;
   selects.forEach(select=>{if(!select.value&&chosen>=maxSlots)select.disabled=true;});
+  updateSlotCount(containerId, chosen, $(planId).value);
+}
+function updateSlotCount(containerId, chosen, plan){
+  const target=$(containerId==="currentSchedule"?"currentSlotCount":"nextSlotCount");
+  if(!target)return;
+  const required=planMaxSlots(plan);
+  if(!plan){target.textContent="プランを選択してください。";target.className="slot-count";return;}
+  if(!Number.isFinite(required)){target.textContent="通い放題：必要な受講枠を選択してください。";target.className="slot-count";return;}
+  const diff=required-chosen;
+  target.className="slot-count "+(diff===0?"slot-count-ok":"slot-count-warning");
+  target.textContent=diff>0?"あと"+diff+"枠選択してください。":diff<0?Math.abs(diff)+"枠多く選択されています。":"必要な"+required+"枠が選択されています。";
+}
+function validateNextSchedule(schedule, grade){
+  if(grade==="小4以下") return "";
+  const byDay={};
+  schedule.forEach(item=>{(byDay[item.day] ||= []).push(item.period);});
+  for(const [day, periods] of Object.entries(byDay)){
+    periods.sort((a,b)=>a-b);
+    if(periods.length%2!==0) return day+"曜日の受講コマは偶数個にしてください。";
+    for(let i=1;i<periods.length;i++){
+      if(periods[i]!==periods[i-1]+1) return day+"曜日の複数コマは、隣り合うコマを選択してください。";
+    }
+  }
+  return "";
 }
 function readSchedule(containerId) {
   return [...$(containerId).querySelectorAll(".schedule-select")].filter(select => select.value)
@@ -217,9 +241,21 @@ $("form").addEventListener("submit",e=>{
     return;
   }
 
-  if(currentSchedule.length>planMaxSlots(currentPlan)){$("error").textContent="現在のプランで選択できる受講コマ数を超えています。";return;}
-  if(nextSchedule.length>planMaxSlots(nextPlan)){$("error").textContent="来月以降のプランで選択できる受講コマ数を超えています。";return;}
-  current={action:"plan_change",studentId,studentName,grade,currentPlan,currentSubjects,currentSchedule,nextPlan,nextSubjects,needsTextbookPurchase,notes,email};
+  const currentRequired=planMaxSlots(currentPlan);
+  const nextRequired=planMaxSlots(nextPlan);
+  if(Number.isFinite(currentRequired) && currentSchedule.length!==currentRequired){
+    const diff=currentRequired-currentSchedule.length;
+    $("error").textContent=diff>0?"現在の受講コマはあと"+diff+"枠選択してください。":"現在の受講コマが"+Math.abs(diff)+"枠多く選択されています。";
+    return;
+  }
+  if(Number.isFinite(nextRequired) && nextSchedule.length!==nextRequired){
+    const diff=nextRequired-nextSchedule.length;
+    $("error").textContent=diff>0?"来月以降の受講コマはあと"+diff+"枠選択してください。":"来月以降の受講コマが"+Math.abs(diff)+"枠多く選択されています。";
+    return;
+  }
+  const scheduleError=validateNextSchedule(nextSchedule,grade);
+  if(scheduleError){$("error").textContent=scheduleError;return;}
+  current={action:"plan_change",studentId,studentName,grade,currentPlan,currentSubjects,currentSchedule,nextPlan,nextSubjects,nextSchedule,needsTextbookPurchase,notes,email};
 
   $("summary").innerHTML=
     '<p><span class="summary-label">生徒番号</span><br>'+esc(studentId)+'</p>'+
