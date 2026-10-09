@@ -26,7 +26,7 @@ $("grade").innerHTML='<option value="">学年を選択してください</option
 function createRangeRow(subject,index){
   const row=document.createElement("div");
   row.className="range-row";
-  row.innerHTML='<span class="range-label">P</span><input class="from" type="text" inputmode="numeric" maxlength="4" placeholder="開始"><span class="range-label">～ P</span><input class="to" type="text" inputmode="numeric" maxlength="4" placeholder="終了"><button class="remove-range" type="button" aria-label="範囲を削除">−</button>';
+  row.innerHTML='<span class="range-label">P</span><input class="from" type="text" inputmode="numeric" maxlength="4" placeholder="開始" aria-label="開始ページ" title="開始ページの数字"><span class="range-label">～ P</span><input class="to" type="text" inputmode="numeric" maxlength="4" placeholder="終了" aria-label="終了ページ" title="終了ページの数字"><button class="remove-range" type="button" aria-label="範囲を削除">−</button>';
   const sanitize=()=>{row.querySelectorAll("input").forEach(i=>i.value=i.value.replace(/[^0-9]/g,""));};
   row.querySelectorAll("input").forEach(i=>i.addEventListener("input",sanitize));
   row.querySelector(".remove-range").addEventListener("click",()=>{row.remove();});
