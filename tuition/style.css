@@ -149,3 +149,52 @@ font-size:1.05rem;
 }
 
 }
+
+
+/* 結論をカードいっぱいに目立たせる */
+.recommendation-conclusion{
+display:block;
+width:100%;
+padding:12px 2px;
+font-size:clamp(1.1rem, 2.8vw, 1.45rem);
+font-weight:900;
+line-height:1.2;
+text-align:center;
+color:#fff;
+background:#176b42;
+border:3px solid #0e5734;
+border-radius:10px;
+box-shadow:0 4px 0 rgba(0,0,0,.14);
+letter-spacing:-.02em;
+}
+.recommendation-card:last-child .recommendation-conclusion{
+background:#b45309;
+border-color:#92400e;
+}
+.recommendation-good strong{
+display:block;
+width:100%;
+box-sizing:border-box;
+padding:12px 2px;
+font-size:clamp(1.1rem, 2.8vw, 1.45rem);
+font-weight:900;
+line-height:1.2;
+text-align:center;
+color:#fff;
+background:#176b42;
+border:3px solid #0e5734;
+border-radius:10px;
+box-shadow:0 4px 0 rgba(0,0,0,.14);
+letter-spacing:-.02em;
+}
+.recommendation-card:last-child .recommendation-good strong{
+background:#b45309;
+border-color:#92400e;
+}
+@media(max-width:700px){
+.recommendation-conclusion,
+.recommendation-good strong{
+font-size:clamp(.88rem, 3.7vw, 1.08rem);
+padding:10px 1px;
+}
+}
