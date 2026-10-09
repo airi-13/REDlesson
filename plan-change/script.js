@@ -55,15 +55,14 @@ function updatePackPlanRestriction() {
   const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
   const nextPlanSelect = $("nextPlan");
   const notice = $("packLockNotice");
-  const weeklyOptions = [...nextPlanSelect.options].filter(option => /^週[1-6]$/.test(option.value));
-
-  weeklyOptions.forEach(option => {
-    option.disabled = currentIsPack;
+  const planOptions = [...nextPlanSelect.options].filter(option => option.value !== "");
+  planOptions.forEach(option => {
+    option.disabled = currentIsPack && option.value !== currentPlan;
   });
 
   notice.classList.toggle("hidden", !currentIsPack);
 
-  if (currentIsPack && /^週[1-6]$/.test(nextPlanSelect.value)) {
+  if (currentIsPack && nextPlanSelect.value !== currentPlan) {
     nextPlanSelect.value = currentPlan;
     updatePlanNotice();
     updateSubjectLimits("nextPlan", "nextSubjects");
