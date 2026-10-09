@@ -58,13 +58,17 @@
   min-width: 0;
   max-width: 100%;
 }
-.two > label input[type="date"] {
+.two > label input[readonly] {
   display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
   font-size: 16px;
+  padding: 12px 10px;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 .day-row {
   width: 100%;
