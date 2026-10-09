@@ -25,3 +25,16 @@ fieldset{border:1px solid #dfe5eb;border-radius:10px;padding:14px}.checks{displa
 .schedule-table{width:100%;min-width:0;border-collapse:separate;border-spacing:4px;table-layout:fixed}
 .schedule-select{display:block;width:100%;min-width:0;box-sizing:border-box;padding:9px 1px}
 @media(max-width:600px){.schedule-table{min-width:0;border-spacing:3px}.schedule-table th,.schedule-table td{padding:5px 1px}.schedule-table thead th{font-size:.8rem}.schedule-table tbody th{width:32px}.schedule-select{font-size:.75rem;padding:10px 0}}
+
+
+/* 受講コマ選択：枠とプルダウンの大きさ・形を統一 */
+.schedule-table{min-width:0;width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.schedule-table td{padding:0;border:0;background:transparent;border-radius:8px}
+.schedule-table td .schedule-select{height:42px;width:100%;margin:0;padding:6px 2px;border:1px solid #d3d9df;border-radius:8px;background:#eef0f2;color:#6b7280;font-size:.82rem;font-weight:700;text-align:center;box-sizing:border-box;appearance:auto}
+.schedule-table td.is-selected .schedule-select{background:#e8f1ff;border-color:#8bb7f0;color:#174ea6}
+.schedule-table td.schedule-unavailable{border:0;background:transparent;color:#a4abb3}
+.schedule-table td.schedule-unavailable span{display:flex;height:42px;align-items:center;justify-content:center;background:#eceff2;border-radius:8px}
+.schedule-group{width:100%;min-width:0}
+.schedule-group h4{display:none}
+.pack-plan-note{margin:-8px 0 12px;color:#9a5b00;font-size:.84rem;font-weight:700}
+@media(max-width:600px){.schedule-table{border-spacing:3px}.schedule-table th,.schedule-table td{padding:3px 1px}.schedule-table thead th{font-size:.75rem}.schedule-table tbody th{width:30px}.schedule-table td .schedule-select{height:40px;padding:5px 0;font-size:.72rem}.schedule-table td.schedule-unavailable span{height:40px}}
