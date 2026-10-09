@@ -16,7 +16,6 @@
 
 
 /* 共通ページデザインに合わせた一覧画面 */
-#listPage .page-title{margin:0 0 20px}
 #listPage .list-actions{margin:0 0 14px}
 #listPage .purchase-nav{min-height:46px}
 #listPage .filters{
@@ -64,18 +63,6 @@
 }
 
 /* 共通ページタイトルと同じ見た目を明示 */
-#listPage .page-title{margin:0 0 16px}
-#listPage .page-title h1{
-  margin:0;
-  color:var(--text);
-  font-size:1.55rem;
-  line-height:1.35;
-}
-#listPage .page-title p{
-  margin:5px 0 0;
-  color:var(--muted);
-  font-size:.9rem;
-}
 #listPage .list-actions{
   margin:0 0 16px;
   display:flex;
@@ -99,9 +86,6 @@
   color:var(--text);
   line-height:1.65;
 }
-#listPage .page-title h1{color:var(--text)}
-
-
 /* 該当テキストがない場合は、注意文の赤系背景と区別した空状態表示にする */
 #listPage .empty-state{
   display:flex;
