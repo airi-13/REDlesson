@@ -58,3 +58,27 @@
   #listPage .purchase-nav{width:100%;min-height:48px}
   #listPage .textbook-grid{grid-template-columns:1fr}
 }
+
+/* 共通ページタイトルと同じ見た目を明示 */
+#listPage .page-title{margin:0 0 16px}
+#listPage .page-title h1{
+  margin:0;
+  color:var(--red);
+  font-size:1.55rem;
+  line-height:1.35;
+}
+#listPage .page-title p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:.9rem;
+}
+#listPage .list-actions{
+  margin:0 0 16px;
+  display:flex;
+  justify-content:flex-end;
+}
+@media(max-width:600px){
+  #listPage .list-actions{justify-content:stretch}
+  #listPage .purchase-nav{width:100%;min-height:48px}
+}
+
