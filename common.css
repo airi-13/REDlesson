@@ -56,7 +56,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--red);box-sh
 .link-button{margin-top:18px}
 footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
 .page-title{margin:0 0 16px}
-.page-title h1{margin:0;color:var(--red);font-size:1.55rem;line-height:1.35}
+.page-title h1{margin:0;color:var(--text);font-size:1.55rem;line-height:1.35}
 .page-title p{margin:5px 0 0;color:var(--muted);font-size:.9rem}
 
 @media(max-width:650px){
