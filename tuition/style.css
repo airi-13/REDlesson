@@ -226,3 +226,31 @@ padding:10px 1px;
   }
 }
 
+/* シミュレーション結果の直前に置くプラン変更への導線 */
+.plan-change-action{
+  margin:0 0 16px;
+  padding:14px 16px;
+  background:#fff;
+  border:1px solid #ead0d3;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+}
+.plan-change-action .primary-button{
+  max-width:460px;
+  margin:0 auto;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.plan-change-action p{
+  margin:8px 0 0;
+  color:var(--muted);
+  font-size:.82rem;
+  text-align:center;
+}
+@media(max-width:650px){
+  .plan-change-action{padding:12px}
+  .plan-change-action .primary-button{max-width:none}
+}
+
