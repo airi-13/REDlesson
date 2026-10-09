@@ -873,6 +873,8 @@ function submitPlanChangeApplication_(data) {
   const nextPlan = String(data.nextPlan || "").trim();
   const currentSubjects = Array.isArray(data.currentSubjects) ? data.currentSubjects.map(String) : [];
   const nextSubjects = Array.isArray(data.nextSubjects) ? data.nextSubjects.map(String) : [];
+  const currentSchedule = Array.isArray(data.currentSchedule) ? data.currentSchedule : [];
+  const nextSchedule = Array.isArray(data.nextSchedule) ? data.nextSchedule : [];
   const needsTextbookPurchase = String(data.needsTextbookPurchase || "").trim();
   const notes = String(data.notes || "").trim();
   const email = String(data.email || "").trim();
@@ -906,6 +908,18 @@ function submitPlanChangeApplication_(data) {
     throw new Error("来月以降のプランで選択できる受講教科数を超えています。");
   }
 
+  
+  const validSchedule = function(schedule, allowed) {
+    const days = { "火":[4,5,6,7,8], "水":[3,4,5,6,7], "木":[4,5,6,7,8], "金":[3,4,5,6,7], "土":[1,2,3,4,5] };
+    return schedule.length > 0 && schedule.every(function(item) {
+      return item && Object.prototype.hasOwnProperty.call(days, String(item.day)) && days[String(item.day)].includes(Number(item.period)) && allowed.includes(String(item.subject));
+    }) && new Set(schedule.map(function(item) { return String(item.day) + "-" + String(item.period); })).size === schedule.length;
+  };
+  if (!validSchedule(currentSchedule, currentSubjects)) throw new Error("現在の受講コマを確認してください。");
+  if (!validSchedule(nextSchedule, nextSubjects)) throw new Error("来月以降の受講コマを確認してください。");
+  const formatScheduleForMail = function(schedule) {
+    return schedule.map(function(item) { return String(item.day) + "曜 " + ["","①","②","③","④","⑤","⑥","⑦","⑧"][Number(item.period)] + " " + String(item.subject); }).join("、");
+  };
   if (!["あり", "なし"].includes(needsTextbookPurchase)) throw new Error("テキスト追加購入の有無を選択してください。");
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
 
@@ -916,14 +930,14 @@ function submitPlanChangeApplication_(data) {
     sh = ss.insertSheet(PLAN_CHANGE_SHEET_NAME);
     sh.appendRow([
       "受付日時","生徒番号","氏名","現在のプラン","現在の受講教科",
-      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス","テキスト追加購入"
+      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス","テキスト追加購入","現在の受講コマ","来月以降の受講コマ"
     ]);
   }
 
   // 既存シートにも購入有無の列を追加し、過去の申請データは保持する。
-  if (sh.getLastColumn() < 10 || String(sh.getRange(1, 10).getDisplayValue() || "").trim() === "") {
-    sh.getRange(1, 10).setValue("テキスト追加購入");
-  }
+  if (!String(sh.getRange(1, 10).getDisplayValue() || "").trim()) sh.getRange(1, 10).setValue("テキスト追加購入");
+  if (!String(sh.getRange(1, 11).getDisplayValue() || "").trim()) sh.getRange(1, 11).setValue("現在の受講コマ");
+  if (!String(sh.getRange(1, 12).getDisplayValue() || "").trim()) sh.getRange(1, 12).setValue("来月以降の受講コマ");
   sh.appendRow([
     new Date(),
     studentId,
@@ -934,7 +948,9 @@ function submitPlanChangeApplication_(data) {
     nextSubjects.join("、"),
     notes,
     email,
-    needsTextbookPurchase
+    needsTextbookPurchase,
+    formatScheduleForMail(currentSchedule),
+    formatScheduleForMail(nextSchedule)
   ]);
   sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
 
@@ -952,6 +968,8 @@ function submitPlanChangeApplication_(data) {
         "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
         "【来月以降のプラン】\n" + nextPlan + "\n\n" +
         "【来月以降の受講教科】\n" + nextSubjects.join("、") + "\n\n" +
+        "【現在の受講コマ】\n" + formatScheduleForMail(currentSchedule) + "\n\n" +
+        "【来月以降の受講コマ】\n" + formatScheduleForMail(nextSchedule) + "\n\n" +
         "【テキスト追加購入】\n" + needsTextbookPurchase + "\n\n" +
         "【連絡事項】\n" + (notes || "なし") + "\n\n" +
         "自立学習RED 天王台教室"
@@ -972,6 +990,8 @@ function submitPlanChangeApplication_(data) {
         "現在の受講教科：" + currentSubjects.join("、") + "\n" +
         "来月以降のプラン：" + nextPlan + "\n" +
         "来月以降の受講教科：" + nextSubjects.join("、") + "\n" +
+        "現在の受講コマ：" + formatScheduleForMail(currentSchedule) + "\n" +
+        "来月以降の受講コマ：" + formatScheduleForMail(nextSchedule) + "\n" +
         "テキスト追加購入：" + needsTextbookPurchase + "\n" +
         "連絡事項：" + (notes || "なし") + "\n" +
         "確認メール送付先：" + email
