@@ -11,4 +11,4 @@ fieldset{border:1px solid #dfe5eb;border-radius:10px;padding:14px}.checks{displa
 .notice-check span{font-weight:600;line-height:1.55}
 
 
-.pack-lock-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #d97706;border-radius:9px;background:#fff8eb;color:#92400e;font-weight:700;line-height:1.55}
+.pack-lock-notice{margin:4px 0 10px;padding:0;border:0;border-radius:0;background:transparent;color:#c62828;font-size:.82rem;font-weight:400;line-height:1.5}
