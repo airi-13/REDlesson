@@ -61,6 +61,7 @@ function refreshScheduleOptions(containerId, subjectContainerId) {
   const chosen=selects.filter(select=>select.value).length;
   selects.forEach(select=>{if(!select.value&&chosen>=maxSlots)select.disabled=true;});
   updateSlotCount(containerId, chosen, $(planId).value);
+  if(containerId==="nextSchedule") updateNextScheduleAnnotation();
 }
 function updateSlotCount(containerId, chosen, plan){
   const target=$(containerId==="currentSchedule"?"currentSlotCount":"nextSlotCount");
@@ -83,12 +84,19 @@ function validateNextSchedule(schedule, grade){
   schedule.forEach(item=>{(byDay[item.day] ||= []).push(item.period);});
   for(const [day, periods] of Object.entries(byDay)){
     periods.sort((a,b)=>a-b);
-    if(periods.length%2!==0) return day+"曜日の受講コマは偶数個にしてください。";
+    if(periods.length%2!==0) return day+"曜日の受講コマは偶数個になるように選択してください。";
     for(let i=1;i<periods.length;i++){
-      if(periods[i]!==periods[i-1]+1) return day+"曜日の複数コマは、隣り合うコマを選択してください。";
+      if(periods[i]!==periods[i-1]+1) return day+"曜日の受講コマが連続していません。飛び飛びにならないよう、連続するコマを選択してください。";
     }
   }
   return "";
+}
+function updateNextScheduleAnnotation(){
+  const target=$("nextScheduleValidation");
+  if(!target) return;
+  const message=validateNextSchedule(readSchedule("nextSchedule"),$("grade").value);
+  target.textContent=message;
+  target.className=message?"field-annotation field-annotation-error":"field-annotation";
 }
 function readSchedule(containerId) {
   return [...$(containerId).querySelectorAll(".schedule-select")].filter(select => select.value)
@@ -104,6 +112,7 @@ renderScheduleGrid("nextSchedule", "nextSubjects");
   const scheduleId = subjectId === "currentSubjects" ? "currentSchedule" : "nextSchedule";
   $(subjectId).addEventListener("change", () => refreshScheduleOptions(scheduleId, subjectId));
 });
+updateNextScheduleAnnotation();
 
 
 const noticeItems = {
@@ -147,7 +156,7 @@ function updatePlanNotice() {
 
 $("nextPlan").addEventListener("change", updatePlanNotice);
 ["currentPlan","nextPlan"].forEach(id=>$(id).addEventListener("change",()=>{updatePackAnnotations();refreshScheduleOptions(id==="currentPlan"?"currentSchedule":"nextSchedule",id==="currentPlan"?"currentSubjects":"nextSubjects");}));
-$("grade").addEventListener("change",updatePackOptions);
+$("grade").addEventListener("change",()=>{updatePackOptions();updateNextScheduleAnnotation();});
 
 function updatePackPlanRestriction() {
   const currentPlan = $("currentPlan").value;
@@ -217,8 +226,21 @@ $("form").addEventListener("submit",e=>{
   const currentMax=planMaxSubjects(currentPlan);
   const nextMax=planMaxSubjects(nextPlan);
 
-  if(!/^\d+$/.test(studentId)||!studentName||!grade||!plans.includes(currentPlan)||!plans.includes(nextPlan)||!currentSubjects.length||!nextSubjects.length||!currentSchedule.length||!nextSchedule.length||!needsTextbookPurchase||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    $("error").textContent="必須項目を正しく入力してください。";
+  const requiredErrors=[];
+  if(!/^\d+$/.test(studentId)) requiredErrors.push("生徒番号を数字で入力してください。");
+  if(!studentName) requiredErrors.push("生徒氏名を入力してください。");
+  if(!grade) requiredErrors.push("現在の学年を選択してください。");
+  if(!plans.includes(currentPlan)) requiredErrors.push("現在のプランを選択してください。");
+  if(!currentSubjects.length) requiredErrors.push("現在の受講教科を1つ以上選択してください。");
+  if(!currentSchedule.length) requiredErrors.push("現在の受講コマを選択してください。");
+  if(!plans.includes(nextPlan)) requiredErrors.push("来月以降のプランを選択してください。");
+  if(!nextSubjects.length) requiredErrors.push("来月以降の受講教科を1つ以上選択してください。");
+  if(!nextSchedule.length) requiredErrors.push("来月以降の受講コマを選択してください。");
+  if(!needsTextbookPurchase) requiredErrors.push("テキストの追加購入について「あり」または「なし」を選択してください。");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) requiredErrors.push("有効なメールアドレスを入力してください。");
+  if(requiredErrors.length){
+    $("error").textContent=requiredErrors.join(" ");
+    $("error").scrollIntoView({behavior:"smooth",block:"center"});
     return;
   }
 
@@ -259,7 +281,13 @@ $("form").addEventListener("submit",e=>{
     return;
   }
   const scheduleError=validateNextSchedule(nextSchedule,grade);
-  if(scheduleError){$("error").textContent=scheduleError;return;}
+  if(scheduleError){
+    $("nextScheduleValidation").textContent=scheduleError;
+    $("nextScheduleValidation").className="field-annotation field-annotation-error";
+    $("nextScheduleValidation").scrollIntoView({behavior:"smooth",block:"center"});
+    $("error").textContent="来月以降の受講コマを確認してください。";
+    return;
+  }
   current={action:"plan_change",studentId,studentName,grade,currentPlan,currentSubjects,currentSchedule,nextPlan,nextSubjects,nextSchedule,needsTextbookPurchase,notes,email};
 
   $("summary").innerHTML=
