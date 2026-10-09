@@ -94,3 +94,6 @@ body:has(#success:not(.hidden)) .page-title{display:none!important}
 .success-card h2{margin:0 0 14px;text-align:center}
 .success-card>p,.success-card .purchase-link,.success-card .textbook-purchase-next{margin-left:auto;margin-right:auto;text-align:center}
 .success-card .link-button,.success-card .primary{margin-left:auto;margin-right:auto}
+
+/* 完了画面ではカード外の見出し・フッターを表示しない */
+body:has(#success:not(.hidden)) footer,body:has(#completePage:not(.hidden)) footer{display:none!important}
