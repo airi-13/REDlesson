@@ -52,28 +52,20 @@ $("nextPlan").addEventListener("change", updatePlanNotice);
 
 function updatePackPlanRestriction() {
   const currentPlan = $("currentPlan").value;
-  const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
-  const nextPlanSelect = $("nextPlan");
-  const notice = $("packLockNotice");
+  const nextPlan = $("nextPlan").value;
   const packPlans = ["週4/6プラン", "通い放題"];
-  const planOptions = [...nextPlanSelect.options].filter(option => option.value !== "");
+  const currentIsPack = packPlans.includes(currentPlan);
+  const nextIsOtherPlan = nextPlan !== "" && !packPlans.includes(nextPlan);
 
-  // パック利用中は、年度内に選択できない通常料金プランを選択肢自体から隠す
-  planOptions.forEach(option => {
-    option.hidden = currentIsPack && !packPlans.includes(option.value);
-  });
-
-  notice.classList.toggle("hidden", !currentIsPack);
-
-  // 現在選択中のプランが選択肢から隠れた場合は、現在のパックを選択状態にする
-  if (currentIsPack && !packPlans.includes(nextPlanSelect.value)) {
-    nextPlanSelect.value = currentPlan;
-    updatePlanNotice();
-    updateSubjectLimits("nextPlan", "nextSubjects");
-  }
+  // 注意文は「現在パック利用中」かつ「来月以降に通常料金プランを選択」の場合だけ表示
+  $("packLockNotice").classList.toggle(
+    "hidden",
+    !(currentIsPack && nextIsOtherPlan)
+  );
 }
 
 $("currentPlan").addEventListener("change", updatePackPlanRestriction);
+$("nextPlan").addEventListener("change", updatePackPlanRestriction);
 updatePackPlanRestriction();
 
 
@@ -136,7 +128,7 @@ $("form").addEventListener("submit",e=>{
   const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
   const nextIsPack = nextPlan === "週4/6プラン" || nextPlan === "通い放題";
   if (currentIsPack && !nextIsPack) {
-    $("error").textContent = "パックは年度内変更することができません。来月以降も週4/6プランまたは通い放題を選択してください。";
+    $("error").textContent = "パックは年度内変更することができません。来月以降もパックを選択してください。";
     return;
   }
 
