@@ -710,12 +710,14 @@ function submitTestRangeApplication_(data) {
   const school = String(data.school || "").trim();
   const grade = String(data.grade || "").trim();
   const notes = String(data.notes || "").trim();
+  const email = String(data.email || "").trim();
   const subjects = Array.isArray(data.subjects) ? data.subjects : [];
 
   if (!/^\d+$/.test(studentId)) {
     throw new Error("生徒番号は半角数字で入力してください。");
   }
   if (!studentName) throw new Error("氏名を入力してください。");
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
   if (!school) throw new Error("学校名を選択してください。");
   if (!grade) throw new Error("学年を選択してください。");
 
