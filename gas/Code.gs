@@ -319,7 +319,6 @@ function submitApplication(data) {
 
   let mailSuccess = true;
   if (!data.deferEmail) {
-    let mailSuccess = true;
   
     const body =
       "欠席・振替申請を受け付けました。\n\n" +
@@ -603,6 +602,7 @@ function submitPurchaseApplication_(data) {
     notes: notes
   });
 
+  let mailSuccess = true;
   if (!data.deferEmail) {
     const itemLines = items.map(function(item) {
       return "・" + item.title + " × " + item.quantity;
@@ -617,8 +617,6 @@ function submitPurchaseApplication_(data) {
       "連絡事項：\n" + (notes || "なし") + "\n\n" +
       "テキスト代は通常授業料と合わせて口座引き落としとなり、お支払い確認後に教室で直接お渡しいたします。\n" +
       "お急ぎの場合は、教室まで直接ご連絡ください。";
-  
-    let mailSuccess = true;
   
     try {
       MailApp.sendEmail({
@@ -1199,7 +1197,6 @@ function submitPlanChangeApplication_(data) {
 
   let mailSuccess = true;
   if (!data.deferEmail) {
-    let mailSuccess = true;
   
     try {
       MailApp.sendEmail({
