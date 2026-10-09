@@ -69,8 +69,13 @@ function updateSlotCount(containerId, chosen, plan){
   if(!plan){target.textContent="プランを選択してください。";target.className="slot-count";return;}
   if(!Number.isFinite(required)){target.textContent="通い放題：必要な受講枠を選択してください。";target.className="slot-count";return;}
   const diff=required-chosen;
-  target.className="slot-count "+(diff===0?"slot-count-ok":"slot-count-warning");
-  target.textContent=diff>0?"あと"+diff+"枠選択してください。":diff<0?Math.abs(diff)+"枠多く選択されています。":"必要な"+required+"枠が選択されています。";
+  if(diff===0){
+    target.textContent="";
+    target.className="slot-count";
+    return;
+  }
+  target.className="slot-count slot-count-warning";
+  target.textContent=diff>0?"あと"+diff+"枠選択してください。":Math.abs(diff)+"枠多く選択されています。";
 }
 function validateNextSchedule(schedule, grade){
   if(grade==="小4以下") return "";
