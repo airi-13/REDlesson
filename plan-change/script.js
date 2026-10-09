@@ -55,14 +55,15 @@ function updatePackPlanRestriction() {
   const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
   const nextPlanSelect = $("nextPlan");
   const notice = $("packLockNotice");
+  const packPlans = ["週4/6プラン", "通い放題"];
   const planOptions = [...nextPlanSelect.options].filter(option => option.value !== "");
   planOptions.forEach(option => {
-    option.disabled = currentIsPack && option.value !== currentPlan;
+    option.disabled = currentIsPack && !packPlans.includes(option.value);
   });
 
   notice.classList.toggle("hidden", !currentIsPack);
 
-  if (currentIsPack && nextPlanSelect.value !== currentPlan) {
+  if (currentIsPack && !packPlans.includes(nextPlanSelect.value)) {
     nextPlanSelect.value = currentPlan;
     updatePlanNotice();
     updateSubjectLimits("nextPlan", "nextSubjects");
@@ -130,8 +131,9 @@ $("form").addEventListener("submit",e=>{
   $("planNoticeError").textContent="";
 
   const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
-  if (currentIsPack && /^週[1-6]$/.test(nextPlan)) {
-    $("error").textContent = "パックは年度内変更することができません。来月以降もパックを選択してください。";
+  const nextIsPack = nextPlan === "週4/6プラン" || nextPlan === "通い放題";
+  if (currentIsPack && !nextIsPack) {
+    $("error").textContent = "パックは年度内変更することができません。来月以降も週4/6プランまたは通い放題を選択してください。";
     return;
   }
 
