@@ -1,15 +1,1 @@
-/* テスト登録ページのタイトルを共通ページデザインに統一 */
-.page-title{
-  margin:0 0 16px;
-}
-.page-title h1{
-  margin:0;
-  color:var(--red);
-  font-size:1.55rem;
-  line-height:1.35;
-}
-.page-title p{
-  margin:5px 0 0;
-  color:var(--muted);
-  font-size:.9rem;
-}
+/* タイトルを含む共通デザインは ../common.css で管理します。 */
