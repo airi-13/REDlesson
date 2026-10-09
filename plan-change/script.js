@@ -67,7 +67,7 @@ function updateSlotCount(containerId, chosen, plan){
   if(!target)return;
   const required=planMaxSlots(plan);
   if(!plan){target.textContent="プランを選択してください。";target.className="slot-count";return;}
-  if(!Number.isFinite(required)){target.textContent="通い放題：必要な受講枠を選択してください。";target.className="slot-count";return;}
+  if(!Number.isFinite(required)){target.textContent="";target.className="slot-count";return;}
   const diff=required-chosen;
   if(diff===0){
     target.textContent="";
