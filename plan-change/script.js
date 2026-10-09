@@ -57,12 +57,15 @@ function updatePackPlanRestriction() {
   const notice = $("packLockNotice");
   const packPlans = ["週4/6プラン", "通い放題"];
   const planOptions = [...nextPlanSelect.options].filter(option => option.value !== "");
+
+  // パック利用中は、年度内に選択できない通常料金プランを選択肢自体から隠す
   planOptions.forEach(option => {
-    option.disabled = currentIsPack && !packPlans.includes(option.value);
+    option.hidden = currentIsPack && !packPlans.includes(option.value);
   });
 
   notice.classList.toggle("hidden", !currentIsPack);
 
+  // 現在選択中のプランが選択肢から隠れた場合は、現在のパックを選択状態にする
   if (currentIsPack && !packPlans.includes(nextPlanSelect.value)) {
     nextPlanSelect.value = currentPlan;
     updatePlanNotice();
