@@ -2,6 +2,7 @@ const SPREADSHEET_ID = "1apUqDRpkV1leEvYegYv61a22vuf2YdQYe40yzvgOb9Q";
 const ABSENCE_SHEET_NAME = "申請一覧";
 const PURCHASE_SHEET_NAME = "購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
+const TEST_PERIOD_CONFIG_SHEET_NAME = "テスト期間設定";
 const PLAN_CHANGE_SHEET_NAME = "プラン変更申請";
 const ADMIN_EMAIL = "tennodai.red@gmail.com";
 const TIME_ZONE = "Asia/Tokyo";
@@ -21,6 +22,8 @@ function doGet(e) {
 
     if (action === "purchase") {
       result = handlePurchaseJsonp_(e);
+    } else if (action === "test_period_config") {
+      result = getTestPeriodConfig_();
     } else if (e.parameter && e.parameter.data) {
       result = handleAbsenceJsonp_(e);
     } else {
@@ -660,6 +663,77 @@ function submitTestRangeApplication_(data) {
   }
 
   return { success: true };
+}
+
+/* =====================================================
+   テスト対策コマの期間設定
+   シート「テスト期間設定」
+   A列: 学校名 / B列: 学年 / C列: テスト日
+===================================================== */
+
+function getTestPeriodConfig_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(TEST_PERIOD_CONFIG_SHEET_NAME);
+
+  if (!sh) {
+    sh = ss.insertSheet(TEST_PERIOD_CONFIG_SHEET_NAME);
+    sh.getRange(1, 1, 1, 4).setValues([[
+      "学校名", "学年", "テスト日", "2週間の開始日（自動計算）"
+    ]]);
+    sh.setFrozenRows(1);
+    sh.getRange("C:C").setNumberFormat("yyyy/mm/dd");
+    sh.getRange("D:D").setNumberFormat("yyyy/mm/dd");
+  }
+
+  const lastRow = sh.getLastRow();
+  if (lastRow < 2) {
+    return { success: true, configs: [] };
+  }
+
+  const values = sh.getRange(2, 1, lastRow - 1, Math.max(4, sh.getLastColumn())).getValues();
+  const configs = [];
+
+  values.forEach(function(row, index) {
+    const school = String(row[0] || "").trim();
+    const grade = String(row[1] || "").trim();
+    const testDate = normalizeSheetDate_(row[2]);
+    if (!school || !grade || !testDate) return;
+
+    const startDate = shiftIsoDate_(testDate, -14);
+    const sheetRow = index + 2;
+    sh.getRange(sheetRow, 4).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
+
+    configs.push({
+      school: school,
+      grade: grade,
+      testDate: testDate,
+      startDate: startDate
+    });
+  });
+
+  return { success: true, configs: configs };
+}
+
+function normalizeSheetDate_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
+  }
+
+  const text = String(value || "").trim();
+  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(text) && parseDate_(text)) return text;
+
+  const match = /^(\\d{4})[\\/.-](\\d{1,2})[\\/.-](\\d{1,2})$/.exec(text);
+  if (!match) return "";
+  const iso = match[1] + "-" + String(Number(match[2])).padStart(2, "0") + "-" +
+    String(Number(match[3])).padStart(2, "0");
+  return parseDate_(iso) ? iso : "";
+}
+
+function shiftIsoDate_(dateString, amount) {
+  const date = parseDate_(dateString);
+  if (!date) return "";
+  date.setDate(date.getDate() + amount);
+  return Utilities.formatDate(date, TIME_ZONE, "yyyy-MM-dd");
 }
 
 /* =====================================================
