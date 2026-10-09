@@ -85,7 +85,7 @@ footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
 .common-form-block .field{margin-bottom:16px}
 .common-form-block .field:last-child{margin-bottom:0}
 /* 申請完了時は、完了カードの外にページ見出しを表示しない */
-body:has(#success:not(.hidden)) .page-title{display:none!important}
+body:has(#success:not(.hidden)) .page-title,body:has(#completePage:not(.hidden)) .page-title{display:none!important}
 
 
 /* すべての申請フォームで完了画面のレイアウトを統一 */
@@ -96,4 +96,4 @@ body:has(#success:not(.hidden)) .page-title{display:none!important}
 .success-card .link-button,.success-card .primary{margin-left:auto;margin-right:auto}
 
 /* 完了画面ではカード外の見出し・フッターを表示しない */
-body:has(#success:not(.hidden)) footer,body:has(#completePage:not(.hidden)) footer{display:none!important}
+body:has(#success:not(.hidden)) footer,body:has(#completePage:not(.hidden)) footer,body:has(#success:not(.hidden)) [data-site-header],body:has(#completePage:not(.hidden)) [data-site-header]{display:none!important}
