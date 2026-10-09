@@ -84,3 +84,7 @@ footer{text-align:center;color:#777;font-size:.8rem;padding:18px}
 
 .common-form-block .field{margin-bottom:16px}
 .common-form-block .field:last-child{margin-bottom:0}
+
+
+/* テスト登録メニューのボタン間隔 */
+.test-registration-menu{display:grid;grid-template-columns:1fr;gap:12px}
