@@ -176,31 +176,6 @@ function submitApplication(data) {
   const storedAbsenceDate = formatJapaneseDate_(absenceDate);
   const storedAbsencePeriods = getPeriodText_(absencePeriods);
 
-  let mailSuccess = true;
-
-  const body =
-    "欠席・振替申請を受け付けました。\n\n" +
-    "【生徒番号】\n" + studentId + "\n\n" +
-    "【生徒氏名】\n" + studentName + "\n\n" +
-    "【欠席希望日】\n" + storedAbsenceDate + "\n\n" +
-    "【欠席希望時間】\n" + storedAbsencePeriods + "\n\n" +
-    "【振替希望日】\n" + storedMakeupDate + "\n\n" +
-    "【振替希望時間】\n" + storedMakeupPeriods + "\n\n" +
-    "【連絡事項】\n" + (notes || "なし") + "\n\n" +
-    "※このメールは申請受付の確認メールです。\n" +
-    "※変更がある場合は、その内容を連絡事項に記入して再申請してください。\n\n" +
-    "自立学習RED 天王台教室";
-
-  try {
-    MailApp.sendEmail({
-      to: email,
-      subject: "欠席・振替申請を受け付けました",
-      body: body
-    });
-  } catch (error) {
-    mailSuccess = false;
-  }
-
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = spreadsheet.getSheetByName(ABSENCE_SHEET_NAME);
 
@@ -227,8 +202,9 @@ function submitApplication(data) {
   if (makeupUndecided) noteParts.push("【振替日未定】");
   if (notes) noteParts.push(notes);
 
+  // 先に申請内容をシートへ登録し、登録後に確認メールを送信する
   const row = [
-    mailSuccess ? "未確認" : "メールエラー",
+    "未確認",
     new Date(),
     studentId,
     studentName,
@@ -243,6 +219,31 @@ function submitApplication(data) {
   const nextRow = sheet.getLastRow() + 1;
   sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
   sheet.getRange(nextRow, 3).setNumberFormat("@");
+
+  let mailSuccess = true;
+  const body =
+    "欠席・振替申請を受け付けました。\n\n" +
+    "【生徒番号】\n" + studentId + "\n\n" +
+    "【生徒氏名】\n" + studentName + "\n\n" +
+    "【欠席希望日】\n" + storedAbsenceDate + "\n\n" +
+    "【欠席希望時間】\n" + storedAbsencePeriods + "\n\n" +
+    "【振替希望日】\n" + storedMakeupDate + "\n\n" +
+    "【振替希望時間】\n" + storedMakeupPeriods + "\n\n" +
+    "【連絡事項】\n" + (notes || "なし") + "\n\n" +
+    "※このメールは申請受付の確認メールです。\n" +
+    "※変更がある場合は、その内容を連絡事項に記入して再申請してください。\n\n" +
+    "自立学習RED 天王台教室";
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "欠席・振替申請を受け付けました",
+      body: body
+    });
+  } catch (error) {
+    mailSuccess = false;
+    sheet.getRange(nextRow, 1).setValue("メールエラー");
+  }
 
   return {
     success: true,
