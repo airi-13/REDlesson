@@ -19,8 +19,11 @@ function doGet(e) {
     const action = String(e.parameter && e.parameter.action || "").trim();
 
     let result;
-
-    if (action === "purchase") {
+    if (action === "submission_status") {
+      result = getSubmissionStatus_(String(e.parameter.requestId || ""));
+    } else if (action === "send_submission_email") {
+      result = sendApplicationEmailsByRequestId_(String(e.parameter.requestId || ""));
+    } else if (action === "purchase") {
       result = handlePurchaseJsonp_(e);
     } else if (action === "test_period_config") {
       result = getTestPeriodConfig_();
@@ -69,6 +72,9 @@ function doPost(e) {
     }
 
     const data = JSON.parse(e.postData.contents);
+    if (String(data.phase || "") === "register") {
+      return jsonResponse_(registerApplicationRequest_(data));
+    }
     if (String(data.action || "") === "purchase") {
       return jsonResponse_(submitPurchaseApplication_(data));
     }
@@ -94,6 +100,141 @@ function doPost(e) {
       message: error && error.message ? error.message : "処理中にエラーが発生しました。"
     });
   }
+}
+
+
+/* =====================================================
+   登録結果確認・二重登録防止・登録後メール送信
+===================================================== */
+const SUBMISSION_LOG_SHEET_ = "申請処理ログ";
+function getSubmissionLogSheet_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(SUBMISSION_LOG_SHEET_);
+  if (!sh) {
+    sh = ss.insertSheet(SUBMISSION_LOG_SHEET_);
+    sh.appendRow(["受付ID","登録状態","エラーメッセージ","申請データ","申請者メール状態","教室メール状態","受付日時"]);
+  }
+  return sh;
+}
+function findSubmissionLogRow_(sh, requestId) {
+  if (sh.getLastRow() < 2) return 0;
+  const found = sh.getRange(2,1,sh.getLastRow()-1,1)
+    .createTextFinder(requestId).matchEntireCell(true).findNext();
+  return found ? found.getRow() : 0;
+}
+function registerApplicationRequest_(data) {
+  const requestId = String(data.requestId || "").trim();
+  if (!/^[A-Za-z0-9_-]{12,80}$/.test(requestId)) {
+    return {success:false,status:"failed",message:"受付IDが正しくありません。"};
+  }
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = getSubmissionLogSheet_();
+    const existing = findSubmissionLogRow_(sh, requestId);
+    if (existing) {
+      return {
+        success: sh.getRange(existing,2).getValue() === "success",
+        status: String(sh.getRange(existing,2).getValue() || "pending"),
+        message: String(sh.getRange(existing,3).getValue() || "")
+      };
+    }
+    const row = sh.getLastRow()+1;
+    sh.getRange(row,1,1,7).setValues([[requestId,"pending","",JSON.stringify(data),"pending","pending",new Date()]]);
+    try {
+      const payload = Object.assign({}, data, {deferEmail:true});
+      let result;
+      switch (String(data.action || "")) {
+        case "purchase": result = submitPurchaseApplication_(payload); break;
+        case "test_range": result = submitTestRangeApplication_(payload); break;
+        case "test_subject": result = submitTestSubjectApplication_(payload); break;
+        case "test_period": result = submitTestPeriodApplication_(payload); break;
+        case "plan_change": result = submitPlanChangeApplication_(payload); break;
+        default: result = submitApplication(payload); break;
+      }
+      if (!result || result.success !== true) throw new Error((result && result.message) || "スプレッドシートへの登録を確認できませんでした。");
+      sh.getRange(row,2,1,2).setValues([["success",""]]);
+      return {success:true,status:"success",message:"登録しました。"};
+    } catch (error) {
+      sh.getRange(row,2,1,2).setValues([["failed",String(error && error.message || "登録に失敗しました。")]]);
+      return {success:false,status:"failed",message:String(error && error.message || "登録に失敗しました。")};
+    }
+  } finally {
+    lock.releaseLock();
+  }
+}
+function getSubmissionStatus_(requestId) {
+  if (!requestId) return {success:false,status:"failed",message:"受付IDがありません。"};
+  const sh = getSubmissionLogSheet_();
+  const row = findSubmissionLogRow_(sh, requestId);
+  if (!row) return {success:false,status:"pending",message:"登録結果を確認しています。"};
+  const status = String(sh.getRange(row,2).getValue() || "pending");
+  return {success:status==="success",status:status,message:String(sh.getRange(row,3).getValue() || "")};
+}
+function sendApplicationEmailsByRequestId_(requestId) {
+  if (!requestId) return {success:false,message:"受付IDがありません。"};
+  const sh = getSubmissionLogSheet_();
+  const row = findSubmissionLogRow_(sh, requestId);
+  if (!row) return {success:false,message:"申請データが見つかりません。"};
+  if (String(sh.getRange(row,2).getValue()) !== "success") return {success:false,message:"登録が完了していないため、メールを送信しませんでした。"};
+  const payload = JSON.parse(String(sh.getRange(row,4).getValue() || "{}"));
+  const emails = buildApplicationEmails_(payload);
+  let applicantStatus = String(sh.getRange(row,5).getValue() || "pending");
+  let adminStatus = String(sh.getRange(row,6).getValue() || "pending");
+  if (applicantStatus !== "sent") {
+    try {
+      if (emails.applicantTo) MailApp.sendEmail({to:emails.applicantTo,subject:emails.applicantSubject,body:emails.applicantBody});
+      applicantStatus = "sent";
+    } catch (err) { applicantStatus = "error"; }
+    sh.getRange(row,5).setValue(applicantStatus);
+  }
+  if (adminStatus !== "sent") {
+    try {
+      MailApp.sendEmail({to:ADMIN_EMAIL,subject:emails.adminSubject,body:emails.adminBody});
+      adminStatus = "sent";
+    } catch (err) { adminStatus = "error"; }
+    sh.getRange(row,6).setValue(adminStatus);
+  }
+  return {success:applicantStatus==="sent" && adminStatus==="sent",applicantMailStatus:applicantStatus,adminMailStatus:adminStatus};
+}
+function buildApplicationEmails_(d) {
+  const action = String(d.action || "absence");
+  const studentId = String(d.studentId || "");
+  const studentName = String(d.studentName || "");
+  const email = String(d.email || "");
+  const notes = String(d.notes || "なし");
+  let label = "申請";
+  let detail = "";
+  if (action === "purchase") {
+    label = "テキスト購入申請";
+    detail = "購入テキスト：\n" + (d.items || []).map(x=>"・"+x.title+" × "+x.quantity).join("\n");
+  } else if (action === "test_range") {
+    label = "テスト範囲登録";
+    detail = "学校名："+d.school+"\n学年："+d.grade+"\n"+(d.subjects||[]).map(x=>x.subject+"（"+formatJapaneseDate_(x.testDate)+"）："+(x.ranges||[]).map(r=>"P"+r.from+"～P"+r.to).join("、")+"（"+x.publisher+"）").join("\n");
+  } else if (action === "test_subject") {
+    label = "テスト対策教科登録";
+    detail = "通常授業受講教科数："+d.normalSubjectCount+"教科\nテスト対策受講希望科目："+(d.subjects||[]).join("、")+"\nテキスト追加購入："+d.textbookPurchase;
+  } else if (action === "test_period") {
+    label = "テスト対策コマ登録";
+    detail = "学校名："+d.school+"\n学年："+d.grade+"\n選択コマ：\n"+(d.periods||[]).map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n");
+  } else if (action === "plan_change") {
+    label = "プラン変更申請";
+    const fmt = a=>(a||[]).map(x=>String(x.day)+"曜 "+["","①","②","③","④","⑤","⑥","⑦","⑧"][Number(x.period)]+" "+String(x.subject)).join("、");
+    detail = "学年："+d.grade+"\n現在のプラン："+d.currentPlan+"\n現在の受講教科："+(d.currentSubjects||[]).join("、")+"\n来月以降のプラン："+d.nextPlan+"\n来月以降の受講教科："+(d.nextSubjects||[]).join("、")+"\n現在の受講コマ："+fmt(d.currentSchedule)+"\n来月以降の受講コマ："+fmt(d.nextSchedule)+"\nテキスト追加購入："+d.needsTextbookPurchase;
+  } else {
+    label = "欠席・振替申請";
+    const absenceDate = d.absenceDate ? formatJapaneseDate_(d.absenceDate) : "";
+    const makeupDate = d.makeupUndecided ? "未定" : (d.makeupDate ? formatJapaneseDate_(d.makeupDate) : "");
+    detail = "欠席希望日："+absenceDate+"\n欠席希望時間："+getPeriodText_(d.absencePeriods||[])+"\n振替希望日："+makeupDate+"\n振替希望時間："+(d.makeupUndecided?"未定":getPeriodText_(d.makeupPeriods||[]));
+  }
+  const common = label+"を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n"+detail+"\n\n連絡事項："+notes+"\n\n自立学習RED 天王台教室";
+  return {
+    applicantTo: email,
+    applicantSubject: label+"を受け付けました",
+    applicantBody: common,
+    adminSubject: "新しい"+label+"があります",
+    adminBody: common+"\n\n確認メール送信先："+email
+  };
 }
 
 function jsonResponse_(data) {
@@ -177,28 +318,32 @@ function submitApplication(data) {
   const storedAbsencePeriods = getPeriodText_(absencePeriods);
 
   let mailSuccess = true;
-
-  const body =
-    "欠席・振替申請を受け付けました。\n\n" +
-    "【生徒番号】\n" + studentId + "\n\n" +
-    "【生徒氏名】\n" + studentName + "\n\n" +
-    "【欠席希望日】\n" + storedAbsenceDate + "\n\n" +
-    "【欠席希望時間】\n" + storedAbsencePeriods + "\n\n" +
-    "【振替希望日】\n" + storedMakeupDate + "\n\n" +
-    "【振替希望時間】\n" + storedMakeupPeriods + "\n\n" +
-    "【連絡事項】\n" + (notes || "なし") + "\n\n" +
-    "※このメールは申請受付の確認メールです。\n" +
-    "※変更がある場合は、その内容を連絡事項に記入して再申請してください。\n\n" +
-    "自立学習RED 天王台教室";
-
-  try {
-    MailApp.sendEmail({
-      to: email,
-      subject: "欠席・振替申請を受け付けました",
-      body: body
-    });
-  } catch (error) {
-    mailSuccess = false;
+  if (!data.deferEmail) {
+  
+    const body =
+      "欠席・振替申請を受け付けました。\n\n" +
+      "【生徒番号】\n" + studentId + "\n\n" +
+      "【生徒氏名】\n" + studentName + "\n\n" +
+      "【欠席希望日】\n" + storedAbsenceDate + "\n\n" +
+      "【欠席希望時間】\n" + storedAbsencePeriods + "\n\n" +
+      "【振替希望日】\n" + storedMakeupDate + "\n\n" +
+      "【振替希望時間】\n" + storedMakeupPeriods + "\n\n" +
+      "【連絡事項】\n" + (notes || "なし") + "\n\n" +
+      "※このメールは申請受付の確認メールです。\n" +
+      "※変更がある場合は、その内容を連絡事項に記入して再申請してください。\n\n" +
+      "自立学習RED 天王台教室";
+  
+    try {
+      MailApp.sendEmail({
+        to: email,
+        subject: "欠席・振替申請を受け付けました",
+        body: body
+      });
+    } catch (error) {
+      mailSuccess = false;
+    }
+  
+  
   }
 
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -457,48 +602,51 @@ function submitPurchaseApplication_(data) {
     notes: notes
   });
 
-  const itemLines = items.map(function(item) {
-    return "・" + item.title + " × " + item.quantity;
-  }).join("\n");
-
-  const body =
-    "テキスト購入申請を受け付けました。\n\n" +
-    "【申請内容】\n" +
-    "生徒番号：" + studentId + "\n" +
-    "生徒氏名：" + studentName + "\n\n" +
-    "購入テキスト：\n" + itemLines + "\n\n" +
-    "連絡事項：\n" + (notes || "なし") + "\n\n" +
-    "テキスト代は通常授業料と合わせて口座引き落としとなり、お支払い確認後に教室で直接お渡しいたします。\n" +
-    "お急ぎの場合は、教室まで直接ご連絡ください。";
-
   let mailSuccess = true;
-
-  try {
-    MailApp.sendEmail({
-      to: email,
-      subject: "テキスト購入申請を受け付けました",
-      body: body
-    });
-  } catch (error) {
-    mailSuccess = false;
-  }
-
-  try {
-    MailApp.sendEmail({
-      to: ADMIN_EMAIL,
-      subject: "新しいテキスト購入申請があります",
-      body:
-        "新しいテキスト購入申請があります。\n\n" +
-        "受付番号：" + applicationId + "\n" +
-        "受付日時：" + timestamp + "\n\n" +
-        "生徒番号：" + studentId + "\n" +
-        "生徒氏名：" + studentName + "\n\n" +
-        "購入テキスト：\n" + itemLines + "\n\n" +
-        "連絡事項：\n" + (notes || "なし") + "\n\n" +
-        "確認メール送信先：" + email
-    });
-  } catch (error) {
-    // 教室宛メールが失敗しても申請自体は成功扱い
+  if (!data.deferEmail) {
+    const itemLines = items.map(function(item) {
+      return "・" + item.title + " × " + item.quantity;
+    }).join("\n");
+  
+    const body =
+      "テキスト購入申請を受け付けました。\n\n" +
+      "【申請内容】\n" +
+      "生徒番号：" + studentId + "\n" +
+      "生徒氏名：" + studentName + "\n\n" +
+      "購入テキスト：\n" + itemLines + "\n\n" +
+      "連絡事項：\n" + (notes || "なし") + "\n\n" +
+      "テキスト代は通常授業料と合わせて口座引き落としとなり、お支払い確認後に教室で直接お渡しいたします。\n" +
+      "お急ぎの場合は、教室まで直接ご連絡ください。";
+  
+    try {
+      MailApp.sendEmail({
+        to: email,
+        subject: "テキスト購入申請を受け付けました",
+        body: body
+      });
+    } catch (error) {
+      mailSuccess = false;
+    }
+  
+    try {
+      MailApp.sendEmail({
+        to: ADMIN_EMAIL,
+        subject: "新しいテキスト購入申請があります",
+        body:
+          "新しいテキスト購入申請があります。\n\n" +
+          "受付番号：" + applicationId + "\n" +
+          "受付日時：" + timestamp + "\n\n" +
+          "生徒番号：" + studentId + "\n" +
+          "生徒氏名：" + studentName + "\n\n" +
+          "購入テキスト：\n" + itemLines + "\n\n" +
+          "連絡事項：\n" + (notes || "なし") + "\n\n" +
+          "確認メール送信先：" + email
+      });
+    } catch (error) {
+      // 教室宛メールが失敗しても申請自体は成功扱い
+    }
+  
+  
   }
 
   return {
@@ -562,12 +710,14 @@ function submitTestRangeApplication_(data) {
   const school = String(data.school || "").trim();
   const grade = String(data.grade || "").trim();
   const notes = String(data.notes || "").trim();
+  const email = String(data.email || "").trim();
   const subjects = Array.isArray(data.subjects) ? data.subjects : [];
 
   if (!/^\d+$/.test(studentId)) {
     throw new Error("生徒番号は半角数字で入力してください。");
   }
   if (!studentName) throw new Error("氏名を入力してください。");
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
   if (!school) throw new Error("学校名を選択してください。");
   if (!grade) throw new Error("学年を選択してください。");
 
@@ -637,29 +787,33 @@ function submitTestRangeApplication_(data) {
   sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
   sheet.getRange(startRow, 2, rows.length, 1).setNumberFormat("@");
 
-  try {
-    const itemLines = subjects.map(function(item) {
-      return item.subject + "（" + formatJapaneseDate_(item.testDate) + "）：" +
-        item.ranges.map(function(range) {
-          return "P" + range.from + "～P" + range.to;
-        }).join("、") +
-        "（" + item.publisher + "）";
-    }).join("\n");
-
-    MailApp.sendEmail({
-      to: ADMIN_EMAIL,
-      subject: "新しいテスト範囲登録があります",
-      body:
-        "テスト範囲登録を受け付けました。\n\n" +
-        "生徒番号：" + studentId + "\n" +
-        "氏名：" + studentName + "\n" +
-        "学校名：" + school + "\n" +
-        "学年：" + grade + "\n\n" +
-        itemLines + "\n\n" +
-        "連絡事項：" + (notes || "なし")
-    });
-  } catch (error) {
-    // 教室宛メールが失敗してもスプレッドシート登録は成功
+  if (!data.deferEmail) {
+    try {
+      const itemLines = subjects.map(function(item) {
+        return item.subject + "（" + formatJapaneseDate_(item.testDate) + "）：" +
+          item.ranges.map(function(range) {
+            return "P" + range.from + "～P" + range.to;
+          }).join("、") +
+          "（" + item.publisher + "）";
+      }).join("\n");
+  
+      MailApp.sendEmail({
+        to: ADMIN_EMAIL,
+        subject: "新しいテスト範囲登録があります",
+        body:
+          "テスト範囲登録を受け付けました。\n\n" +
+          "生徒番号：" + studentId + "\n" +
+          "氏名：" + studentName + "\n" +
+          "学校名：" + school + "\n" +
+          "学年：" + grade + "\n\n" +
+          itemLines + "\n\n" +
+          "連絡事項：" + (notes || "なし")
+      });
+    } catch (error) {
+      // 教室宛メールが失敗してもスプレッドシート登録は成功
+    }
+  
+  
   }
 
   return { success: true };
@@ -901,8 +1055,12 @@ function submitTestSubjectApplication_(data) {
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
   sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
   sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
-  try{MailApp.sendEmail({to:email,subject:"テスト対策教科登録を受け付けました",body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策教科登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
+  if (!data.deferEmail) {
+    try{MailApp.sendEmail({to:email,subject:"テスト対策教科登録を受け付けました",body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
+    try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策教科登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
+  
+  }
+
   return {success:true};
 }
 
@@ -929,8 +1087,12 @@ function submitTestPeriodApplication_(data) {
     sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
     sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
   });
-  try{MailApp.sendEmail({to:email,subject:"テスト対策コマ登録を受け付けました",body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策コマ登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
+  if (!data.deferEmail) {
+    try{MailApp.sendEmail({to:email,subject:"テスト対策コマ登録を受け付けました",body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
+    try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策コマ登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
+  
+  }
+
   return {success:true};
 }
 
@@ -1036,50 +1198,54 @@ function submitPlanChangeApplication_(data) {
   sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
 
   let mailSuccess = true;
-
-  try {
-    MailApp.sendEmail({
-      to: email,
-      subject: "プラン変更申請を受け付けました",
-      body:
-        "プラン変更申請を受け付けました。\n\n" +
-        "【生徒番号】\n" + studentId + "\n\n" +
-        "【氏名】\n" + studentName + "\n\n" +
-        "【学年】\n" + grade + "\n\n" +
-        "【現在のプラン】\n" + currentPlan + "\n\n" +
-        "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
-        "【来月以降のプラン】\n" + nextPlan + "\n\n" +
-        "【来月以降の受講教科】\n" + nextSubjects.join("、") + "\n\n" +
-        "【現在の受講コマ】\n" + formatScheduleForMail(currentSchedule) + "\n\n" +
-        "【来月以降の受講コマ】\n" + formatScheduleForMail(nextSchedule) + "\n\n" +
-        "【テキスト追加購入】\n" + needsTextbookPurchase + "\n\n" +
-        "【連絡事項】\n" + (notes || "なし") + "\n\n" +
-        "自立学習RED 天王台教室"
-    });
-  } catch (e) {
-    mailSuccess = false;
+  if (!data.deferEmail) {
+  
+    try {
+      MailApp.sendEmail({
+        to: email,
+        subject: "プラン変更申請を受け付けました",
+        body:
+          "プラン変更申請を受け付けました。\n\n" +
+          "【生徒番号】\n" + studentId + "\n\n" +
+          "【氏名】\n" + studentName + "\n\n" +
+          "【学年】\n" + grade + "\n\n" +
+          "【現在のプラン】\n" + currentPlan + "\n\n" +
+          "【現在の受講教科】\n" + currentSubjects.join("、") + "\n\n" +
+          "【来月以降のプラン】\n" + nextPlan + "\n\n" +
+          "【来月以降の受講教科】\n" + nextSubjects.join("、") + "\n\n" +
+          "【現在の受講コマ】\n" + formatScheduleForMail(currentSchedule) + "\n\n" +
+          "【来月以降の受講コマ】\n" + formatScheduleForMail(nextSchedule) + "\n\n" +
+          "【テキスト追加購入】\n" + needsTextbookPurchase + "\n\n" +
+          "【連絡事項】\n" + (notes || "なし") + "\n\n" +
+          "自立学習RED 天王台教室"
+      });
+    } catch (e) {
+      mailSuccess = false;
+    }
+  
+    try {
+      MailApp.sendEmail({
+        to: ADMIN_EMAIL,
+        subject: "新しいプラン変更申請があります",
+        body:
+          "プラン変更申請を受け付けました。\n\n" +
+          "生徒番号：" + studentId + "\n" +
+          "氏名：" + studentName + "\n" +
+          "学年：" + grade + "\n" +
+          "現在のプラン：" + currentPlan + "\n" +
+          "現在の受講教科：" + currentSubjects.join("、") + "\n" +
+          "来月以降のプラン：" + nextPlan + "\n" +
+          "来月以降の受講教科：" + nextSubjects.join("、") + "\n" +
+          "現在の受講コマ：" + formatScheduleForMail(currentSchedule) + "\n" +
+          "来月以降の受講コマ：" + formatScheduleForMail(nextSchedule) + "\n" +
+          "テキスト追加購入：" + needsTextbookPurchase + "\n" +
+          "連絡事項：" + (notes || "なし") + "\n" +
+          "確認メール送付先：" + email
+      });
+    } catch (e) {}
+  
+  
   }
-
-  try {
-    MailApp.sendEmail({
-      to: ADMIN_EMAIL,
-      subject: "新しいプラン変更申請があります",
-      body:
-        "プラン変更申請を受け付けました。\n\n" +
-        "生徒番号：" + studentId + "\n" +
-        "氏名：" + studentName + "\n" +
-        "学年：" + grade + "\n" +
-        "現在のプラン：" + currentPlan + "\n" +
-        "現在の受講教科：" + currentSubjects.join("、") + "\n" +
-        "来月以降のプラン：" + nextPlan + "\n" +
-        "来月以降の受講教科：" + nextSubjects.join("、") + "\n" +
-        "現在の受講コマ：" + formatScheduleForMail(currentSchedule) + "\n" +
-        "来月以降の受講コマ：" + formatScheduleForMail(nextSchedule) + "\n" +
-        "テキスト追加購入：" + needsTextbookPurchase + "\n" +
-        "連絡事項：" + (notes || "なし") + "\n" +
-        "確認メール送付先：" + email
-    });
-  } catch (e) {}
 
   return { success: true, mailSuccess: mailSuccess };
 }

@@ -189,18 +189,14 @@
     $("loading").classList.remove("hidden");
 
     try{
-      await fetch(GAS_URL,{
-        method:"POST",
-        mode:"no-cors",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({...data,action:"absence"})
-      });
+      const registration = await RED.registerApplication({...data,action:"absence"});
 
       confirmation.classList.add("hidden");
       success.classList.remove("hidden");
+      await RED.sendApplicationEmails(registration.requestId);
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(err){
-      alert("申請の送信に失敗しました。\\n\\n通信エラーが発生しました。時間をおいてもう一度お試しください。");
+      alert(err.message || "申請結果を確認できませんでした。教室へご連絡ください。");
       $("submitButton").disabled=false;
       $("backButton").disabled=false;
       $("loading").classList.add("hidden");
