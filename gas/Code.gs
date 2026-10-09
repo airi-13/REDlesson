@@ -1,5 +1,5 @@
 const SPREADSHEET_ID = "1apUqDRpkV1leEvYegYv61a22vuf2YdQYe40yzvgOb9Q";
-const ABSENCE_SHEET_NAME = "申請一覧";
+const ABSENCE_SHEET_NAME = "欠席振替申請";
 const PURCHASE_SHEET_NAME = "購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
 const TEST_PERIOD_CONFIG_SHEET_NAME = "テスト期間設定";
@@ -176,8 +176,51 @@ function submitApplication(data) {
   const storedAbsenceDate = formatJapaneseDate_(absenceDate);
   const storedAbsencePeriods = getPeriodText_(absencePeriods);
 
-  let mailSuccess = true;
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(ABSENCE_SHEET_NAME);
 
+  // 欠席・振替申請シートがなければ自動作成し、見出しを設定する
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(ABSENCE_SHEET_NAME);
+    sheet.appendRow([
+      "状態",
+      "受付日時",
+      "生徒ID",
+      "生徒名",
+      "欠席希望日",
+      "欠席時間",
+      "振替希望日",
+      "振替希望時間",
+      "メールアドレス",
+      "連絡事項"
+    ]);
+    sheet.setFrozenRows(1);
+  }
+
+  const noteParts = [];
+  if (absenceRegistered) noteParts.push("【欠席登録済み】");
+  if (makeupUndecided) noteParts.push("【振替日未定】");
+  if (notes) noteParts.push(notes);
+
+  // 先に申請内容をシートへ登録し、登録後に確認メールを送信する
+  const row = [
+    "未確認",
+    new Date(),
+    studentId,
+    studentName,
+    storedAbsenceDate,
+    storedAbsencePeriods,
+    storedMakeupDate,
+    storedMakeupPeriods,
+    email,
+    noteParts.join("\n")
+  ];
+
+  const nextRow = sheet.getLastRow() + 1;
+  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+  sheet.getRange(nextRow, 3).setNumberFormat("@");
+
+  let mailSuccess = true;
   const body =
     "欠席・振替申請を受け付けました。\n\n" +
     "【生徒番号】\n" + studentId + "\n\n" +
@@ -199,34 +242,8 @@ function submitApplication(data) {
     });
   } catch (error) {
     mailSuccess = false;
+    sheet.getRange(nextRow, 1).setValue("メールエラー");
   }
-
-  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = spreadsheet.getSheetByName(ABSENCE_SHEET_NAME);
-
-  if (!sheet) throw new Error("「" + ABSENCE_SHEET_NAME + "」シートが見つかりません。");
-
-  const noteParts = [];
-  if (absenceRegistered) noteParts.push("【欠席登録済み】");
-  if (makeupUndecided) noteParts.push("【振替日未定】");
-  if (notes) noteParts.push(notes);
-
-  const row = [
-    mailSuccess ? "未確認" : "メールエラー",
-    new Date(),
-    studentId,
-    studentName,
-    storedAbsenceDate,
-    storedAbsencePeriods,
-    storedMakeupDate,
-    storedMakeupPeriods,
-    email,
-    noteParts.join("\n")
-  ];
-
-  const nextRow = sheet.getLastRow() + 1;
-  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
-  sheet.getRange(nextRow, 3).setNumberFormat("@");
 
   return {
     success: true,
