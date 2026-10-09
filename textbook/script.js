@@ -118,7 +118,7 @@ function renderBooks(){
  }else{
    rendered=renderSubjectGroups(filtered);
  }
- $("textbooks").innerHTML=rendered||"<div class='notice'>該当するテキストはありません。</div>";
+ $("textbooks").innerHTML=rendered||"<div class='empty-state'><span class='empty-state-icon'>📚</span><span>該当するテキストはありません。</span></div>";
 }
 $("purchaseNav").onclick=()=>{show("purchasePage");if(!$("items").children.length)addItem()};
 $("backList").onclick=()=>show("listPage");
