@@ -1,11 +1,11 @@
 const GAS_URL=RED.GAS_URL;
 const subjects=["英語","数学","国語","理科","社会"];
-const plans=["通い放題","週4/6プラン","週1","週2","週3","週4","週5","週6"];
+const plans=["通い放題","週4パック","週6パック","週1","週2","週3","週4","週5","週6"];
 const $=id=>document.getElementById(id);
 
 function planMaxSubjects(plan){
   if(plan==="通い放題") return 5;
-  if(plan==="週4/6プラン") return 3;
+  if(plan==="週4パック" || plan==="週6パック") return 3;
   const m=plan.match(/^週([1-6])$/);
   return m ? Number(m[1]) : 0;
 }
@@ -27,6 +27,11 @@ const saturdayScheduleDays = [
   { day: "土", available: [1,2,3,4,5] }
 ];
 const periodMarks = ["①","②","③","④","⑤","⑥","⑦","⑧"];
+function planMaxSlots(plan){if(plan==="通い放題")return Infinity;if(plan==="週4パック")return 8;if(plan==="週6パック")return 12;const m=String(plan||"").match(/^週([1-6])$/);return m?Number(m[1])*2:0;}
+function isPackPlan(plan){return plan==="週4パック"||plan==="週6パック";}
+function packGradeAllowed(plan,grade){if(plan==="週4パック")return grade==="中1"||grade==="中2";if(plan==="週6パック")return grade==="中3";return true;}
+function updatePackOptions(){const grade=$("grade").value;["currentPlan","nextPlan"].forEach(id=>{const select=$(id);[...select.options].forEach(option=>{if(option.value==="週4パック"||option.value==="週6パック")option.disabled=!packGradeAllowed(option.value,grade);});if(select.value&&isPackPlan(select.value)&&!packGradeAllowed(select.value,grade))select.value="";});updatePackAnnotations();updateSubjectLimits("currentPlan","currentSubjects");updateSubjectLimits("nextPlan","nextSubjects");refreshScheduleOptions("currentSchedule","currentSubjects");refreshScheduleOptions("nextSchedule","nextSubjects");}
+function updatePackAnnotations(){["currentPlan","nextPlan"].forEach(id=>{const note=$(id+"PackNote");if(!note)return;const plan=$(id).value;note.textContent=plan==="週4パック"?"※週4パックは中1・2限定プランです。":plan==="週6パック"?"※週6パックは中3限定プランです。":"";note.classList.toggle("hidden",!isPackPlan(plan));});}
 function buildScheduleTable(days, periods) {
   let table = '<table class="schedule-table"><thead><tr><th>曜日</th>' + periods.map(period => '<th>' + periodMarks[period - 1] + '</th>').join('') + '</tr></thead><tbody>';
   days.forEach(row => {
@@ -44,19 +49,17 @@ function buildScheduleTable(days, periods) {
   return table + '</tbody></table>';
 }
 function renderScheduleGrid(containerId, subjectContainerId) {
-  $(containerId).innerHTML =
-    '<div class="schedule-group"><h4>平日</h4>' + buildScheduleTable(weekdayScheduleDays, [4,5,6,7,8]) + '</div>' +
-    '<div class="schedule-group"><h4>土曜</h4>' + buildScheduleTable(saturdayScheduleDays, [1,2,3,4,5]) + '</div>';
+  $(containerId).innerHTML = buildScheduleTable(weekdayScheduleDays, [4,5,6,7,8]) + buildScheduleTable(saturdayScheduleDays, [1,2,3,4,5]);
   refreshScheduleOptions(containerId, subjectContainerId);
 }
 function refreshScheduleOptions(containerId, subjectContainerId) {
-  const selected = [...document.querySelectorAll("#" + subjectContainerId + " input:checked")].map(input => input.value);
-  $(containerId).querySelectorAll(".schedule-select").forEach(select => {
-    const oldValue = select.value;
-    select.innerHTML = '<option value="">未選択</option>' + selected.map(subject => '<option value="' + esc(subject) + '">' + esc(subject) + '</option>').join("");
-    select.disabled = selected.length === 0;
-    if (selected.includes(oldValue)) select.value = oldValue;
-  });
+  const selected=[...document.querySelectorAll("#"+subjectContainerId+" input:checked")].map(input=>input.value);
+  const planId=containerId==="currentSchedule"?"currentPlan":"nextPlan";
+  const maxSlots=planMaxSlots($(planId).value);
+  const selects=[...$(containerId).querySelectorAll(".schedule-select")];
+  selects.forEach(select=>{const oldValue=select.value;select.innerHTML='<option value="">未選択</option>'+selected.map(subject=>'<option value="'+esc(subject)+'">'+esc(subject)+'</option>').join("");if(selected.includes(oldValue))select.value=oldValue;select.closest("td").classList.toggle("is-selected",!!select.value);select.disabled=selected.length===0;});
+  const chosen=selects.filter(select=>select.value).length;
+  selects.forEach(select=>{if(!select.value&&chosen>=maxSlots)select.disabled=true;});
 }
 function readSchedule(containerId) {
   return [...$(containerId).querySelectorAll(".schedule-select")].filter(select => select.value)
@@ -67,6 +70,7 @@ function formatSchedule(schedule) {
 }
 renderScheduleGrid("currentSchedule", "currentSubjects");
 renderScheduleGrid("nextSchedule", "nextSubjects");
+[...document.querySelectorAll(".schedule-select")].forEach(select=>select.addEventListener("change",()=>{const cid=select.closest(".schedule-grid-wrap").id;refreshScheduleOptions(cid,cid==="currentSchedule"?"currentSubjects":"nextSubjects");}));
 ["currentSubjects","nextSubjects"].forEach(subjectId => {
   const scheduleId = subjectId === "currentSubjects" ? "currentSchedule" : "nextSchedule";
   $(subjectId).addEventListener("change", () => refreshScheduleOptions(scheduleId, subjectId));
@@ -74,10 +78,16 @@ renderScheduleGrid("nextSchedule", "nextSubjects");
 
 
 const noticeItems = {
-  "週4/6プラン": [
+  "週4パック": [
     "欠席した授業の振替はできないことを確認しました。",
     "通常授業は最大3教科まで選択できることを確認しました。テスト期間中の対策教科数に制限はありませんが、該当教科のテキストを保有している場合に限ります。",
     "テキストを保有している教科のみ受講できることを確認しました.",
+    "一度パックに変更すると、年度内は通常料金のプランに戻せないことを確認しました。"
+  ],
+  "週6パック": [
+    "欠席した授業の振替はできないことを確認しました。",
+    "通常授業は最大3教科まで選択できることを確認しました。テスト期間中の対策教科数に制限はありませんが、該当教科のテキストを保有している場合に限ります。",
+    "テキストを保有している教科のみ受講できることを確認しました。",
     "一度パックに変更すると、年度内は通常料金のプランに戻せないことを確認しました。"
   ],
   "通い放題": [
@@ -107,11 +117,13 @@ function updatePlanNotice() {
 }
 
 $("nextPlan").addEventListener("change", updatePlanNotice);
+["currentPlan","nextPlan"].forEach(id=>$(id).addEventListener("change",()=>{updatePackAnnotations();refreshScheduleOptions(id==="currentPlan"?"currentSchedule":"nextSchedule",id==="currentPlan"?"currentSubjects":"nextSubjects");}));
+$("grade").addEventListener("change",updatePackOptions);
 
 function updatePackPlanRestriction() {
   const currentPlan = $("currentPlan").value;
   const nextPlan = $("nextPlan").value;
-  const packPlans = ["週4/6プラン", "通い放題"];
+  const packPlans = ["週4パック", "週6パック", "通い放題"];
   const currentIsPack = packPlans.includes(currentPlan);
   const nextIsOtherPlan = nextPlan !== "" && !packPlans.includes(nextPlan);
 
@@ -158,6 +170,7 @@ $("form").addEventListener("submit",e=>{
 
   const studentId=$("studentId").value.trim();
   const studentName=$("studentName").value.trim();
+  const grade=$("grade").value;
   const currentPlan=$("currentPlan").value;
   const nextPlan=$("nextPlan").value;
   const currentSubjects=[...document.querySelectorAll("#currentSubjects input:checked")].map(x=>x.value);
@@ -171,10 +184,11 @@ $("form").addEventListener("submit",e=>{
   const needsPlanNotice = Object.prototype.hasOwnProperty.call(noticeItems, nextPlan);
 
 
+  if(!packGradeAllowed(currentPlan,grade)||!packGradeAllowed(nextPlan,grade)){$("error").textContent="週4パックは中1・2、週6パックは中3のみ選択できます。学年とプランを確認してください。";return;}
   const currentMax=planMaxSubjects(currentPlan);
   const nextMax=planMaxSubjects(nextPlan);
 
-  if(!/^\d+$/.test(studentId)||!studentName||!plans.includes(currentPlan)||!plans.includes(nextPlan)||!currentSubjects.length||!nextSubjects.length||!currentSchedule.length||!nextSchedule.length||!needsTextbookPurchase||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+  if(!/^\d+$/.test(studentId)||!studentName||!grade||!plans.includes(currentPlan)||!plans.includes(nextPlan)||!currentSubjects.length||!nextSubjects.length||!currentSchedule.length||!nextSchedule.length||!needsTextbookPurchase||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     $("error").textContent="必須項目を正しく入力してください。";
     return;
   }
@@ -186,8 +200,8 @@ $("form").addEventListener("submit",e=>{
   }
   $("planNoticeError").textContent="";
 
-  const currentIsPack = currentPlan === "週4/6プラン" || currentPlan === "通い放題";
-  const nextIsPack = nextPlan === "週4/6プラン" || nextPlan === "通い放題";
+  const currentIsPack = ["週4パック","週6パック","通い放題"].includes(currentPlan);
+  const nextIsPack = ["週4パック","週6パック","通い放題"].includes(nextPlan);
   if (currentIsPack && !nextIsPack) {
     $("error").textContent = "パックは年度内変更することができません。来月以降もパックを選択してください。";
     return;
@@ -203,11 +217,14 @@ $("form").addEventListener("submit",e=>{
     return;
   }
 
-  current={action:"plan_change",studentId,studentName,currentPlan,currentSubjects,currentSchedule,nextPlan,nextSubjects,nextSchedule,needsTextbookPurchase,notes,email};
+  if(currentSchedule.length>planMaxSlots(currentPlan)){$("error").textContent="現在のプランで選択できる受講コマ数を超えています。";return;}
+  if(nextSchedule.length>planMaxSlots(nextPlan)){$("error").textContent="来月以降のプランで選択できる受講コマ数を超えています。";return;}
+  current={action:"plan_change",studentId,studentName,grade,currentPlan,currentSubjects,currentSchedule,nextPlan,nextSubjects,needsTextbookPurchase,notes,email};
 
   $("summary").innerHTML=
     '<p><span class="summary-label">生徒番号</span><br>'+esc(studentId)+'</p>'+
     '<p><span class="summary-label">氏名</span><br>'+esc(studentName)+'</p>'+
+    '<p><span class="summary-label">学年</span><br>'+esc(grade)+'</p>'+
     '<p><span class="summary-label">現在のプラン</span><br>'+esc(currentPlan)+'</p>'+
     '<p><span class="summary-label">現在の受講教科</span><br>'+esc(currentSubjects.join("、"))+'</p>'+
     '<p><span class="summary-label">現在の受講コマ</span><br>'+esc(formatSchedule(currentSchedule))+'</p>'+
