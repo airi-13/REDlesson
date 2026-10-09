@@ -17,27 +17,36 @@ function makeChecks(id){
 makeChecks("currentSubjects");
 makeChecks("nextSubjects");
 
-const scheduleDays = [
+const weekdayScheduleDays = [
   { day: "火", available: [4,5,6,7,8] },
   { day: "水", available: [3,4,5,6,7] },
   { day: "木", available: [4,5,6,7,8] },
-  { day: "金", available: [3,4,5,6,7] },
+  { day: "金", available: [3,4,5,6,7] }
+];
+const saturdayScheduleDays = [
   { day: "土", available: [1,2,3,4,5] }
 ];
 const periodMarks = ["①","②","③","④","⑤","⑥","⑦","⑧"];
-function renderScheduleGrid(containerId, subjectContainerId) {
-  let table = '<table class="schedule-table"><thead><tr><th>曜日</th>' + periodMarks.map(mark => '<th>' + mark + '</th>').join('') + '</tr></thead><tbody>';
-  scheduleDays.forEach(row => {
+function buildScheduleTable(days, periods) {
+  let table = '<table class="schedule-table"><thead><tr><th>曜日</th>' + periods.map(period => '<th>' + periodMarks[period - 1] + '</th>').join('') + '</tr></thead><tbody>';
+  days.forEach(row => {
     table += '<tr><th scope="row">' + row.day + '</th>';
-    periodMarks.forEach((mark, index) => {
-      const period = index + 1;
-      if (!row.available.includes(period)) table += '<td class="schedule-unavailable"><span aria-label="開校していません">ー</span></td>';
-      else table += '<td><select class="schedule-select" data-day="' + row.day + '" data-period="' + period + '" aria-label="' + row.day + '曜日 ' + mark + 'コマの受講教科"><option value="">未選択</option></select></td>';
+    periods.forEach(period => {
+      const mark = periodMarks[period - 1];
+      if (!row.available.includes(period)) {
+        table += '<td class="schedule-unavailable"><span aria-label="開校していません">ー</span></td>';
+      } else {
+        table += '<td><select class="schedule-select" data-day="' + row.day + '" data-period="' + period + '" aria-label="' + row.day + '曜日 ' + mark + 'コマの受講教科"><option value="">未選択</option></select></td>';
+      }
     });
     table += '</tr>';
   });
-  table += '</tbody></table>';
-  $(containerId).innerHTML = table;
+  return table + '</tbody></table>';
+}
+function renderScheduleGrid(containerId, subjectContainerId) {
+  $(containerId).innerHTML =
+    '<div class="schedule-group"><h4>平日</h4>' + buildScheduleTable(weekdayScheduleDays, [4,5,6,7,8]) + '</div>' +
+    '<div class="schedule-group"><h4>土曜</h4>' + buildScheduleTable(saturdayScheduleDays, [1,2,3,4,5]) + '</div>';
   refreshScheduleOptions(containerId, subjectContainerId);
 }
 function refreshScheduleOptions(containerId, subjectContainerId) {
