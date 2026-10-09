@@ -38,3 +38,5 @@ fieldset{border:1px solid #dfe5eb;border-radius:10px;padding:14px}.checks{displa
 .schedule-group h4{display:none}
 .pack-plan-note{margin:-8px 0 12px;color:#9a5b00;font-size:.84rem;font-weight:700}
 @media(max-width:600px){.schedule-table{border-spacing:3px}.schedule-table th,.schedule-table td{padding:3px 1px}.schedule-table thead th{font-size:.75rem}.schedule-table tbody th{width:30px}.schedule-table td .schedule-select{height:40px;padding:5px 0;font-size:.72rem}.schedule-table td.schedule-unavailable span{height:40px}}
+
+.slot-count{margin:8px 0 0;padding:10px 12px;border-radius:8px;font-weight:800;line-height:1.5}.slot-count-warning{background:#fff4e5;color:#9a4b00;border:1px solid #f1c27d}.slot-count-ok{background:#edf8ef;color:#216e39;border:1px solid #b8dfc0}
