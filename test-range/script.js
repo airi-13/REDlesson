@@ -127,7 +127,6 @@ $("rangeForm").addEventListener("submit",e=>{
   $("rangeForm").classList.add("hidden");
   $("confirmation").classList.remove("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
-      await RED.sendApplicationEmails(registration.requestId);
 });
 
 $("backButton").addEventListener("click",()=>{
