@@ -676,8 +676,8 @@ const TEST_PERIOD_SCHOOLS_ = ["我孫子中","我孫子第二中","我孫子第�
 const TEST_PERIOD_GRADES_ = ["中学1年","中学2年","中学3年"];
 
 function setupTestPeriodConfigSheet_(sh) {
-  sh.getRange(1, 1, 1, 5).setValues([[
-    "学校名", "学年", "テスト開始日", "テスト最終日", "対策期間開始日（自動計算）"
+  sh.getRange(1, 1, 1, 6).setValues([[
+    "学校名", "学年", "テスト開始日", "テスト最終日", "対策期間開始日（自動計算）", "状態（有効／無効）"
   ]]);
   sh.setFrozenRows(1);
   sh.getRange("C:D").setNumberFormat("yyyy/mm/dd");
@@ -691,8 +691,28 @@ function setupTestPeriodConfigSheet_(sh) {
     .requireValueInList(TEST_PERIOD_GRADES_, true)
     .setAllowInvalid(false)
     .build();
+  const statusRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["有効", "無効"], true)
+    .setAllowInvalid(false)
+    .build();
+
   sh.getRange("A2:A500").setDataValidation(schoolRule);
   sh.getRange("B2:B500").setDataValidation(gradeRule);
+  sh.getRange("F2:F500").setDataValidation(statusRule);
+
+  // 既存行の状態が空欄なら有効として扱い、過去データを消さずに移行する。
+  const lastRow = sh.getLastRow();
+  if (lastRow >= 2) {
+    const statuses = sh.getRange(2, 6, lastRow - 1, 1).getValues();
+    let changed = false;
+    statuses.forEach(function(row) {
+      if (!String(row[0] || "").trim()) {
+        row[0] = "有効";
+        changed = true;
+      }
+    });
+    if (changed) sh.getRange(2, 6, statuses.length, 1).setValues(statuses);
+  }
 }
 
 function getTestPeriodConfig_() {
@@ -720,35 +740,38 @@ function getTestPeriodConfig_() {
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return { success: true, configs: [] };
 
-  const values = sh.getRange(2, 1, lastRow - 1, 5).getValues();
-  const configs = [];
+  // F列が「有効」の行だけ対象。重複した学校・学年は、下にある最新の有効行を採用する。
+  // 過去行は削除も自動変更もしないため、誤設定時はシート上で有効／無効を切り替えられる。
+  const values = sh.getRange(2, 1, lastRow - 1, 6).getValues();
+  const configsByKey = {};
 
   values.forEach(function(row, index) {
     const school = String(row[0] || "").trim();
     const grade = String(row[1] || "").trim();
     const testStartDate = normalizeSheetDate_(row[2]);
     const testEndDate = normalizeSheetDate_(row[3]);
-    if (!school || !grade || !testStartDate || !testEndDate) return;
-
+    const status = String(row[5] || "").trim();
+    if (status !== "有効" || !school || !grade || !testStartDate || !testEndDate) return;
     if (parseDate_(testStartDate) > parseDate_(testEndDate)) return;
 
-    // テスト最終日を含む14日間（最終日の13日前～最終日）
     const startDate = shiftIsoDate_(testEndDate, -13);
     const sheetRow = index + 2;
     sh.getRange(sheetRow, 5).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
 
-    configs.push({
+    const key = school + "｜" + grade;
+    configsByKey[key] = {
       school: school,
       grade: grade,
       testStartDate: testStartDate,
       testEndDate: testEndDate,
       startDate: startDate
-    });
+    };
   });
 
-  return { success: true, configs: configs };
+  return { success: true, configs: Object.keys(configsByKey).map(function(key) {
+    return configsByKey[key];
+  }) };
 }
-
 function normalizeSheetDate_(value) {
   if (value instanceof Date && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
