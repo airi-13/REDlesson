@@ -715,6 +715,19 @@ function setupTestPeriodConfigSheet_(sh) {
   }
 }
 
+/**
+ * スプレッドシートの「テスト期間設定」に学校名・学年・状態のプルダウンを設定する。
+ * 初回設定やプルダウンが消えた場合は、Apps Scriptエディタからこの関数を手動実行する。
+ */
+function setupTestPeriodConfigSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(TEST_PERIOD_CONFIG_SHEET_NAME);
+  if (!sh) sh = ss.insertSheet(TEST_PERIOD_CONFIG_SHEET_NAME);
+  setupTestPeriodConfigSheet_(sh);
+  SpreadsheetApp.flush();
+  Logger.log("「テスト期間設定」の学校名・学年・状態のプルダウンを設定しました。");
+}
+
 function getTestPeriodConfig_() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(TEST_PERIOD_CONFIG_SHEET_NAME);
