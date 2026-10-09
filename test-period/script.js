@@ -107,30 +107,33 @@ function render() {
 
   const parts = start.split("-").map(Number);
   const d = new Date(parts[0], parts[1] - 1, parts[2]);
-  const periods = ["①","②","③","④","⑤","⑥","⑦","⑧"];
   const weekdays = ["日","月","火","水","木","金","土"];
-  let html = '<div class="calendar"><table><thead><tr><th>日付</th>';
-
-  periods.forEach(p => html += '<th>'+p+'<div class="period-time">'+TIMES[p]+'</div></th>');
-  html += '</tr></thead><tbody>';
+  const allPeriods = ["①","②","③","④","⑤","⑥","⑦","⑧"];
+  let html = '<div class="calendar-days">';
 
   for (let i = 0; i < 14; i++) {
     const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
     const key = x.getDay();
     const ds = localIsoDate(x);
-    html += '<tr><th class="date-cell"><span class="date-number">'+(x.getMonth()+1)+'/'+x.getDate()+'</span><span class="date-weekday">（'+weekdays[key]+'）</span></th>';
+    const available = PERIODS[key] || [];
+    const dateLabel = (x.getMonth()+1)+'/'+x.getDate();
+    const dayClass = key === 0 || key === 1 ? ' closed-day' : (key === 6 ? ' saturday' : ' weekday');
+    html += '<section class="day-row'+dayClass+'">';
+    html += '<div class="day-date"><span class="date-number">'+dateLabel+'</span><span class="date-weekday">（'+weekdays[key]+'）</span></div>';
 
-    periods.forEach(p => {
-      if ((PERIODS[key] || []).includes(p)) {
-        html += '<td class="period-cell"><input type="checkbox" data-date="'+ds+'" data-period="'+p+'" aria-label="'+(x.getMonth()+1)+'月'+x.getDate()+'日 '+p+' '+TIMES[p]+'"></td>';
-      } else {
-        html += '<td class="unavailable">—</td>';
-      }
-    });
-    html += '</tr>';
+    if (!available.length) {
+      html += '<div class="closed-label">休講</div>';
+    } else {
+      html += '<div class="day-periods">';
+      available.forEach(p => {
+        html += '<label class="day-period"><span class="day-period-name">'+p+'</span><span class="day-period-time">'+TIMES[p]+'</span><input type="checkbox" data-date="'+ds+'" data-period="'+p+'" aria-label="'+dateLabel+' '+p+' '+TIMES[p]+'"></label>';
+      });
+      html += '</div>';
+    }
+    html += '</section>';
   }
 
-  html += '</tbody></table></div>';
+  html += '</div>';
   $("calendarWrap").innerHTML = html;
 }
 
