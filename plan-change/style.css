@@ -9,3 +9,6 @@ fieldset{border:1px solid #dfe5eb;border-radius:10px;padding:14px}.checks{displa
 .notice-check{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #ead8b5;border-radius:10px;background:#fff}
 .notice-check input{flex:0 0 auto;width:18px;height:18px;margin:3px 0 0;accent-color:#E60012}
 .notice-check span{font-weight:600;line-height:1.55}
+
+
+.pack-lock-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #d97706;border-radius:9px;background:#fff8eb;color:#92400e;font-weight:700;line-height:1.55}
