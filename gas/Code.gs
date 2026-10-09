@@ -742,7 +742,7 @@ function setupTestPeriodConfigSheet() {
   if (!sh) sh = ss.insertSheet(TEST_PERIOD_CONFIG_SHEET_NAME);
   setupTestPeriodConfigSheet_(sh);
 
-  // テスト最終日（D列）を入力・変更したら、対策期間開始日（E列）を14日前に自動設定するトリガー。
+  // テスト最終日（D列）を入力・変更したら、対策期間開始日（E列）を13日前に自動設定するトリガー。
   const triggers = ScriptApp.getProjectTriggers();
   const alreadyExists = triggers.some(function(trigger) {
     return trigger.getHandlerFunction() === "handleTestPeriodConfigEdit_";
@@ -762,7 +762,7 @@ function setupTestPeriodConfigSheet() {
       const endDate = row[0];
       if (endDate instanceof Date && !isNaN(endDate.getTime())) {
         const startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - 14);
+        startDate.setDate(startDate.getDate() - 13);
         return [startDate];
       }
       return [""];
@@ -776,7 +776,7 @@ function setupTestPeriodConfigSheet() {
 
 /**
  * 「テスト期間設定」のD列（テスト最終日）が編集されたら、
- * E列（対策期間開始日）に14日前の日付を自動入力する。
+ * E列（対策期間開始日）に13日前の日付を自動入力する。
  */
 function handleTestPeriodConfigEdit_(e) {
   if (!e || !e.range) return;
@@ -796,7 +796,7 @@ function handleTestPeriodConfigEdit_(e) {
     const target = sh.getRange(row, 5);
     if (endDate instanceof Date && !isNaN(endDate.getTime())) {
       const startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - 14);
+      startDate.setDate(startDate.getDate() - 13);
       target.setValue(startDate).setNumberFormat("yyyy/mm/dd");
     } else {
       target.clearContent();
@@ -844,7 +844,7 @@ function getTestPeriodConfig_() {
     if (status !== "有効" || !school || !grade || !testStartDate || !testEndDate) return;
     if (parseDate_(testStartDate) > parseDate_(testEndDate)) return;
 
-    const startDate = shiftIsoDate_(testEndDate, -14);
+    const startDate = shiftIsoDate_(testEndDate, -13);
     const sheetRow = index + 2;
     sh.getRange(sheetRow, 5).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
 
