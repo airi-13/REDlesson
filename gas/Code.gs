@@ -724,8 +724,67 @@ function setupTestPeriodConfigSheet() {
   let sh = ss.getSheetByName(TEST_PERIOD_CONFIG_SHEET_NAME);
   if (!sh) sh = ss.insertSheet(TEST_PERIOD_CONFIG_SHEET_NAME);
   setupTestPeriodConfigSheet_(sh);
+
+  // テスト最終日（D列）を入力・変更したら、対策期間開始日（E列）を14日前に自動設定するトリガー。
+  const triggers = ScriptApp.getProjectTriggers();
+  const alreadyExists = triggers.some(function(trigger) {
+    return trigger.getHandlerFunction() === "handleTestPeriodConfigEdit_";
+  });
+  if (!alreadyExists) {
+    ScriptApp.newTrigger("handleTestPeriodConfigEdit_")
+      .forSpreadsheet(ss)
+      .onEdit()
+      .create();
+  }
+
+  // 既存行も一度計算し直す。
+  const lastRow = sh.getLastRow();
+  if (lastRow >= 2) {
+    const endDates = sh.getRange(2, 4, lastRow - 1, 1).getValues();
+    const startDates = endDates.map(function(row) {
+      const endDate = row[0];
+      if (endDate instanceof Date && !isNaN(endDate.getTime())) {
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - 14);
+        return [startDate];
+      }
+      return [""];
+    });
+    sh.getRange(2, 5, startDates.length, 1).setValues(startDates).setNumberFormat("yyyy/mm/dd");
+  }
+
   SpreadsheetApp.flush();
-  Logger.log("「テスト期間設定」の学校名・学年・状態のプルダウンを設定しました。");
+  Logger.log("「テスト期間設定」のプルダウンと対策期間開始日の自動計算を設定しました。");
+}
+
+/**
+ * 「テスト期間設定」のD列（テスト最終日）が編集されたら、
+ * E列（対策期間開始日）に14日前の日付を自動入力する。
+ */
+function handleTestPeriodConfigEdit_(e) {
+  if (!e || !e.range) return;
+  const sh = e.range.getSheet();
+  if (sh.getName() !== TEST_PERIOD_CONFIG_SHEET_NAME) return;
+
+  const firstRow = Math.max(2, e.range.getRow());
+  const lastRow = e.range.getLastRow();
+  const firstCol = e.range.getColumn();
+  const lastCol = e.range.getLastColumn();
+
+  // 編集範囲がD列（テスト最終日）に重ならない場合は何もしない。
+  if (firstCol > 4 || lastCol < 4 || lastRow < 2) return;
+
+  for (let row = firstRow; row <= lastRow; row++) {
+    const endDate = sh.getRange(row, 4).getValue();
+    const target = sh.getRange(row, 5);
+    if (endDate instanceof Date && !isNaN(endDate.getTime())) {
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 14);
+      target.setValue(startDate).setNumberFormat("yyyy/mm/dd");
+    } else {
+      target.clearContent();
+    }
+  }
 }
 
 function getTestPeriodConfig_() {
@@ -768,7 +827,7 @@ function getTestPeriodConfig_() {
     if (status !== "有効" || !school || !grade || !testStartDate || !testEndDate) return;
     if (parseDate_(testStartDate) > parseDate_(testEndDate)) return;
 
-    const startDate = shiftIsoDate_(testEndDate, -13);
+    const startDate = shiftIsoDate_(testEndDate, -14);
     const sheetRow = index + 2;
     sh.getRange(sheetRow, 5).setValue(parseDate_(startDate)).setNumberFormat("yyyy/mm/dd");
 
