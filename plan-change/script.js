@@ -17,6 +17,40 @@ function makeChecks(id){
 makeChecks("currentSubjects");
 makeChecks("nextSubjects");
 
+const noticeItems = {
+  "週4/6プラン": [
+    "週4/6プランは、受講教科を最大3教科まで選択するプランであることを確認しました。",
+    "欠席した授業の振替はできないことを確認しました。",
+    "追加授業を希望する場合は、同じ週の中で受講することを確認しました。"
+  ],
+  "通い放題": [
+    "通い放題プランは、受講教科を最大5教科まで選択するプランであることを確認しました。",
+    "欠席した授業の振替はできないことを確認しました。",
+    "追加授業を希望する場合は、同じ週の中で受講することを確認しました。"
+  ]
+};
+
+function updatePlanNotice() {
+  const plan = $("nextPlan").value;
+  const items = noticeItems[plan];
+  const block = $("planNotice");
+  const container = $("planNoticeItems");
+  if (!items) {
+    block.classList.add("hidden");
+    container.innerHTML = "";
+    $("planNoticeError").textContent = "";
+    return;
+  }
+  block.classList.remove("hidden");
+  container.innerHTML = items.map((item, i) =>
+    '<label class="notice-check"><input type="checkbox" value="' + i + '"><span>' + esc(item) + '</span></label>'
+  ).join("");
+  $("planNoticeError").textContent = "";
+}
+
+$("nextPlan").addEventListener("change", updatePlanNotice);
+
+
 function updateSubjectLimits(planId,subjectId){
   const max=planMaxSubjects($(planId).value);
   const boxes=[...document.querySelectorAll("#"+subjectId+" input")];
@@ -54,6 +88,9 @@ $("form").addEventListener("submit",e=>{
   const nextSubjects=[...document.querySelectorAll("#nextSubjects input:checked")].map(x=>x.value);
   const notes=$("notes").value.trim();
   const email=$("email").value.trim();
+  const nextPlanNoticeChecks = [...document.querySelectorAll("#planNoticeItems input:checked")];
+  const needsPlanNotice = Object.prototype.hasOwnProperty.call(noticeItems, nextPlan);
+
 
   const currentMax=planMaxSubjects(currentPlan);
   const nextMax=planMaxSubjects(nextPlan);
@@ -62,6 +99,13 @@ $("form").addEventListener("submit",e=>{
     $("error").textContent="必須項目を正しく入力してください。";
     return;
   }
+
+  if(needsPlanNotice && nextPlanNoticeChecks.length !== noticeItems[nextPlan].length){
+    $("planNoticeError").textContent="注意事項をすべて確認し、各項目にチェックを入れてください。";
+    $("planNotice").scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  $("planNoticeError").textContent="";
 
   if(currentSubjects.length>currentMax){
     $("error").textContent="現在のプランで選択できる受講教科数を超えています。";
@@ -82,6 +126,7 @@ $("form").addEventListener("submit",e=>{
     '<p><span class="summary-label">現在の受講教科</span><br>'+esc(currentSubjects.join("、"))+'</p>'+
     '<p><span class="summary-label">来月以降のプラン</span><br>'+esc(nextPlan)+'</p>'+
     '<p><span class="summary-label">来月以降の受講教科</span><br>'+esc(nextSubjects.join("、"))+'</p>'+
+    (needsPlanNotice ? '<p><span class="summary-label">注意事項の確認</span><br>'+noticeItems[nextPlan].map((item,i)=>'✓ '+esc(item)).join("<br>")+'</p>' : '')+
     '<p><span class="summary-label">連絡事項</span><br>'+esc(notes||"なし")+'</p>'+
     '<p><span class="summary-label">メールアドレス</span><br>'+esc(email)+'</p>';
 
