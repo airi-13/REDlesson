@@ -144,6 +144,7 @@ $("submitButton").addEventListener("click",async()=>{
     const registration = await RED.registerApplication(current);
     $("confirmation").classList.add("hidden");
     $("success").classList.remove("hidden");
+    await RED.sendApplicationEmails(registration.requestId);
     window.scrollTo({top:0,behavior:"smooth"});
   }catch(e){
     $("loading").classList.add("hidden");
