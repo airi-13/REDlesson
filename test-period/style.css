@@ -101,3 +101,20 @@
   font-size: .9rem;
   margin: 5px 0 0;
 }
+
+
+/* テキスト一覧と同じページタイトルデザインを強制適用 */
+.content > .page-title {
+  margin: 0 0 16px;
+}
+.content > .page-title h1 {
+  margin: 0;
+  color: var(--text) !important;
+  font-size: 1.55rem;
+  line-height: 1.35;
+}
+.content > .page-title p {
+  margin: 5px 0 0;
+  color: var(--muted) !important;
+  font-size: .9rem;
+}
