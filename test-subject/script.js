@@ -1,9 +1,16 @@
 const GAS_URL=RED.GAS_URL;
 const subjects=["英語","数学","国語","理科","社会"];
 const $=id=>document.getElementById(id);
-$("subjects").innerHTML=subjects.map(s=>'<label class="check"><input type="checkbox" value="'+s+'">'+s+'</label>').join("");
+$("subjects").innerHTML=subjects.map(s=>'<label class="check"><input type="checkbox" value="'+s+'"><span>'+s+'</span></label>').join("");
 let current=null;
 const esc=RED.escapeHtml;
+
+// 選択状態をカード表示にも即時反映する
+$("subjects").addEventListener("change",e=>{
+  if(!e.target.matches('input[type="checkbox"]')) return;
+  const label=e.target.closest(".check");
+  if(label) label.classList.toggle("selected",e.target.checked);
+});
 
 $("form").addEventListener("submit",e=>{
   e.preventDefault();
