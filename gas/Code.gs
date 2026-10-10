@@ -118,9 +118,20 @@ function getAnnouncements_() {
     sheet.getRange(1, 1, 1, 6).setValues([["対象", "タイトル", "内容", "表示開始日", "表示終了日", "状態"]]);
     sheet.setFrozenRows(1);
     sheet.getRange("D:E").setNumberFormat("yyyy/mm/dd");
-    sheet.getRange("F2:F").setDataValidation(
-      SpreadsheetApp.newDataValidation().requireValueInList(["有効", "無効"], true).setAllowInvalid(false).build()
-    );
+  }
+
+  // 既存シートにも対象・状態のプルダウンを適用する。
+  sheet.getRange("A2:A").setDataValidation(
+    SpreadsheetApp.newDataValidation()
+      .requireValueInList(["小学生", "中学生", "高校生", "受験生", "QUREO", "全員"], true)
+      .setAllowInvalid(false)
+      .build()
+  );
+  sheet.getRange("F2:F").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(["有効", "無効"], true).setAllowInvalid(false).build()
+  );
+
+  if (sheet.getLastRow() < 2) {
     return { success: true, announcements: [] };
   }
   if (sheet.getLastRow() < 2) {
