@@ -137,7 +137,11 @@ function setupDropdowns() {
       const range = sheet.getRange(firstRow, colIndex + 1, rowCount, 1);
       const validation = SpreadsheetApp.newDataValidation()
         .requireValueInList(rules[sheetName][headerName], true)
-        .setAllowInvalid(sheetName === "プラン変更申請" && ["現在の受講教科", "現在の受講コマ", "来月以降の受講教科", "来月以降の受講コマ"].indexOf(headerName) !== -1 || sheetName === "テスト対策教科" && headerName === "テスト対策受講希望科目")
+        .setAllowInvalid(
+          (sheetName === "プラン変更申請" &&
+            ["現在の受講教科", "現在の受講コマ", "来月以降の受講教科", "来月以降の受講コマ"].indexOf(headerName) !== -1) ||
+          (sheetName === "テスト対策教科" && headerName === "テスト対策受講希望科目")
+        )
         .setHelpText("リストから選択してください。複数選択できる項目は、選択を繰り返してください。")
         .build();
       range.setDataValidation(validation);
