@@ -24,6 +24,7 @@
     .announcement-item{background:#fff;border:1px solid #d9e0e6;border-radius:12px;margin:0 0 9px;overflow:hidden}
     .announcement-head{display:flex;align-items:flex-start;gap:10px;padding:13px 14px}
     .announcement-target{flex:0 0 auto;background:#eef2f5;color:#4c5963;border-radius:6px;padding:3px 7px;font-size:.76rem;font-weight:700}
+    .announcement-target-all{background:#fff0f0;color:#e60012}
     .announcement-title{font-weight:800;flex:1;min-width:0;overflow-wrap:anywhere}
     .announcement-detail{border:0;background:#f2f5f7;color:#303c44;padding:8px 12px;border-radius:8px;font-weight:700;white-space:nowrap}
     .announcement-body{padding:0 14px 15px;white-space:pre-wrap;overflow-wrap:anywhere;color:#39464f}
@@ -144,11 +145,13 @@
         try {
           if (!result || !result.success || !Array.isArray(result.announcements) || !result.announcements.length) return;
           list.innerHTML = result.announcements.map((item, index) => {
-            const target = escapeHtml(item.target || "全員");
+            const rawTarget = String(item.target || "全員");
+            const target = escapeHtml(rawTarget);
+            const targetClass = rawTarget === "全員" ? " announcement-target-all" : "";
             const title = escapeHtml(item.title || "");
             const body = escapeHtml(item.content || "");
             return '<article class="announcement-item">' +
-              '<div class="announcement-head"><span class="announcement-target">' + target + '</span>' +
+              '<div class="announcement-head"><span class="announcement-target' + targetClass + '">' + target + '</span>' +
               '<div class="announcement-title">' + title + '</div>' +
               '<button type="button" class="announcement-detail" aria-expanded="false" aria-controls="announcement-body-' + index + '">詳細</button></div>' +
               '<div id="announcement-body-' + index + '" class="announcement-body" hidden>' + body + '</div></article>';
