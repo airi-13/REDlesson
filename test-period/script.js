@@ -94,7 +94,7 @@ function applySelectedConfig() {
 
   $("testDateDisplay").value = config.testStartDate + " ～ " + config.testEndDate;
   $("startDate").value = calculatedStart;
-  setConfigMessage("テスト最終日を含む14日間（最終日の13日前から）の予定を表示しています。");
+  setConfigMessage("");
   render();
 }
 
@@ -114,6 +114,7 @@ function render() {
   for (let i = 0; i < 14; i++) {
     const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
     const key = x.getDay();
+    if (key === 0 || key === 1) continue; // 日曜・月曜は固定休校のため表示しない
     const ds = localIsoDate(x);
     const available = PERIODS[key] || [];
     const dateLabel = (x.getMonth()+1)+'/'+x.getDate();
