@@ -956,6 +956,37 @@ function submitTestPeriodApplication_(data) {
 ===================================================== */
 
 /**
+ * 既存の「プラン変更申請」シートを、フォームの入力順に一度だけ移行する。
+ * Apps Scriptの関数一覧から migratePlanChangeSheetColumns を実行してください。
+ */
+function migratePlanChangeSheetColumns() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh = ss.getSheetByName(PLAN_CHANGE_SHEET_NAME);
+  if (!sh) throw new Error("「プラン変更申請」シートが見つかりません。");
+
+  const headers = [
+    "受付日時",
+    "生徒番号",
+    "氏名",
+    "学年",
+    "現在のプラン",
+    "現在の受講教科",
+    "現在の受講コマ",
+    "来月以降のプラン",
+    "来月以降の受講教科",
+    "来月以降の受講コマ",
+    "テキスト追加購入",
+    "連絡事項",
+    "メールアドレス"
+  ];
+
+  const migrated = migratePlanChangeSheetColumns_(sh, headers);
+  Logger.log(migrated
+    ? "移行完了：既存データを保持してフォームの入力順に列を整理しました。"
+    : "移行不要：すでにフォームの入力順に整理されています。");
+}
+
+/**
  * 「プラン変更申請」シートの列をフォームの入力順に整理する。
  * 見出し名でデータを対応付けるため、既存の申請履歴を保持したまま並べ替えられる。
  * 必要な場合のみプルダウン設定も再適用する。
