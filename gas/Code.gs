@@ -955,6 +955,78 @@ function submitTestPeriodApplication_(data) {
    プラン変更申請
 ===================================================== */
 
+/**
+ * 「プラン変更申請」シートの列をフォームの入力順に整理する。
+ * 見出し名でデータを対応付けるため、既存の申請履歴を保持したまま並べ替えられる。
+ * 必要な場合のみプルダウン設定も再適用する。
+ */
+function migratePlanChangeSheetColumns_(sh, targetHeaders) {
+  const lastColumn = sh.getLastColumn();
+  if (lastColumn < 1) {
+    sh.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders]);
+    sh.setFrozenRows(1);
+    return true;
+  }
+
+  const oldHeaders = sh.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
+    .map(function(value) { return String(value || "").trim(); });
+
+  if (targetHeaders.every(function(header, index) { return oldHeaders[index] === header; })) {
+    return false;
+  }
+
+  const headerIndex = {};
+  oldHeaders.forEach(function(header, index) {
+    if (header && headerIndex[header] === undefined) headerIndex[header] = index;
+  });
+
+  const missingHeaders = targetHeaders.filter(function(header) {
+    return headerIndex[header] === undefined;
+  });
+  if (missingHeaders.length) {
+    throw new Error(
+      "プラン変更申請シートの見出しを自動整理できません。見つからない見出し：" +
+      missingHeaders.join("、") +
+      "。既存データ保護のため登録を中止しました。"
+    );
+  }
+
+  // 想定外の見出しにデータがある場合は、勝手に捨てずに処理を止める。
+  const unknownHeaders = oldHeaders.filter(function(header) {
+    return header && targetHeaders.indexOf(header) === -1;
+  });
+  if (unknownHeaders.length) {
+    throw new Error(
+      "プラン変更申請シートに想定外の列があります：" +
+      unknownHeaders.join("、") +
+      "。データ保護のため自動整理を中止しました。"
+    );
+  }
+
+  const lastRow = sh.getLastRow();
+  const oldRows = lastRow >= 2
+    ? sh.getRange(2, 1, lastRow - 1, lastColumn).getValues()
+    : [];
+  const reorderedRows = oldRows.map(function(row) {
+    return targetHeaders.map(function(header) {
+      return row[headerIndex[header]];
+    });
+  });
+
+  // 見出しと全履歴を同じ順番で更新する。N列以降など、対象外の列は触らない。
+  sh.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders]);
+  if (reorderedRows.length) {
+    sh.getRange(2, 1, reorderedRows.length, targetHeaders.length).setValues(reorderedRows);
+    sh.getRange(2, 2, reorderedRows.length, 1).setNumberFormat("@");
+  }
+  sh.setFrozenRows(1);
+
+  // プルダウンは列位置に設定されているため、移行後に見出し基準で再設定する。
+  if (typeof setupDropdowns === "function") setupDropdowns();
+  Logger.log("「プラン変更申請」の列順をフォームの入力順に整理しました。");
+  return true;
+}
+
 function submitPlanChangeApplication_(data) {
   const studentId = String(data.studentId || "").trim();
   const studentName = String(data.studentName || "").trim();
@@ -1022,33 +1094,45 @@ function submitPlanChangeApplication_(data) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh = ss.getSheetByName(PLAN_CHANGE_SHEET_NAME);
 
+  const planChangeHeaders = [
+    "受付日時",
+    "生徒番号",
+    "氏名",
+    "学年",
+    "現在のプラン",
+    "現在の受講教科",
+    "現在の受講コマ",
+    "来月以降のプラン",
+    "来月以降の受講教科",
+    "来月以降の受講コマ",
+    "テキスト追加購入",
+    "連絡事項",
+    "メールアドレス"
+  ];
+
   if (!sh) {
     sh = ss.insertSheet(PLAN_CHANGE_SHEET_NAME);
-    sh.appendRow([
-      "受付日時","生徒番号","氏名","現在のプラン","現在の受講教科",
-      "来月以降のプラン","来月以降の受講教科","連絡事項","メールアドレス","テキスト追加購入","現在の受講コマ","来月以降の受講コマ"
-    ]);
+    sh.getRange(1, 1, 1, planChangeHeaders.length).setValues([planChangeHeaders]);
+    sh.setFrozenRows(1);
+  } else {
+    // 既存シートが旧順の場合は、見出し名を基準に既存データを保ったまま新しい順番へ移行する。
+    migratePlanChangeSheetColumns_(sh, planChangeHeaders);
   }
 
-  // 既存シートにも購入有無の列を追加し、過去の申請データは保持する。
-  if (!String(sh.getRange(1, 10).getDisplayValue() || "").trim()) sh.getRange(1, 10).setValue("テキスト追加購入");
-  if (!String(sh.getRange(1, 11).getDisplayValue() || "").trim()) sh.getRange(1, 11).setValue("現在の受講コマ");
-  if (!String(sh.getRange(1, 12).getDisplayValue() || "").trim()) sh.getRange(1, 12).setValue("来月以降の受講コマ");
-  if (!String(sh.getRange(1, 13).getDisplayValue() || "").trim()) sh.getRange(1, 13).setValue("学年");
   sh.appendRow([
     new Date(),
     studentId,
     studentName,
+    grade,
     currentPlan,
     currentSubjects.join("、"),
+    formatScheduleForMail(currentSchedule),
     nextPlan,
     nextSubjects.join("、"),
-    notes,
-    email,
-    needsTextbookPurchase,
-    formatScheduleForMail(currentSchedule),
     formatScheduleForMail(nextSchedule),
-    grade
+    needsTextbookPurchase,
+    notes,
+    email
   ]);
   sh.getRange(sh.getLastRow(), 2).setNumberFormat("@");
 
