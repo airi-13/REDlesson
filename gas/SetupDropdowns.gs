@@ -59,6 +59,14 @@ function setupDropdowns() {
     }
 
     const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0];
+
+    // プラン変更申請は列順を移行した際、旧列に残ったプルダウンを消してから
+    // 現在の見出し位置に設定し直す（他シートの入力規則には触れない）。
+    if (sheetName === "プラン変更申請") {
+      const dataRows = Math.max(sheet.getMaxRows() - 1, RED_DROPDOWN_ROWS - 1, 1);
+      sheet.getRange(2, 1, dataRows, lastColumn).clearDataValidations();
+    }
+
     Object.keys(rules[sheetName]).forEach(function(headerName) {
       const colIndex = headers.indexOf(headerName);
       if (colIndex === -1) {
