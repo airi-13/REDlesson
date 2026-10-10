@@ -17,6 +17,19 @@
   <title>自立学習RED 天王台教室</title>
 
   <link rel="stylesheet" href="./common.css">
+  <style>
+    .announcements{margin:18px auto 22px;width:min(900px,100%);padding:0 16px}
+    .announcements[hidden]{display:none}
+    .announcements h2{font-size:1.1rem;margin:0 0 10px}
+    .announcement-item{background:#fff;border:1px solid #d9e0e6;border-radius:12px;margin:0 0 9px;overflow:hidden}
+    .announcement-head{display:flex;align-items:flex-start;gap:10px;padding:13px 14px}
+    .announcement-target{flex:0 0 auto;background:#eef2f5;color:#4c5963;border-radius:6px;padding:3px 7px;font-size:.76rem;font-weight:700}
+    .announcement-title{font-weight:800;flex:1;min-width:0;overflow-wrap:anywhere}
+    .announcement-detail{border:0;background:#f2f5f7;color:#303c44;padding:8px 12px;border-radius:8px;font-weight:700;white-space:nowrap}
+    .announcement-body{padding:0 14px 15px;white-space:pre-wrap;overflow-wrap:anywhere;color:#39464f}
+    .announcement-body[hidden]{display:none}
+    @media(max-width:560px){.announcements{padding:0 12px}.announcement-head{gap:7px;padding:11px}.announcement-detail{padding:8px;font-size:.8rem}.announcement-target{font-size:.7rem}}
+  </style>
 
 </head>
 
@@ -37,6 +50,11 @@
   <div data-site-header></div>
 
   <main>
+
+    <section id="announcements" class="announcements" aria-labelledby="announcementsTitle" hidden>
+      <h2 id="announcementsTitle">📢 お知らせ</h2>
+      <div id="announcementList" class="announcement-list"></div>
+    </section>
 
     <nav class="menu" aria-label="教室メニュー">
 
@@ -113,6 +131,49 @@
       input.addEventListener("keydown",e=>{if(e.key==="Enter")unlock();});
       if(sessionStorage.getItem("redLessonAuth")==="ok"){gate.style.display="none";content.style.display="block";}
       else setTimeout(()=>input.focus(),100);
+    })();
+  </script>
+  <script>
+    (() => {
+      const section = document.getElementById("announcements");
+      const list = document.getElementById("announcementList");
+      if (!section || !list) return;
+      const gasUrl = "https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+      const callbackName = "redAnnouncementsCallback";
+      window[callbackName] = (result) => {
+        try {
+          if (!result || !result.success || !Array.isArray(result.announcements) || !result.announcements.length) return;
+          list.innerHTML = result.announcements.map((item, index) => {
+            const target = escapeHtml(item.target || "全員");
+            const title = escapeHtml(item.title || "");
+            const body = escapeHtml(item.content || "");
+            return '<article class="announcement-item">' +
+              '<div class="announcement-head"><span class="announcement-target">' + target + '</span>' +
+              '<div class="announcement-title">' + title + '</div>' +
+              '<button type="button" class="announcement-detail" aria-expanded="false" aria-controls="announcement-body-' + index + '">詳細</button></div>' +
+              '<div id="announcement-body-' + index + '" class="announcement-body" hidden>' + body + '</div></article>';
+          }).join("");
+          section.hidden = false;
+          list.querySelectorAll(".announcement-detail").forEach(button => {
+            button.addEventListener("click", () => {
+              const body = document.getElementById(button.getAttribute("aria-controls"));
+              const open = button.getAttribute("aria-expanded") !== "true";
+              button.setAttribute("aria-expanded", String(open));
+              button.textContent = open ? "閉じる" : "詳細";
+              body.hidden = !open;
+            });
+          });
+        } catch (error) { console.error("お知らせの表示に失敗しました", error); }
+      };
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+        }[char]));
+      }
+      const script = document.createElement("script");
+      script.src = gasUrl + "?action=announcements&callback=" + callbackName + "&_=" + Date.now();
+      script.onerror = () => console.warn("お知らせを読み込めませんでした");
+      document.head.appendChild(script);
     })();
   </script>
   <script src="./common.js"></script>
