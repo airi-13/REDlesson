@@ -237,7 +237,7 @@ function submitApplication(data) {
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "欠席・振替申請を受け付けました",
+      subject: "【自立学習RED】欠席振替登録完了_" + studentId,
       body: body
     });
   } catch (error) {
@@ -493,7 +493,7 @@ function submitPurchaseApplication_(data) {
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "テキスト購入申請を受け付けました",
+      subject: "【自立学習RED】テキスト購入申請完了_" + studentId,
       body: body
     });
   } catch (error) {
@@ -503,7 +503,7 @@ function submitPurchaseApplication_(data) {
   try {
     MailApp.sendEmail({
       to: ADMIN_EMAIL,
-      subject: "新しいテキスト購入申請があります",
+      subject: "【テキスト購入】" + studentName + "_" + studentId,
       body:
         "新しいテキスト購入申請があります。\n\n" +
         "受付番号：" + applicationId + "\n" +
@@ -665,7 +665,7 @@ function submitTestRangeApplication_(data) {
 
     MailApp.sendEmail({
       to: ADMIN_EMAIL,
-      subject: "新しいテスト範囲登録があります",
+      subject: "【テスト範囲登録】" + studentName + "_" + studentId,
       body:
         "テスト範囲登録を受け付けました。\n\n" +
         "生徒番号：" + studentId + "\n" +
@@ -918,8 +918,8 @@ function submitTestSubjectApplication_(data) {
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
   sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
   sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
-  try{MailApp.sendEmail({to:email,subject:"テスト対策教科登録を受け付けました",body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策教科登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
+  try{MailApp.sendEmail({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
+  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
   return {success:true};
 }
 
@@ -946,8 +946,8 @@ function submitTestPeriodApplication_(data) {
     sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
     sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
   });
-  try{MailApp.sendEmail({to:email,subject:"テスト対策コマ登録を受け付けました",body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"新しいテスト対策コマ登録があります",body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
+  try{MailApp.sendEmail({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
+  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"【テスト対策コマ登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
   return {success:true};
 }
 
@@ -1057,7 +1057,7 @@ function submitPlanChangeApplication_(data) {
   try {
     MailApp.sendEmail({
       to: email,
-      subject: "プラン変更申請を受け付けました",
+      subject: "【自立学習RED】プラン変更申請完了_" + studentId,
       body:
         "プラン変更申請を受け付けました。\n\n" +
         "【生徒番号】\n" + studentId + "\n\n" +
@@ -1080,7 +1080,7 @@ function submitPlanChangeApplication_(data) {
   try {
     MailApp.sendEmail({
       to: ADMIN_EMAIL,
-      subject: "新しいプラン変更申請があります",
+      subject: "【プラン変更】" + studentName + "_" + studentId,
       body:
         "プラン変更申請を受け付けました。\n\n" +
         "生徒番号：" + studentId + "\n" +
