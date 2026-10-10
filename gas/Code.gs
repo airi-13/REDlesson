@@ -112,8 +112,18 @@ function jsonResponse_(data) {
 
 function getAnnouncements_() {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = spreadsheet.getSheetByName("お知らせ");
-  if (!sheet || sheet.getLastRow() < 2) {
+  let sheet = spreadsheet.getSheetByName("お知らせ");
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet("お知らせ");
+    sheet.getRange(1, 1, 1, 6).setValues([["対象", "タイトル", "内容", "表示開始日", "表示終了日", "状態"]]);
+    sheet.setFrozenRows(1);
+    sheet.getRange("D:E").setNumberFormat("yyyy/mm/dd");
+    sheet.getRange("F2:F").setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(["有効", "無効"], true).setAllowInvalid(false).build()
+    );
+    return { success: true, announcements: [] };
+  }
+  if (sheet.getLastRow() < 2) {
     return { success: true, announcements: [] };
   }
 
