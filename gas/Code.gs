@@ -22,6 +22,8 @@ function doGet(e) {
 
     if (action === "purchase") {
       result = handlePurchaseJsonp_(e);
+    } else if (action === "announcements") {
+      result = getAnnouncements_();
     } else if (action === "test_period_config") {
       result = getTestPeriodConfig_();
     } else if (e.parameter && e.parameter.data) {
@@ -100,6 +102,58 @@ function jsonResponse_(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* =====================================================
+   トップページのお知らせ
+   シート「お知らせ」列:
+   A 対象 / B タイトル / C 内容 / D 表示開始日 / E 表示終了日 / F 状態
+===================================================== */
+
+function getAnnouncements_() {
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = spreadsheet.getSheetByName("お知らせ");
+  if (!sheet || sheet.getLastRow() < 2) {
+    return { success: true, announcements: [] };
+  }
+
+  const today = Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd");
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(6, sheet.getLastColumn())).getValues();
+  const announcements = [];
+
+  values.forEach(function(row) {
+    const target = String(row[0] == null ? "" : row[0]).trim();
+    const title = String(row[1] == null ? "" : row[1]).trim();
+    const content = String(row[2] == null ? "" : row[2]).trim();
+    const startDate = announcementDateKey_(row[3]);
+    const endDate = announcementDateKey_(row[4]);
+    const status = String(row[5] == null ? "" : row[5]).trim();
+
+    if (!title || !content || !startDate || !endDate) return;
+    if (status === "無効") return;
+    if (startDate > today || endDate < today || startDate > endDate) return;
+
+    announcements.push({
+      target: target || "全員",
+      title: title,
+      content: content,
+      startDate: startDate,
+      endDate: endDate
+    });
+  });
+
+  return { success: true, announcements: announcements };
+}
+
+function announcementDateKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
+  }
+  const text = String(value == null ? "" : value).trim();
+  if (!text) return "";
+  const match = /^(\\d{4})[-/年](\\d{1,2})[-/月](\\d{1,2})日?$/.exec(text);
+  if (!match) return "";
+  return match[1] + "-" + ("0" + match[2]).slice(-2) + "-" + ("0" + match[3]).slice(-2);
 }
 
 /* =====================================================
