@@ -26,7 +26,7 @@ function buildPlanScheduleOptions_() {
  * 対象セルで選択済みの値を再選択すると、その項目だけ解除する。
  * 対象：複数教科・複数コマを格納する申請一覧の列。
  */
-function onEdit(e) {
+function handleMultiSelectEdit(e) {
   if (!e || !e.range || typeof e.value === "undefined") return;
   const sheet = e.range.getSheet();
   if (e.range.getRow() < 2 || e.range.getNumRows() !== 1 || e.range.getNumColumns() !== 1) return;
@@ -50,6 +50,19 @@ function onEdit(e) {
 
 function setupDropdowns() {
   const ss = SpreadsheetApp.openById(RED_DROPDOWN_SPREADSHEET_ID);
+
+  // このGASがスプレッドシートに直接紐づいていない場合も動くよう、
+  // 対象スプレッドシートの編集時トリガーを1つだけ登録する。
+  const hasEditTrigger = ScriptApp.getProjectTriggers().some(function(trigger) {
+    return trigger.getHandlerFunction() === "handleMultiSelectEdit" &&
+      trigger.getEventType() === ScriptApp.EventType.ON_EDIT;
+  });
+  if (!hasEditTrigger) {
+    ScriptApp.newTrigger("handleMultiSelectEdit")
+      .forSpreadsheet(ss)
+      .onEdit()
+      .create();
+  }
   const rules = {
     "欠席振替申請": {
       "状態": ["未確認", "確認済み", "対応済み", "メールエラー"]
