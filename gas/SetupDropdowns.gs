@@ -79,5 +79,5 @@ function setupDropdowns() {
   });
 
   Logger.log(summary.join("\n"));
-  SpreadsheetApp.getUi().alert("プルダウン設定処理が完了しました。\n\n" + summary.join("\n"));
+  Logger.log("プルダウン設定処理が完了しました。");
 }
