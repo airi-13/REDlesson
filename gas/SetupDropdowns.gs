@@ -6,6 +6,48 @@
 const RED_DROPDOWN_SPREADSHEET_ID = "1apUqDRpkV1leEvYegYv61a22vuf2YdQYe40yzvgOb9Q";
 const RED_DROPDOWN_ROWS = 1000;
 
+function buildPlanScheduleOptions_() {
+  const days = { "火": [4,5,6,7,8], "水": [3,4,5,6,7], "木": [4,5,6,7,8], "金": [3,4,5,6,7], "土": [1,2,3,4,5] };
+  const marks = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧"];
+  const subjects = ["英語", "数学", "国語", "理科", "社会"];
+  const options = [];
+  Object.keys(days).forEach(function(day) {
+    days[day].forEach(function(period) {
+      subjects.forEach(function(subject) {
+        options.push(day + "曜 " + marks[period] + " " + subject);
+      });
+    });
+  });
+  return options;
+}
+
+/**
+ * プルダウンの選択を複数登録できるようにする。
+ * 対象セルで選択済みの値を再選択すると、その項目だけ解除する。
+ * 対象：複数教科・複数コマを格納する申請一覧の列。
+ */
+function onEdit(e) {
+  if (!e || !e.range || typeof e.value === "undefined") return;
+  const sheet = e.range.getSheet();
+  if (e.range.getRow() < 2 || e.range.getNumRows() !== 1 || e.range.getNumColumns() !== 1) return;
+  const sheetName = sheet.getName();
+  const header = String(sheet.getRange(1, e.range.getColumn()).getDisplayValue() || "").trim();
+  const multiHeaders = {
+    "プラン変更申請": ["現在の受講教科", "現在の受講コマ", "来月以降の受講教科", "来月以降の受講コマ"],
+    "テスト対策教科": ["テスト対策受講希望科目"]
+  };
+  if (!multiHeaders[sheetName] || multiHeaders[sheetName].indexOf(header) === -1) return;
+
+  const selected = String(e.value || "").trim();
+  const previous = String(e.oldValue || "").trim();
+  if (!selected) return;
+  const items = previous ? previous.split("、").map(function(item) { return item.trim(); }).filter(Boolean) : [];
+  const index = items.indexOf(selected);
+  if (index >= 0) items.splice(index, 1);
+  else items.push(selected);
+  e.range.setValue(items.join("、"));
+}
+
 function setupDropdowns() {
   const ss = SpreadsheetApp.openById(RED_DROPDOWN_SPREADSHEET_ID);
   const rules = {
@@ -18,7 +60,11 @@ function setupDropdowns() {
     },
     "プラン変更申請": {
       "現在のプラン": ["通い放題", "週4パック", "週6パック", "週1", "週2", "週3", "週4", "週5", "週6"],
+      "現在の受講教科": ["英語", "数学", "国語", "理科", "社会"],
+      "現在の受講コマ": buildPlanScheduleOptions_(),
       "来月以降のプラン": ["通い放題", "週4パック", "週6パック", "週1", "週2", "週3", "週4", "週5", "週6"],
+      "来月以降の受講教科": ["英語", "数学", "国語", "理科", "社会"],
+      "来月以降の受講コマ": buildPlanScheduleOptions_(),
       "学年": ["小4以下", "小5・6", "中1", "中2", "中3", "高1", "高2", "高3"],
       "テキスト追加購入": ["あり", "なし"]
     },
@@ -78,8 +124,8 @@ function setupDropdowns() {
       const range = sheet.getRange(firstRow, colIndex + 1, rowCount, 1);
       const validation = SpreadsheetApp.newDataValidation()
         .requireValueInList(rules[sheetName][headerName], true)
-        .setAllowInvalid(false)
-        .setHelpText("リストから選択してください。")
+        .setAllowInvalid(sheetName === "プラン変更申請" && ["現在の受講教科", "現在の受講コマ", "来月以降の受講教科", "来月以降の受講コマ"].indexOf(headerName) !== -1 || sheetName === "テスト対策教科" && headerName === "テスト対策受講希望科目")
+        .setHelpText("リストから選択してください。複数選択できる項目は、選択を繰り返してください。")
         .build();
       range.setDataValidation(validation);
       summary.push(sheetName + " / " + headerName + "：設定完了");
