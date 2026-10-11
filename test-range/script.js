@@ -86,7 +86,7 @@ function validate(){
     const publisher=block.querySelector(".publisher").value.trim();
     const rows=[...block.querySelectorAll(".range-row")];
     const ranges=rows.map(row=>({from:row.querySelector(".from").value.trim(),to:row.querySelector(".to").value.trim()}));
-    const used=publisher||ranges.some(x=>x.from||x.to);
+    const used=Boolean(testDate||publisher||ranges.some(x=>x.from||x.to));
     if(!used) return;
     if(!testDate){block.querySelector(".subject-error").textContent="テスト日を選択してください。";ok=false;return;}
     if(!ranges.some(x=>x.from&&x.to)){block.querySelector(".subject-error").textContent="ページ範囲を1つ以上、P○～P○の形で入力してください。";ok=false;return;}
