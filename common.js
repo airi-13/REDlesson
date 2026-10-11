@@ -7,7 +7,7 @@
   window.RED.GAS_URL=GAS_URL;
 
   // POSTの結果はCORS制約で直接読めないため、受付IDを使ってGAS側の処理結果をJSONPで確認する。
-  window.RED.submitApplication = async function(payload, options) {
+  window.RED.submitApplication = async function(payload) {
     const data = Object.assign({}, payload || {});
     const requestId = "red-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
     data.requestId = requestId;
