@@ -189,18 +189,13 @@
     $("loading").classList.remove("hidden");
 
     try{
-      await fetch(GAS_URL,{
-        method:"POST",
-        mode:"no-cors",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({...data,action:"absence"})
-      });
+      await RED.submitApplication({...data, action:"absence"});
 
       confirmation.classList.add("hidden");
       success.classList.remove("hidden");
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(err){
-      alert("申請の送信に失敗しました。\\n\\n通信エラーが発生しました。時間をおいてもう一度お試しください。");
+      alert(e && e.message ? e.message : "申請の受付結果を確認できませんでした。時間をおいて再度お試しください。");
       $("submitButton").disabled=false;
       $("backButton").disabled=false;
       $("loading").classList.add("hidden");
