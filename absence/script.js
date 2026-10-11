@@ -195,7 +195,7 @@
       success.classList.remove("hidden");
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(err){
-      alert(e && e.message ? e.message : "申請の受付結果を確認できませんでした。時間をおいて再度お試しください。");
+      alert(err && err.message ? err.message : "申請の受付結果を確認できませんでした。時間をおいて再度お試しください。");
       $("submitButton").disabled=false;
       $("backButton").disabled=false;
       $("loading").classList.add("hidden");
