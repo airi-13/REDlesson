@@ -26,6 +26,28 @@ function sendRedEmail_(message) {
   GmailApp.sendEmail(to, subject, body, data);
 }
 
+function ensureApplicationStatusColumn_(sheet) {
+  if (!sheet) return;
+  const lastRow = Math.max(sheet.getLastRow(), 1);
+  const header = String(sheet.getRange(1, 1).getDisplayValue() || "").trim();
+  if (header !== "状態") {
+    sheet.insertColumnBefore(1);
+    sheet.getRange(1, 1).setValue("状態");
+    if (lastRow >= 2) {
+      sheet.getRange(2, 1, lastRow - 1, 1).setValues(
+        Array.from({ length: lastRow - 1 }, function() { return ["未確認"]; })
+      );
+    }
+  }
+  sheet.getRange("A2:A").setDataValidation(
+    SpreadsheetApp.newDataValidation()
+      .requireValueInList(["未確認", "処理済", "要確認"], true)
+      .setAllowInvalid(false)
+      .build()
+  );
+  sheet.setFrozenRows(1);
+}
+
 function saveSubmissionStatus_(requestId, result) {
   const id = String(requestId || "");
   if (!/^[a-zA-Z0-9_-]{8,100}$/.test(id)) return;
@@ -290,6 +312,8 @@ function submitApplication(data) {
     ]);
     sheet.setFrozenRows(1);
   }
+
+  ensureApplicationStatusColumn_(sheet);
 
   const noteParts = [];
   if (absenceRegistered) noteParts.push("【欠席登録済み】");
@@ -662,10 +686,13 @@ function savePurchaseApplication_(data) {
     ]);
   }
 
+  ensureApplicationStatusColumn_(sheet);
+
   data.items.forEach(function(item) {
     const row = sheet.getLastRow() + 1;
 
-    sheet.getRange(row, 1, 1, 10).setValues([[
+    sheet.getRange(row, 1, 1, 11).setValues([[
+      "未確認",
       data.applicationId,
       data.timestamp,
       data.studentId,
@@ -1040,8 +1067,9 @@ function submitTestSubjectApplication_(data) {
   const name="テスト対策教科";
   let sh=ss.getSheetByName(name);
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
-  sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
-  sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
+  ensureApplicationStatusColumn_(sh);
+  sh.appendRow(["未確認",new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
+  sh.getRange(sh.getLastRow(),3).setNumberFormat("@");
   let mailSuccess = true;
   try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策教科メール送信に失敗しました: "+e);}
   try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){mailSuccess=false;console.error("教室宛のテスト対策教科メール送信に失敗しました: "+e);}
@@ -1074,12 +1102,13 @@ function submitTestPeriodApplication_(data) {
   const name="テスト対策コマ";
   let sh=ss.getSheetByName(name);
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","学校名","学年","日付","コマ","時間","連絡事項","メールアドレス"]); }
+  ensureApplicationStatusColumn_(sh);
   periods.forEach(p=>{
     if(!parseDate_(p.date)||!p.period) throw new Error("受講コマの入力内容が正しくありません。");
     const d=parseDate_(p.date);
     if(!getAvailablePeriods_(d.getDay()).includes(String(p.period))) throw new Error("選択できないコマが含まれています。");
-    sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
-    sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
+    sh.appendRow(["未確認",new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
+    sh.getRange(sh.getLastRow(),3).setNumberFormat("@");
   });
   let mailSuccess = true;
   try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策コマメール送信に失敗しました: "+e);}
@@ -1101,6 +1130,7 @@ function migratePlanChangeSheetColumns() {
   if (!sh) throw new Error("「プラン変更申請」シートが見つかりません。");
 
   const headers = [
+    "状態",
     "受付日時",
     "生徒番号",
     "氏名",
@@ -1265,6 +1295,7 @@ function submitPlanChangeApplication_(data) {
   let sh = ss.getSheetByName(PLAN_CHANGE_SHEET_NAME);
 
   const planChangeHeaders = [
+    "状態",
     "受付日時",
     "生徒番号",
     "氏名",
@@ -1285,11 +1316,14 @@ function submitPlanChangeApplication_(data) {
     sh.getRange(1, 1, 1, planChangeHeaders.length).setValues([planChangeHeaders]);
     sh.setFrozenRows(1);
   } else {
-    // 既存シートが旧順の場合は、見出し名を基準に既存データを保ったまま新しい順番へ移行する。
+    // 状態列を先頭に追加してから、既存データを保持したまま列順を整理する。
+    ensureApplicationStatusColumn_(sh);
     migratePlanChangeSheetColumns_(sh, planChangeHeaders);
   }
+  if (sh.getRange(1, 1).getDisplayValue() !== "状態") ensureApplicationStatusColumn_(sh);
 
   sh.appendRow([
+    "未確認",
     new Date(),
     studentId,
     studentName,
