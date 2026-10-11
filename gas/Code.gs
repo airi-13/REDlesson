@@ -1,6 +1,6 @@
 const SPREADSHEET_ID = "1apUqDRpkV1leEvYegYv61a22vuf2YdQYe40yzvgOb9Q";
 const ABSENCE_SHEET_NAME = "欠席振替申請";
-const PURCHASE_SHEET_NAME = "購入申請";
+const PURCHASE_SHEET_NAME = "テキスト購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
 const TEST_PERIOD_CONFIG_SHEET_NAME = "テスト期間設定";
 const PLAN_CHANGE_SHEET_NAME = "プラン変更申請";
@@ -668,6 +668,11 @@ function savePurchaseApplication_(data) {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   let sheet = spreadsheet.getSheetByName(PURCHASE_SHEET_NAME);
+  // 旧シート名「購入申請」があれば、履歴を保持したまま新しい名前に変更する。
+  if (!sheet) {
+    const legacySheet = spreadsheet.getSheetByName("購入申請");
+    if (legacySheet) sheet = legacySheet.setName(PURCHASE_SHEET_NAME);
+  }
 
   if (!sheet) {
     sheet = spreadsheet.insertSheet(PURCHASE_SHEET_NAME);
