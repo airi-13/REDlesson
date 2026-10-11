@@ -46,6 +46,9 @@
       if (!result || result.success !== true) {
         throw new Error(result && result.message ? result.message : "申請処理の結果を確認できませんでした。入力内容を確認して、時間をおいて再度お試しください。");
       }
+      if (result.mailSuccess === false) {
+        window.alert("申請データは受け付けられましたが、確認メールの送信に失敗した可能性があります。申請を再送信せず、教室へご連絡ください。");
+      }
       return result;
     }
     throw new Error("申請の受付結果を確認できませんでした。二重送信を避けるため、スプレッドシートを確認してから再申請してください。");
