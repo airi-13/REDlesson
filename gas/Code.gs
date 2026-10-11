@@ -350,6 +350,7 @@ function submitApplication(data) {
         "確認メール送信先：" + email
     });
   } catch (error) {
+    mailSuccess = false;
     console.error("教室宛の欠席・振替通知メール送信に失敗しました: " + error);
   }
 
@@ -623,7 +624,8 @@ function submitPurchaseApplication_(data) {
         "確認メール送信先：" + email
     });
   } catch (error) {
-    // 教室宛メールが失敗しても申請自体は成功扱い
+    mailSuccess = false;
+    console.error("教室宛のテキスト購入通知メール送信に失敗しました: " + error);
   }
 
   return {
@@ -767,6 +769,7 @@ function submitTestRangeApplication_(data) {
   sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
   sheet.getRange(startRow, 2, rows.length, 1).setNumberFormat("@");
 
+  let mailSuccess = true;
   try {
     const itemLines = subjects.map(function(item) {
       return item.subject + "（" + formatJapaneseDate_(item.testDate) + "）：" +
@@ -789,10 +792,11 @@ function submitTestRangeApplication_(data) {
         "連絡事項：" + (notes || "なし")
     });
   } catch (error) {
-    // 教室宛メールが失敗してもスプレッドシート登録は成功
+    mailSuccess = false;
+    console.error("教室宛のテスト範囲通知メール送信に失敗しました: " + error);
   }
 
-  return { success: true };
+  return { success: true, mailSuccess: mailSuccess };
 }
 
 /* =====================================================
@@ -1033,9 +1037,10 @@ function submitTestSubjectApplication_(data) {
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
   sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
   sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
-  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
-  return {success:true};
+  let mailSuccess = true;
+  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策教科メール送信に失敗しました: "+e);}
+  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){mailSuccess=false;console.error("教室宛のテスト対策教科メール送信に失敗しました: "+e);}
+  return {success:true,mailSuccess:mailSuccess};
 }
 
 function submitTestPeriodApplication_(data) {
@@ -1071,9 +1076,10 @@ function submitTestPeriodApplication_(data) {
     sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
     sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
   });
-  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策コマ登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
-  return {success:true};
+  let mailSuccess = true;
+  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策コマメール送信に失敗しました: "+e);}
+  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策コマ登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){mailSuccess=false;console.error("教室宛のテスト対策コマメール送信に失敗しました: "+e);}
+  return {success:true,mailSuccess:mailSuccess};
 }
 
 /* =====================================================
@@ -1339,7 +1345,10 @@ function submitPlanChangeApplication_(data) {
         "連絡事項：" + (notes || "なし") + "\n" +
         "確認メール送付先：" + email
     });
-  } catch (e) {}
+  } catch (e) {
+    mailSuccess = false;
+    console.error("教室宛のプラン変更通知メール送信に失敗しました: " + e);
+  }
 
   return { success: true, mailSuccess: mailSuccess };
 }
