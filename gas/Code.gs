@@ -12,7 +12,12 @@ const PASSWORD = "11391";
 /** 教室メールの返信先をフォーム用エイリアスに統一する。送信元エイリアスはGmail側で設定済みの場合のみ使用。 */
 function sendRedEmail_(message) {
   const data = Object.assign({}, message || {});
-  const to = data.to, subject = data.subject, body = data.body;
+  const to = data.to, subject = data.subject;
+  let body = data.body;
+  // 生徒宛ての申請完了メールには、共通の再申請案内を末尾に追加する。
+  if (String(subject || "").indexOf("【自立学習RED】") === 0) {
+    body = String(body || "") + "\n\n変更・訂正がある場合は、以下のURLより再申請を行いその旨を連絡事項に記載してください。\nhttps://airi-13.github.io/REDlesson/";
+  }
   delete data.to; delete data.subject; delete data.body;
   data.replyTo = FORM_EMAIL;
   try {
