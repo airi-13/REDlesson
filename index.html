@@ -134,12 +134,13 @@
       else setTimeout(()=>input.focus(),100);
     })();
   </script>
+  <script src="./common.js?v=20261011-1"></script>
   <script>
     (() => {
       const section = document.getElementById("announcements");
       const list = document.getElementById("announcementList");
       if (!section || !list) return;
-      const gasUrl = "https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+      const gasUrl = window.RED.GAS_URL;
       const callbackName = "redAnnouncementsCallback";
       window[callbackName] = (result) => {
         try {
@@ -179,6 +180,5 @@
       document.head.appendChild(script);
     })();
   </script>
-  <script src="./common.js?v=20261011-1"></script>
 </body>
 </html>
