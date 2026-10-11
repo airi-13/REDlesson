@@ -86,7 +86,7 @@ function validate(){
     const publisher=block.querySelector(".publisher").value.trim();
     const rows=[...block.querySelectorAll(".range-row")];
     const ranges=rows.map(row=>({from:row.querySelector(".from").value.trim(),to:row.querySelector(".to").value.trim()}));
-    const used=publisher||ranges.some(x=>x.from||x.to);
+    const used=Boolean(testDate||publisher||ranges.some(x=>x.from||x.to));
     if(!used) return;
     if(!testDate){block.querySelector(".subject-error").textContent="テスト日を選択してください。";ok=false;return;}
     if(!ranges.some(x=>x.from&&x.to)){block.querySelector(".subject-error").textContent="ページ範囲を1つ以上、P○～P○の形で入力してください。";ok=false;return;}
@@ -137,18 +137,13 @@ $("submitButton").addEventListener("click",async()=>{
   $("submitButton").disabled=true;
   $("loading").classList.remove("hidden");
   try{
-    await fetch(GAS_URL,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify(current)
-    });
+    await RED.submitApplication(current);
     $("confirmation").classList.add("hidden");
     $("success").classList.remove("hidden");
     window.scrollTo({top:0,behavior:"smooth"});
   }catch(e){
     $("loading").classList.add("hidden");
     $("submitButton").disabled=false;
-    alert("通信エラーが発生しました。時間をおいて再度お試しください。");
+    alert(e && e.message ? e.message : "申請の受付結果を確認できませんでした。時間をおいて再度お試しください。");
   }
 });

@@ -191,15 +191,10 @@ $("submit").onclick=async()=>{
  $("loading").classList.remove("hidden");
 
  try{
-   await fetch(GAS_URL,{
-     method:"POST",
-     mode:"no-cors",
-     headers:{"Content-Type":"text/plain;charset=utf-8"},
-     body:JSON.stringify({...current,action:"purchase"})
-   });
+   await RED.submitApplication({...current, action:"purchase"});
    show("completePage");
  }catch(e){
-   alert("通信エラーが発生しました。時間をおいて再度お試しください。");
+   alert(e && e.message ? e.message : "申請の受付結果を確認できませんでした。時間をおいて再度お試しください。");
    $("submit").disabled=false;
    $("loading").classList.add("hidden");
  }

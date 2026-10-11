@@ -4,9 +4,28 @@ const PURCHASE_SHEET_NAME = "購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
 const TEST_PERIOD_CONFIG_SHEET_NAME = "テスト期間設定";
 const PLAN_CHANGE_SHEET_NAME = "プラン変更申請";
-const ADMIN_EMAIL = "tennodai.red@gmail.com";
+const FORM_EMAIL = "tennodai.red+form@gmail.com";
+const ADMIN_EMAIL = FORM_EMAIL;
 const TIME_ZONE = "Asia/Tokyo";
 const PASSWORD = "11391";
+
+/** 教室メールの返信先をフォーム用エイリアスに統一する。送信元エイリアスはGmail側で設定済みの場合のみ使用。 */
+function sendRedEmail_(message) {
+  const data = Object.assign({}, message || {});
+  const to = data.to, subject = data.subject, body = data.body;
+  delete data.to; delete data.subject; delete data.body;
+  data.replyTo = FORM_EMAIL;
+  try {
+    if (GmailApp.getAliases().indexOf(FORM_EMAIL) !== -1) data.from = FORM_EMAIL;
+  } catch (error) {}
+  GmailApp.sendEmail(to, subject, body, data);
+}
+
+function saveSubmissionStatus_(requestId, result) {
+  const id = String(requestId || "");
+  if (!/^[a-zA-Z0-9_-]{8,100}$/.test(id)) return;
+  CacheService.getScriptCache().put("submission:" + id, JSON.stringify(result), 300);
+}
 
 /**
  * GitHub PagesからのGET受付。
@@ -20,7 +39,12 @@ function doGet(e) {
 
     let result;
 
-    if (action === "purchase") {
+    if (action === "submission_status") {
+      const requestId = String(e.parameter && e.parameter.requestId || "");
+      const cached = /^[a-zA-Z0-9_-]{8,100}$/.test(requestId)
+        ? CacheService.getScriptCache().get("submission:" + requestId) : null;
+      result = cached ? JSON.parse(cached) : { success: false, pending: true };
+    } else if (action === "purchase") {
       result = handlePurchaseJsonp_(e);
     } else if (action === "announcements") {
       result = getAnnouncements_();
@@ -32,7 +56,7 @@ function doGet(e) {
       result = { success: true, message: "RED天王台教室 API は正常に動作しています。" };
     }
 
-    if (callback) {
+    if (callback && /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
       return ContentService
         .createTextOutput(callback + "(" + JSON.stringify(result) + ");")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -48,7 +72,7 @@ function doGet(e) {
 
     const callback = String(e && e.parameter && e.parameter.callback || "").trim();
 
-    if (callback) {
+    if (callback && /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
       return ContentService
         .createTextOutput(callback + "(" + JSON.stringify(result) + ");")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -62,39 +86,27 @@ function doGet(e) {
  * 旧Cloudflare等からのPOSTにも対応。
  */
 function doPost(e) {
+  let requestId = "";
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      return jsonResponse_({
-        success: false,
-        message: "データが送信されていません。"
-      });
+      return jsonResponse_({ success: false, message: "データが送信されていません。" });
     }
-
     const data = JSON.parse(e.postData.contents);
-    if (String(data.action || "") === "purchase") {
-      return jsonResponse_(submitPurchaseApplication_(data));
-    }
-
-    if (String(data.action || "") === "test_range") {
-      return jsonResponse_(submitTestRangeApplication_(data));
-    }
-    if (String(data.action || "") === "test_subject") {
-      return jsonResponse_(submitTestSubjectApplication_(data));
-    }
-    if (String(data.action || "") === "test_period") {
-      return jsonResponse_(submitTestPeriodApplication_(data));
-    }
-    if (String(data.action || "") === "plan_change") {
-      return jsonResponse_(submitPlanChangeApplication_(data));
-    }
-
-    return jsonResponse_(submitApplication(data));
-
+    requestId = String(data.requestId || "");
+    const action = String(data.action || "");
+    let result;
+    if (action === "purchase") result = submitPurchaseApplication_(data);
+    else if (action === "test_range") result = submitTestRangeApplication_(data);
+    else if (action === "test_subject") result = submitTestSubjectApplication_(data);
+    else if (action === "test_period") result = submitTestPeriodApplication_(data);
+    else if (action === "plan_change") result = submitPlanChangeApplication_(data);
+    else result = submitApplication(data);
+    saveSubmissionStatus_(requestId, result);
+    return jsonResponse_(result);
   } catch (error) {
-    return jsonResponse_({
-      success: false,
-      message: error && error.message ? error.message : "処理中にエラーが発生しました。"
-    });
+    const result = { success: false, message: error && error.message ? error.message : "処理中にエラーが発生しました。" };
+    try { saveSubmissionStatus_(requestId, result); } catch (_) {}
+    return jsonResponse_(result);
   }
 }
 
@@ -172,7 +184,7 @@ function announcementDateKey_(value) {
   }
   const text = String(value == null ? "" : value).trim();
   if (!text) return "";
-  const match = /^(\\d{4})[-/年](\\d{1,2})[-/月](\\d{1,2})日?$/.exec(text);
+  const match = /^(\d{4})[-\/年](\d{1,2})[-\/月](\d{1,2})日?$/.exec(text);
   if (!match) return "";
   return match[1] + "-" + ("0" + match[2]).slice(-2) + "-" + ("0" + match[3]).slice(-2);
 }
@@ -215,6 +227,7 @@ function submitApplication(data) {
   if (!studentName) throw new Error("生徒氏名を入力してください。");
   if (!absenceDate) throw new Error("欠席希望日を選択してください。");
   if (!absencePeriods.length) throw new Error("欠席する時間を選択してください。");
+  if (new Set(absencePeriods).size !== absencePeriods.length) throw new Error("欠席時間が重複しています。");
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
 
   const absenceCheck = checkDateAndPeriods_(absenceDate, absencePeriods);
@@ -233,6 +246,7 @@ function submitApplication(data) {
   } else {
     if (!makeupDate) throw new Error("振替希望日を選択してください。");
     if (!makeupPeriods.length) throw new Error("振替希望時間を選択してください。");
+    if (new Set(makeupPeriods).size !== makeupPeriods.length) throw new Error("振替時間が重複しています。");
 
     if (makeupPeriods.length !== absencePeriods.length) {
       throw new Error("欠席するコマ数と振替するコマ数を同じにしてください。");
@@ -310,7 +324,7 @@ function submitApplication(data) {
     "自立学習RED 天王台教室";
 
   try {
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: email,
       subject: "【自立学習RED】欠席振替登録完了_" + studentId,
       body: body
@@ -318,6 +332,26 @@ function submitApplication(data) {
   } catch (error) {
     mailSuccess = false;
     sheet.getRange(nextRow, 1).setValue("メールエラー");
+  }
+
+  try {
+    sendRedEmail_({
+      to: ADMIN_EMAIL,
+      subject: "【欠席振替】" + studentName + "_" + studentId,
+      body:
+        "欠席・振替申請を受け付けました。\n\n" +
+        "生徒番号：" + studentId + "\n" +
+        "氏名：" + studentName + "\n" +
+        "欠席希望日：" + storedAbsenceDate + "\n" +
+        "欠席時間：" + storedAbsencePeriods + "\n" +
+        "振替希望日：" + storedMakeupDate + "\n" +
+        "振替希望時間：" + storedMakeupPeriods + "\n" +
+        "連絡事項：" + (notes || "なし") + "\n" +
+        "確認メール送信先：" + email
+    });
+  } catch (error) {
+    mailSuccess = false;
+    console.error("教室宛の欠席・振替通知メール送信に失敗しました: " + error);
   }
 
   return {
@@ -566,7 +600,7 @@ function submitPurchaseApplication_(data) {
   let mailSuccess = true;
 
   try {
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: email,
       subject: "【自立学習RED】テキスト購入申請完了_" + studentId,
       body: body
@@ -576,7 +610,7 @@ function submitPurchaseApplication_(data) {
   }
 
   try {
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: ADMIN_EMAIL,
       subject: "【テキスト購入】" + studentName + "_" + studentId,
       body:
@@ -590,7 +624,8 @@ function submitPurchaseApplication_(data) {
         "確認メール送信先：" + email
     });
   } catch (error) {
-    // 教室宛メールが失敗しても申請自体は成功扱い
+    mailSuccess = false;
+    console.error("教室宛のテキスト購入通知メール送信に失敗しました: " + error);
   }
 
   return {
@@ -660,14 +695,19 @@ function submitTestRangeApplication_(data) {
     throw new Error("生徒番号は半角数字で入力してください。");
   }
   if (!studentName) throw new Error("氏名を入力してください。");
-  if (!school) throw new Error("学校名を選択してください。");
-  if (!grade) throw new Error("学年を選択してください。");
+  const allowedSchools = ["我孫子中","我孫子第二中","我孫子第三中","白山中","湖北台中","湖北中","その他"];
+  const allowedGrades = ["中学1年","中学2年","中学3年"];
+  if (!allowedSchools.includes(school)) throw new Error("学校名を選択してください。");
+  if (!allowedGrades.includes(grade)) throw new Error("学年を選択してください。");
 
   if (!subjects.length) {
     throw new Error("少なくとも1教科のテスト範囲を登録してください。");
   }
 
   const allowedSubjects = ["英語","数学","国語","理科","社会"];
+  const allowedPublishers = ["東京書籍","開隆堂","三省堂","教育出版","光村図書","啓林館","大日本図書","学校図書","数研出版","帝国書院","日本文教出版","山川出版社","その他"];
+  const subjectNames = subjects.map(item => String(item.subject || "").trim());
+  if (new Set(subjectNames).size !== subjectNames.length) throw new Error("同じ教科を重複して登録できません。");
   const rows = [];
 
   subjects.forEach(function(item) {
@@ -681,7 +721,7 @@ function submitTestRangeApplication_(data) {
     }
     const parsedDate = parseDate_(testDate);
     if (!parsedDate) throw new Error(subject + "のテスト日が正しくありません。");
-    if (!publisher) {
+    if (!allowedPublishers.includes(publisher)) {
       throw new Error(subject + "の教科書出版社を選択してください。");
     }
     if (!ranges.length) {
@@ -729,6 +769,7 @@ function submitTestRangeApplication_(data) {
   sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
   sheet.getRange(startRow, 2, rows.length, 1).setNumberFormat("@");
 
+  let mailSuccess = true;
   try {
     const itemLines = subjects.map(function(item) {
       return item.subject + "（" + formatJapaneseDate_(item.testDate) + "）：" +
@@ -738,7 +779,7 @@ function submitTestRangeApplication_(data) {
         "（" + item.publisher + "）";
     }).join("\n");
 
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: ADMIN_EMAIL,
       subject: "【テスト範囲登録】" + studentName + "_" + studentId,
       body:
@@ -751,10 +792,11 @@ function submitTestRangeApplication_(data) {
         "連絡事項：" + (notes || "なし")
     });
   } catch (error) {
-    // 教室宛メールが失敗してもスプレッドシート登録は成功
+    mailSuccess = false;
+    console.error("教室宛のテスト範囲通知メール送信に失敗しました: " + error);
   }
 
-  return { success: true };
+  return { success: true, mailSuccess: mailSuccess };
 }
 
 /* =====================================================
@@ -954,9 +996,9 @@ function normalizeSheetDate_(value) {
   }
 
   const text = String(value || "").trim();
-  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(text) && parseDate_(text)) return text;
+  if (/^(\d{4})-(\d{2})-(\d{2})$/.test(text) && parseDate_(text)) return text;
 
-  const match = /^(\\d{4})[\\/.-](\\d{1,2})[\\/.-](\\d{1,2})$/.exec(text);
+  const match = /^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/.exec(text);
   if (!match) return "";
   const iso = match[1] + "-" + String(Number(match[2])).padStart(2, "0") + "-" +
     String(Number(match[3])).padStart(2, "0");
@@ -985,6 +1027,8 @@ function submitTestSubjectApplication_(data) {
   if(!/^\d+$/.test(studentId)||!studentName) throw new Error("生徒情報を確認してください。");
   if(!Number.isInteger(count)||count<1||count>5) throw new Error("通常授業受講教科数を確認してください。");
   if(!subjects.length) throw new Error("テスト対策受講希望科目を1つ以上選択してください。");
+  const allowedTestSubjects = ["英語","数学","国語","理科","社会"];
+  if(!subjects.every(subject => allowedTestSubjects.includes(String(subject))) || new Set(subjects.map(String)).size !== subjects.length) throw new Error("テスト対策教科に不正な値または重複があります。");
   if(!["あり","なし"].includes(purchase)) throw new Error("テキスト追加購入の選択を確認してください。");
   if(!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
   const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -993,9 +1037,10 @@ function submitTestSubjectApplication_(data) {
   if(!sh){sh=ss.insertSheet(name);sh.appendRow(["受付日時","生徒番号","氏名","通常授業受講教科数","テスト対策受講希望科目","テキスト追加購入","連絡事項","メールアドレス"]); }
   sh.appendRow([new Date(),studentId,studentName,count,subjects.join("、"),purchase,notes,email]);
   sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
-  try{MailApp.sendEmail({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){}
-  return {success:true};
+  let mailSuccess = true;
+  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策教科登録完了_"+studentId,body:"テスト対策教科登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策受講希望科目："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策教科メール送信に失敗しました: "+e);}
+  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策教科登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n通常授業受講教科数："+count+"教科\nテスト対策："+subjects.join("、")+"\nテキスト追加購入："+purchase+"\n連絡事項："+(notes||"なし")});}catch(e){mailSuccess=false;console.error("教室宛のテスト対策教科メール送信に失敗しました: "+e);}
+  return {success:true,mailSuccess:mailSuccess};
 }
 
 function submitTestPeriodApplication_(data) {
@@ -1007,8 +1052,18 @@ function submitTestPeriodApplication_(data) {
   const periods=Array.isArray(data.periods)?data.periods:[];
   const notes=String(data.notes||"").trim();
   const email=String(data.email||"").trim();
-  if(!/^\d+$/.test(studentId)||!studentName||!school||!grade||!parseDate_(startDate)) throw new Error("入力内容を確認してください。");
+  if(!/^\d+$/.test(studentId)||!studentName||!TEST_PERIOD_SCHOOLS_.includes(school)||!TEST_PERIOD_GRADES_.includes(grade)||!parseDate_(startDate)) throw new Error("入力内容を確認してください。");
   if(!periods.length) throw new Error("受講コマを1つ以上選択してください。");
+  const periodKeys = periods.map(p => String(p.date || "") + "-" + String(p.period || ""));
+  if(new Set(periodKeys).size !== periodKeys.length) throw new Error("受講コマが重複しています。");
+  const configResult = getTestPeriodConfig_();
+  const activeConfig = (configResult.configs || []).find(config => config.school === school && config.grade === grade);
+  if(!activeConfig) throw new Error("該当する学校・学年のテスト期間が設定されていません。教室へ確認してください。");
+  periods.forEach(p => {
+    const d = parseDate_(p.date);
+    if (!d || p.date < activeConfig.startDate || p.date > activeConfig.testEndDate) throw new Error("テスト対策期間外のコマが含まれています。");
+    if (!getAvailablePeriods_(d.getDay()).includes(String(p.period))) throw new Error("選択できないコマが含まれています。");
+  });
   if(!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
   const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
   const name="テスト対策コマ";
@@ -1021,9 +1076,10 @@ function submitTestPeriodApplication_(data) {
     sh.appendRow([new Date(),studentId,studentName,school,grade,formatJapaneseDate_(p.date),String(p.period),getPeriodText_([String(p.period)]),notes,email]);
     sh.getRange(sh.getLastRow(),2).setNumberFormat("@");
   });
-  try{MailApp.sendEmail({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){}
-  try{MailApp.sendEmail({to:ADMIN_EMAIL,subject:"【テスト対策コマ登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){}
-  return {success:true};
+  let mailSuccess = true;
+  try{sendRedEmail_({to:email,subject:"【自立学習RED】テスト対策コマ登録完了_"+studentId,body:"テスト対策コマ登録を受け付けました。\n\n生徒番号："+studentId+"\n氏名："+studentName+"\n選択コマ数："+periods.length+"\n\n自立学習RED 天王台教室"});}catch(e){mailSuccess=false;console.error("生徒宛のテスト対策コマメール送信に失敗しました: "+e);}
+  try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【テスト対策コマ登録】"+studentName+"_"+studentId,body:"生徒番号："+studentId+"\n氏名："+studentName+"\n学校名："+school+"\n学年："+grade+"\n選択コマ数："+periods.length+"\n\n"+periods.map(p=>formatJapaneseDate_(p.date)+" "+p.period+" "+getPeriodText_([p.period])).join("\n")+"\n\n連絡事項："+(notes||"なし")});}catch(e){mailSuccess=false;console.error("教室宛のテスト対策コマメール送信に失敗しました: "+e);}
+  return {success:true,mailSuccess:mailSuccess};
 }
 
 /* =====================================================
@@ -1162,6 +1218,9 @@ function submitPlanChangeApplication_(data) {
   if (!nextSubjects.length || !nextSubjects.every(s => allowedSubjects.includes(s))) {
     throw new Error("来月以降の受講教科を確認してください。");
   }
+  if (new Set(currentSubjects).size !== currentSubjects.length || new Set(nextSubjects).size !== nextSubjects.length) {
+    throw new Error("受講教科が重複しています。");
+  }
 
   const packGradeAllowed = function(plan) { if (plan === "週4パック") return grade === "中1" || grade === "中2"; if (plan === "週6パック") return grade === "中3"; return true; };
   if (!packGradeAllowed(currentPlan) || !packGradeAllowed(nextPlan)) throw new Error("週4パックは中1・2、週6パックは中3のみ選択できます。");
@@ -1245,7 +1304,7 @@ function submitPlanChangeApplication_(data) {
   let mailSuccess = true;
 
   try {
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: email,
       subject: "【自立学習RED】プラン変更申請完了_" + studentId,
       body:
@@ -1268,7 +1327,7 @@ function submitPlanChangeApplication_(data) {
   }
 
   try {
-    MailApp.sendEmail({
+    sendRedEmail_({
       to: ADMIN_EMAIL,
       subject: "【プラン変更】" + studentName + "_" + studentId,
       body:
@@ -1286,7 +1345,10 @@ function submitPlanChangeApplication_(data) {
         "連絡事項：" + (notes || "なし") + "\n" +
         "確認メール送付先：" + email
     });
-  } catch (e) {}
+  } catch (e) {
+    mailSuccess = false;
+    console.error("教室宛のプラン変更通知メール送信に失敗しました: " + e);
+  }
 
   return { success: true, mailSuccess: mailSuccess };
 }
@@ -1302,7 +1364,7 @@ function testMail() {
     throw new Error("現在のアカウントのメールアドレスを取得できませんでした。");
   }
 
-  MailApp.sendEmail({
+  sendRedEmail_({
     to: email,
     subject: "RED天王台教室 GASメール送信テスト",
     body: "MailAppの送信権限テストです。"

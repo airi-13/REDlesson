@@ -1,10 +1,59 @@
 (() => {
   "use strict";
 
-  const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+  const GAS_URL="https://script.google.com/macros/s/AKfycbwpSTb4WiArofE1-Ajj6HchKU3RvJ_vCkHlykU1okVnYO2NWBWATQb1e3PsBL_NsyTB/exec";
 
   window.RED=window.RED||{};
   window.RED.GAS_URL=GAS_URL;
+
+  // POSTの結果はCORS制約で直接読めないため、受付IDを使ってGAS側の処理結果をJSONPで確認する。
+  window.RED.submitApplication = async function(payload) {
+    const data = Object.assign({}, payload || {});
+    const requestId = "red-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+    data.requestId = requestId;
+
+    await fetch(window.RED.GAS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(data)
+    });
+
+    const deadline = Date.now() + 30000;
+    while (Date.now() < deadline) {
+      const result = await new Promise((resolve, reject) => {
+        const callbackName = "RED_STATUS_" + requestId.replace(/[^a-zA-Z0-9_]/g, "_");
+        const script = document.createElement("script");
+        let settled = false;
+        const cleanup = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          script.remove();
+          try { delete window[callbackName]; } catch (_) { window[callbackName] = undefined; }
+        };
+        window[callbackName] = value => { cleanup(); resolve(value); };
+        script.onerror = () => { cleanup(); resolve({ success: false, pending: true }); };
+        const timer = setTimeout(() => { cleanup(); resolve({ success: false, pending: true }); }, 6000);
+        script.src = window.RED.GAS_URL + "?action=submission_status&requestId=" +
+          encodeURIComponent(requestId) + "&callback=" + callbackName + "&_=" + Date.now();
+        document.head.appendChild(script);
+      });
+      if (result && result.pending) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        continue;
+      }
+      if (!result || result.success !== true) {
+        throw new Error(result && result.message ? result.message : "申請処理の結果を確認できませんでした。入力内容を確認して、時間をおいて再度お試しください。");
+      }
+      if (result.mailSuccess === false) {
+        window.alert("申請データは受け付けられましたが、確認メールの送信に失敗した可能性があります。申請を再送信せず、教室へご連絡ください。");
+      }
+      return result;
+    }
+    throw new Error("申請の受付結果を確認できませんでした。二重送信を避けるため、スプレッドシートを確認してから再申請してください。");
+  };
+
   window.RED.escapeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[char]));
