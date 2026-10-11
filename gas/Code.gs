@@ -184,7 +184,7 @@ function announcementDateKey_(value) {
   }
   const text = String(value == null ? "" : value).trim();
   if (!text) return "";
-  const match = /^(\\d{4})[-/年](\\d{1,2})[-/月](\\d{1,2})日?$/.exec(text);
+  const match = /^(\d{4})[-\/年](\d{1,2})[-\/月](\d{1,2})日?$/.exec(text);
   if (!match) return "";
   return match[1] + "-" + ("0" + match[2]).slice(-2) + "-" + ("0" + match[3]).slice(-2);
 }
@@ -971,9 +971,9 @@ function normalizeSheetDate_(value) {
   }
 
   const text = String(value || "").trim();
-  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(text) && parseDate_(text)) return text;
+  if (/^(\d{4})-(\d{2})-(\d{2})$/.test(text) && parseDate_(text)) return text;
 
-  const match = /^(\\d{4})[\\/.-](\\d{1,2})[\\/.-](\\d{1,2})$/.exec(text);
+  const match = /^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/.exec(text);
   if (!match) return "";
   const iso = match[1] + "-" + String(Number(match[2])).padStart(2, "0") + "-" +
     String(Number(match[3])).padStart(2, "0");
@@ -1190,6 +1190,9 @@ function submitPlanChangeApplication_(data) {
   }
   if (!nextSubjects.length || !nextSubjects.every(s => allowedSubjects.includes(s))) {
     throw new Error("来月以降の受講教科を確認してください。");
+  }
+  if (new Set(currentSubjects).size !== currentSubjects.length || new Set(nextSubjects).size !== nextSubjects.length) {
+    throw new Error("受講教科が重複しています。");
   }
 
   const packGradeAllowed = function(plan) { if (plan === "週4パック") return grade === "中1" || grade === "中2"; if (plan === "週6パック") return grade === "中3"; return true; };
