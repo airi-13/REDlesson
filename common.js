@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const GAS_URL="https://script.google.com/macros/s/AKfycby1q-1oxYwOgWsMgDaGvCDVg3BnTdZIeLmjrbFKMf3r53dD5DkU49D3SWXwgYxFpTo/exec";
+  const GAS_URL="https://script.google.com/macros/s/AKfycbwpSTb4WiArofE1-Ajj6HchKU3RvJ_vCkHlykU1okVnYO2NWBWATQb1e3PsBL_NsyTB/exec";
 
   window.RED=window.RED||{};
   window.RED.GAS_URL=GAS_URL;
