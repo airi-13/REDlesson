@@ -693,8 +693,10 @@ function submitTestRangeApplication_(data) {
     throw new Error("生徒番号は半角数字で入力してください。");
   }
   if (!studentName) throw new Error("氏名を入力してください。");
-  if (!school) throw new Error("学校名を選択してください。");
-  if (!grade) throw new Error("学年を選択してください。");
+  const allowedSchools = ["我孫子中","我孫子第二中","我孫子第三中","白山中","湖北台中","湖北中","その他"];
+  const allowedGrades = ["中学1年","中学2年","中学3年"];
+  if (!allowedSchools.includes(school)) throw new Error("学校名を選択してください。");
+  if (!allowedGrades.includes(grade)) throw new Error("学年を選択してください。");
 
   if (!subjects.length) {
     throw new Error("少なくとも1教科のテスト範囲を登録してください。");
