@@ -48,6 +48,34 @@ function ensureApplicationStatusColumn_(sheet) {
   sheet.setFrozenRows(1);
 }
 
+/**
+ * 既存の申請シート5枚に状態列とプルダウンを一括設定する。
+ * Apps Scriptから手動実行できる初期設定用関数。
+ */
+function setupApplicationStatusColumns() {
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // 旧名称の購入シートがあれば、既存データを残して名称を統一する。
+  let purchaseSheet = spreadsheet.getSheetByName("テキスト購入申請");
+  if (!purchaseSheet) {
+    purchaseSheet = spreadsheet.getSheetByName("購入申請");
+    if (purchaseSheet) purchaseSheet.setName("テキスト購入申請");
+  }
+
+  const sheetNames = [
+    "テスト対策コマ",
+    "テスト対策教科",
+    PLAN_CHANGE_SHEET_NAME,
+    PURCHASE_SHEET_NAME,
+    ABSENCE_SHEET_NAME
+  ];
+
+  sheetNames.forEach(function(name) {
+    const sheet = spreadsheet.getSheetByName(name);
+    if (sheet) ensureApplicationStatusColumn_(sheet);
+  });
+}
+
 function saveSubmissionStatus_(requestId, result) {
   const id = String(requestId || "");
   if (!/^[a-zA-Z0-9_-]{8,100}$/.test(id)) return;
