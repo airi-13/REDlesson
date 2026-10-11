@@ -334,6 +334,25 @@ function submitApplication(data) {
     sheet.getRange(nextRow, 1).setValue("メールエラー");
   }
 
+  try {
+    sendRedEmail_({
+      to: ADMIN_EMAIL,
+      subject: "【欠席振替】" + studentName + "_" + studentId,
+      body:
+        "欠席・振替申請を受け付けました。\n\n" +
+        "生徒番号：" + studentId + "\n" +
+        "氏名：" + studentName + "\n" +
+        "欠席希望日：" + storedAbsenceDate + "\n" +
+        "欠席時間：" + storedAbsencePeriods + "\n" +
+        "振替希望日：" + storedMakeupDate + "\n" +
+        "振替希望時間：" + storedMakeupPeriods + "\n" +
+        "連絡事項：" + (notes || "なし") + "\n" +
+        "確認メール送信先：" + email
+    });
+  } catch (error) {
+    console.error("教室宛の欠席・振替通知メール送信に失敗しました: " + error);
+  }
+
   return {
     success: true,
     mailSuccess: mailSuccess
