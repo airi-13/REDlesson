@@ -154,6 +154,7 @@ function doPost(e) {
     else if (action === "test_range") result = submitTestRangeApplication_(data);
     else if (action === "test_subject") result = submitTestSubjectApplication_(data);
     else if (action === "test_period") result = submitTestPeriodApplication_(data);
+    else if (action === "external_exam") result = submitExternalExamApplication_(data);
     else if (action === "plan_change") result = submitPlanChangeApplication_(data);
     else result = submitApplication(data);
     saveSubmissionStatus_(requestId, result);
@@ -1443,4 +1444,61 @@ function testMail() {
   });
 
   return "送信しました。";
+}
+
+
+/* =====================================================
+   外部試験受験登録（Vもぎ・プロ検・TOFAS共通フォーム）
+===================================================== */
+function submitExternalExamApplication_(data) {
+  const allowedTypes = ["Vもぎ", "プロ検", "TOFAS"];
+  const examType = String(data.examType || "").trim();
+  const examDate = String(data.examDate || "").trim();
+  const studentId = String(data.studentId || "").trim();
+  const studentName = String(data.studentName || "").trim();
+  const notes = String(data.notes || "").trim();
+  const email = String(data.email || "").trim();
+
+  if (allowedTypes.indexOf(examType) === -1) throw new Error("外部試験を選択してください。");
+  if (!/^1139\\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+  if (!studentName) throw new Error("生徒氏名を入力してください。");
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(examDate) || isNaN(new Date(examDate + "T00:00:00").getTime())) {
+    throw new Error("受験日を正しく選択してください。");
+  }
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetName = "外部試験登録";
+  let sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+    sheet.appendRow(["状態", "受付日時", "生徒ID", "生徒名", "外部試験", "受験日", "メールアドレス", "連絡事項"]);
+    sheet.setFrozenRows(1);
+  }
+  ensureApplicationStatusColumn_(sheet);
+
+  const date = new Date(examDate + "T00:00:00");
+  const formattedDate = Utilities.formatDate(date, TIME_ZONE, "yyyy/MM/dd");
+  sheet.appendRow(["未確認", new Date(), studentId, studentName, examType, formattedDate, email, notes]);
+
+  const studentSubject = "【自立学習RED】外部試験登録完了_" + studentId;
+  const adminSubject = "【外部試験】" + studentName + "_" + studentId;
+  const body = "外部試験の受験登録を受け付けました。\\n\\n" +
+    "生徒番号：" + studentId + "\\n" +
+    "生徒氏名：" + studentName + "\\n" +
+    "外部試験：" + examType + "\\n" +
+    "受験日：" + formattedDate + "\\n" +
+    "連絡事項：" + (notes || "なし");
+  let emailWarning = "";
+  try {
+    sendRedEmail_({to: email, subject: studentSubject, body: body});
+  } catch (mailError) {
+    emailWarning = "確認メールを送信できませんでした。";
+  }
+  try {
+    sendRedEmail_({to: ADMIN_EMAIL, subject: adminSubject, body: body});
+  } catch (mailError) {
+    emailWarning = "教室への通知メールを送信できませんでした。";
+  }
+  return {success: true, message: "外部試験の受験登録を受け付けました。", emailWarning: emailWarning};
 }
