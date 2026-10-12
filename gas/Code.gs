@@ -1460,9 +1460,9 @@ function submitExternalExamApplication_(data) {
   const email = String(data.email || "").trim();
 
   if (allowedTypes.indexOf(examType) === -1) throw new Error("外部試験を選択してください。");
-  if (!/^1139\\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+  if (!/^1139\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
   if (!studentName) throw new Error("生徒氏名を入力してください。");
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(examDate) || isNaN(new Date(examDate + "T00:00:00").getTime())) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(examDate) || isNaN(new Date(examDate + "T00:00:00").getTime())) {
     throw new Error("受験日を正しく選択してください。");
   }
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
@@ -1483,11 +1483,11 @@ function submitExternalExamApplication_(data) {
 
   const studentSubject = "【自立学習RED】外部試験登録完了_" + studentId;
   const adminSubject = "【外部試験】" + studentName + "_" + studentId;
-  const body = "外部試験の受験登録を受け付けました。\\n\\n" +
-    "生徒番号：" + studentId + "\\n" +
-    "生徒氏名：" + studentName + "\\n" +
-    "外部試験：" + examType + "\\n" +
-    "受験日：" + formattedDate + "\\n" +
+  const body = "外部試験の受験登録を受け付けました。\n\n" +
+    "生徒番号：" + studentId + "\n" +
+    "生徒氏名：" + studentName + "\n" +
+    "外部試験：" + examType + "\n" +
+    "受験日：" + formattedDate + "\n" +
     "連絡事項：" + (notes || "なし");
   let emailWarning = "";
   try {
