@@ -94,7 +94,7 @@
     const placeholder=document.querySelector("[data-site-header]");
     if(!placeholder || placeholder.dataset.rendered==="1") return;
     const home=document.body.dataset.siteHome||"../";
-    const logo=home==="."||home==="./"?"./assets/red-logo.png":"../assets/red-logo.png";
+    const logo=home+"assets/red-logo.png";
     placeholder.outerHTML=
       '<header class="site-banner"><div class="site-banner-inner">'+
       '<a class="site-logo-link" href="'+home+'" aria-label="自立学習RED 天王台教室トップ">'+
