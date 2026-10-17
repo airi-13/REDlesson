@@ -112,7 +112,12 @@
   <script>
     (() => {
       const grid = document.getElementById("calendarGrid");
-      const monthSelect = document.getElementById("monthSelect");
+      let monthSelect = document.getElementById("monthSelect");
+      if (!monthSelect) {
+        monthSelect = document.createElement("select");
+        monthSelect.id = "monthSelect";
+        monthSelect.setAttribute("aria-label", "表示する月");
+      }
       const schoolSelect = document.getElementById("schoolSelect");
       const status = document.getElementById("dataStatus");
       const detailDate = document.getElementById("detailDate");
