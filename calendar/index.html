@@ -136,13 +136,13 @@
         if (!status) return;
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "予定を取得できませんでした。";
+        status.textContent = "予定を取得できませんでした。再読み込みしてください";
       });
       window.addEventListener("unhandledrejection", event => {
         if (!status) return;
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "予定を取得できませんでした。";
+        status.textContent = "予定を取得できませんでした。再読み込みしてください";
       });
       const detailDate = document.getElementById("detailDate");
       const eventList = document.getElementById("eventList");
@@ -286,7 +286,7 @@
             if (viewYear === today.getFullYear() && viewMonth === today.getMonth()) renderDetail(nowKey);
           } catch (err) {
             status.classList.add("error");
-            status.textContent = "予定を取得できませんでした。";
+            status.textContent = "予定を取得できませんでした。再読み込みしてください";
             renderCalendar();
           }
         };
@@ -294,7 +294,7 @@
         script.src = window.RED.GAS_URL + "?action=calendar&callback=" + callbackName + "&_=" + Date.now();
         script.onerror = () => {
           status.classList.add("error");
-          status.textContent = "予定を取得できませんでした。";
+          status.textContent = "予定を取得できませんでした。再読み込みしてください";
           renderCalendar();
         };
         document.head.appendChild(script);
@@ -316,8 +316,8 @@
       } catch (err) {
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "予定を取得できませんでした。";
-        grid.innerHTML = '<p class="status error">予定を取得できませんでした。</p>';
+        status.textContent = "予定を取得できませんでした。再読み込みしてください";
+        grid.innerHTML = '<p class="status error">予定を取得できませんでした。再読み込みしてください</p>';
       }
       loadEvents();
     })();
