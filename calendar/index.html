@@ -184,7 +184,7 @@
         for (let y = today.getFullYear() - 2; y <= today.getFullYear() + 5; y++) {
           const option = document.createElement("option");
           option.value = String(y);
-          option.textContent = y + "年";
+          option.textContent = "(" + y + ")年";
           if (y === viewYear) option.selected = true;
           yearSelect.appendChild(option);
         }
@@ -192,7 +192,7 @@
         for (let m = 0; m < 12; m++) {
           const option = document.createElement("option");
           option.value = String(m);
-          option.textContent = (m + 1) + "月";
+          option.textContent = "(" + (m + 1) + ")月";
           if (m === viewMonth) option.selected = true;
           monthSelect.appendChild(option);
         }
@@ -230,12 +230,14 @@
           btn.dataset.date = key;
           btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (isClosed ? "、休校日" : "") + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
           const rangeEvents = dayEvents.filter(e => e.startDate && e.endDate && e.startDate < e.endDate);
-          const titleLabels = dayEvents.filter(e => {
+          const calendarVisibleEvents = dayEvents.filter(e => !isClosingEvent(e));
+          const visibleRangeEvents = rangeEvents.filter(e => !isClosingEvent(e));
+          const titleLabels = calendarVisibleEvents.filter(e => {
             const type = String(e.type || e.category || "").trim();
             const isRange = e.startDate && e.endDate && e.startDate < e.endDate;
             return isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
           }).map(e => { const isDeadline = String(e.type || e.category || "").trim() === "〆切"; return '<span class="event-title-label ' + (isDeadline ? "deadline-title" : "exam-title") + '">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
-          const rangeBars = rangeEvents.map(e => {
+          const rangeBars = visibleRangeEvents.map(e => {
             const position = key === e.startDate ? "start" : key === e.endDate ? "end" : "middle";
             return '<span class="range-bar ' + position + ' ' + eventKind(e) + '" aria-hidden="true"></span>';
           }).join("");
