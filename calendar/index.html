@@ -189,7 +189,7 @@
       }
       function renderCalendar() {
         yearSelect.innerHTML = "";
-        for (let y = today.getFullYear() - 2; y <= today.getFullYear() + 5; y++) {
+        for (let y = today.getFullYear() - 1; y <= today.getFullYear() + 1; y++) {
           const option = document.createElement("option");
           option.value = String(y);
           option.textContent = y + "年";
