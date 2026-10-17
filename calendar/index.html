@@ -170,7 +170,7 @@
         const days = new Date(year, monthIndex + 1, 0).getDate();
         const card = document.createElement("article");
         card.className = "month-card";
-        card.innerHTML = '<div class="month-title"><span>' + year + "年 " + month + "月</span><small>日付を選択して予定を確認</small></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
+        card.innerHTML = '<div class="month-title"><span>' + year + '年 ' + month + '月</span><small>日付を選択して予定を確認</small></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
         const monthGrid = card.querySelector(".month-grid");
         for (let i = 0; i < firstDay; i++) {
           const empty = document.createElement("div");
