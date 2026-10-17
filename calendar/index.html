@@ -71,6 +71,7 @@
       <h1 class="page-heading">📅 年間カレンダー</h1>
       <p class="lead">今月の教室予定を表示します。プルダウンから見たい月に切り替えられます。日付を押すと、その日の予定が表示されます。</p>
       <div class="toolbar">
+        <div class="year-controls"><label for="schoolSelect" style="font-weight:700">表示する予定</label><select id="schoolSelect" aria-label="表示する予定" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"><option value="全体共通">全体共通</option><option value="我孫子中">我孫子中</option><option value="我孫子第二中">我孫子第二中</option><option value="我孫子第三中">我孫子第三中</option><option value="白山中">白山中</option><option value="湖北台中">湖北台中</option><option value="湖北中">湖北中</option><option value="その他">その他</option></select></div>
         <div class="year-controls"><label for="monthSelect" style="font-weight:700">表示する月</label><select id="monthSelect" aria-label="表示する月" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"></select></div>
         <button id="todayButton" class="today-button" type="button">今日の月へ</button>
         <div class="legend" aria-label="予定の凡例">
@@ -114,6 +115,7 @@
     (() => {
       const grid = document.getElementById("calendarGrid");
       const monthSelect = document.getElementById("monthSelect");
+      const schoolSelect = document.getElementById("schoolSelect");
       const status = document.getElementById("dataStatus");
       const detailDate = document.getElementById("detailDate");
       const eventList = document.getElementById("eventList");
@@ -134,7 +136,13 @@
         if (/講習|テスト|模試|対策/.test(type)) return "event";
         return "other";
       }
-      function eventsOn(key) { return events.filter(e => String(e.date || e.startDate || "") === key || (e.startDate && e.endDate && key >= e.startDate && key <= e.endDate)); }
+      function isSharedEvent(e) { const scope = String(e.school || e.target || e.scope || "全体共通").trim(); return !scope || scope === "全体共通" || scope === "共通" || scope === "全員"; }
+      function isVisibleEvent(e) { return isSharedEvent(e) || (schoolSelect.value !== "全体共通" && String(e.school || e.target || e.scope || "").trim() === schoolSelect.value); }
+      function rawEventsOn(key) { return events.filter(e => String(e.date || e.startDate || "") === key || (e.startDate && e.endDate && key >= e.startDate && key <= e.endDate)); }
+      function eventsOn(key) { return rawEventsOn(key).filter(isVisibleEvent); }
+      function isOpeningEvent(e) { return /開校|開室|通常授業あり/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
+      function isClosingEvent(e) { return /休校|休日|休業/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
+      function isClosedOn(key) { const shared = rawEventsOn(key).filter(isSharedEvent); if (shared.some(isOpeningEvent)) return false; if (shared.some(isClosingEvent)) return true; const dow = new Date(key + "T00:00:00").getDay(); return dow === 0 || dow === 1; }
       function renderDetail(key) {
         selectedDate = key;
         const [y,m,d] = key.split("-").map(Number);
@@ -175,9 +183,7 @@
           const date = new Date(year, monthIndex, d);
           const btn = document.createElement("button");
           btn.type = "button";
-          const weeklyClosed = date.getDay() === 0 || date.getDay() === 1;
-          const specialClosed = dayEvents.some(e => eventKind(e) === "holiday");
-          const isClosed = weeklyClosed || specialClosed;
+          const isClosed = isClosedOn(key);
           btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
           btn.dataset.date = key;
           btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (isClosed ? "、休校日" : "") + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
@@ -207,7 +213,8 @@
               endDate: String(e.endDate || ""),
               title: String(e.title || e.name || ""),
               type: String(e.type || e.category || "その他"),
-              description: String(e.description || e.content || "")
+              description: String(e.description || e.content || ""),
+              school: String(e.school || e.target || e.scope || "全体共通")
             })).filter(e => e.date || e.startDate);
             status.hidden = true;
             renderCalendar();
@@ -228,6 +235,7 @@
         };
         document.head.appendChild(script);
       }
+      schoolSelect.addEventListener("change", () => { selectedDate = ""; renderCalendar(); });
       monthSelect.addEventListener("change", () => {
         const parts = monthSelect.value.split("-").map(Number);
         viewYear = parts[0];
