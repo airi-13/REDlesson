@@ -3,6 +3,7 @@ const ABSENCE_SHEET_NAME = "欠席振替申請";
 const PURCHASE_SHEET_NAME = "テキスト購入申請";
 const TEST_RANGE_SHEET_NAME = "テスト範囲";
 const TEST_PERIOD_CONFIG_SHEET_NAME = "テスト期間設定";
+const CALENDAR_SHEET_NAME = "カレンダー予定";
 const PLAN_CHANGE_SHEET_NAME = "プラン変更申請";
 const FORM_EMAIL = "tennodai.red+form@gmail.com";
 const ADMIN_EMAIL = FORM_EMAIL;
@@ -103,6 +104,8 @@ function doGet(e) {
       result = handlePurchaseJsonp_(e);
     } else if (action === "announcements") {
       result = getAnnouncements_();
+    } else if (action === "calendar") {
+      result = getCalendarEvents_();
     } else if (action === "test_period_config") {
       result = getTestPeriodConfig_();
     } else if (e.parameter && e.parameter.data) {
@@ -177,6 +180,80 @@ function jsonResponse_(data) {
    シート「お知らせ」列:
    A 対象 / B タイトル / C 内容 / D 表示開始日 / E 表示終了日 / F 状態
 ===================================================== */
+
+/**
+ * 年間カレンダーの予定を返す。
+ * シートが未作成の場合は、既存の申請用スプレッドシート内に自動作成する。
+ * シート「カレンダー予定」列: A 対象 / B 種別 / C タイトル / D 内容 / E 開始日 / F 終了日
+ */
+function getCalendarEvents_() {
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(CALENDAR_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(CALENDAR_SHEET_NAME);
+    sheet.getRange(1, 1, 1, 6).setValues([["対象", "種別", "タイトル", "内容", "開始日", "終了日"]]);
+    sheet.setFrozenRows(1);
+    sheet.getRange("E:F").setNumberFormat("yyyy/mm/dd");
+    sheet.setColumnWidth(1, 120);
+    sheet.setColumnWidth(2, 100);
+    sheet.setColumnWidth(3, 220);
+    sheet.setColumnWidth(4, 360);
+    sheet.setColumnWidth(5, 110);
+    sheet.setColumnWidth(6, 110);
+  }
+
+  sheet.getRange("A2:A").setDataValidation(
+    SpreadsheetApp.newDataValidation()
+      .requireValueInList(["全体", "我孫子中", "湖北台中", "白山中", "その他"], true)
+      .setAllowInvalid(false)
+      .build()
+  );
+  sheet.getRange("B2:B").setDataValidation(
+    SpreadsheetApp.newDataValidation()
+      .requireValueInList(["開校", "休校", "模試", "検定", "テスト", "〆切"], true)
+      .setAllowInvalid(false)
+      .build()
+  );
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { success: true, events: [] };
+
+  const values = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  const events = [];
+  values.forEach(function(row) {
+    const target = String(row[0] == null ? "" : row[0]).trim() || "全体";
+    const type = String(row[1] == null ? "" : row[1]).trim();
+    const title = String(row[2] == null ? "" : row[2]).trim();
+    const description = String(row[3] == null ? "" : row[3]).trim();
+    const startDate = calendarDateKey_(row[4]);
+    const endDate = calendarDateKey_(row[5]) || startDate;
+    if (!startDate || !endDate || startDate > endDate || (!title && !type)) return;
+    events.push({
+      school: target,
+      type: type,
+      title: title || type,
+      description: description,
+      startDate: startDate,
+      endDate: endDate,
+      date: startDate
+    });
+  });
+  return { success: true, events: events };
+}
+
+function calendarDateKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
+  }
+  const text = String(value == null ? "" : value).trim();
+  if (!text) return "";
+  const match = text.match(/^(\\d{4})[\\/-](\\d{1,2})[\\/-](\\d{1,2})$/);
+  if (!match) return "";
+  const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+  return year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+}
 
 function getAnnouncements_() {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
