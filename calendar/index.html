@@ -184,10 +184,12 @@
           const btn = document.createElement("button");
           btn.type = "button";
           const isClosed = isClosedOn(key);
-          const hasDeadline = dayEvents.some(e => String(e.type || e.category || "").trim() === "〆切");\n          btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (hasDeadline ? " deadline-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
+          const hasDeadline = dayEvents.some(e => String(e.type || e.category || "").trim() === "〆切");
+          btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (hasDeadline ? " deadline-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
           btn.dataset.date = key;
           btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (isClosed ? "、休校日" : "") + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
-          const titleLabels = dayEvents.filter(e => ["模試","検定","テスト","〆切"].includes(String(e.type || e.category || "").trim())).map(e => { const isDeadline = String(e.type || e.category || "").trim() === "〆切"; return '<span class="event-title-label ' + (isDeadline ? "deadline-title" : "exam-title") + '">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");\n          btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels;
+          const titleLabels = dayEvents.filter(e => ["模試","検定","テスト","〆切"].includes(String(e.type || e.category || "").trim())).map(e => { const isDeadline = String(e.type || e.category || "").trim() === "〆切"; return '<span class="event-title-label ' + (isDeadline ? "deadline-title" : "exam-title") + '">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
+          btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels;
           btn.addEventListener("click", () => renderDetail(key));
           monthGrid.appendChild(btn);
         }
