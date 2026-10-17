@@ -245,8 +245,11 @@
             const isRange = e.startDate && e.endDate && e.startDate < e.endDate;
             return isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
           }).map(e => { const colorClass = calendarEventClass(e); return '<span class="event-title-label ' + colorClass + '-title">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
+          const orderedRangeEvents = events.filter(e => e.startDate && e.endDate && e.startDate < e.endDate && !isClosingEvent(e));
           const rangeBars = visibleRangeEvents.filter(e => key > e.startDate && key < e.endDate).map(e => {
-            return '<span class="range-bar middle ' + calendarEventClass(e) + '" aria-hidden="true"></span>';
+            const order = orderedRangeEvents.indexOf(e);
+            const bottom = 7 + Math.max(0, orderedRangeEvents.length - order - 1) * 5;
+            return '<span class="range-bar middle ' + calendarEventClass(e) + '" style="bottom:' + bottom + 'px" aria-hidden="true"></span>';
           }).join("");
           btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels + rangeBars;
           btn.addEventListener("click", () => renderDetail(key));
