@@ -210,7 +210,7 @@ function getCalendarEvents_() {
   );
   sheet.getRange("B2:B").setDataValidation(
     SpreadsheetApp.newDataValidation()
-      .requireValueInList(["開校", "休校", "模試", "検定", "テスト", "〆切"], true)
+      .requireValueInList(["開校", "休校", "模試", "検定", "テスト", "〆切", "その他"], true)
       .setAllowInvalid(false)
       .build()
   );
