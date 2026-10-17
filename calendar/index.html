@@ -183,7 +183,7 @@
         for (let y = today.getFullYear() - 2; y <= today.getFullYear() + 5; y++) {
           const option = document.createElement("option");
           option.value = String(y);
-          option.textContent = "(" + y + ")年";
+          option.textContent = y + "年";
           if (y === viewYear) option.selected = true;
           yearSelect.appendChild(option);
         }
@@ -191,7 +191,7 @@
         for (let m = 0; m < 12; m++) {
           const option = document.createElement("option");
           option.value = String(m);
-          option.textContent = "(" + (m + 1) + ")月";
+          option.textContent = (m + 1) + "月";
           if (m === viewMonth) option.selected = true;
           monthSelect.appendChild(option);
         }
