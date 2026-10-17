@@ -245,9 +245,8 @@
             const isRange = e.startDate && e.endDate && e.startDate < e.endDate;
             return isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
           }).map(e => { const colorClass = calendarEventClass(e); return '<span class="event-title-label ' + colorClass + '-title">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
-          const rangeBars = visibleRangeEvents.map(e => {
-            const position = key === e.startDate ? "start" : key === e.endDate ? "end" : "middle";
-            return '<span class="range-bar ' + position + ' ' + calendarEventClass(e) + '" aria-hidden="true"></span>';
+          const rangeBars = visibleRangeEvents.filter(e => key > e.startDate && key < e.endDate).map(e => {
+            return '<span class="range-bar middle ' + calendarEventClass(e) + '" aria-hidden="true"></span>';
           }).join("");
           btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels + rangeBars;
           btn.addEventListener("click", () => renderDetail(key));
