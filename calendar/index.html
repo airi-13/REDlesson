@@ -135,7 +135,7 @@
         return "other";
       }
       function isSharedEvent(e) { const scope = String(e.school || e.target || e.scope || "全体").trim(); return !scope || scope === "全体" || scope === "全体共通" || scope === "共通" || scope === "全員"; }
-      function isVisibleEvent(e) { const selected = schoolSelect.value; return !selected || isSharedEvent(e) || String(e.school || e.target || e.scope || "").trim() === selected; }
+      function isVisibleEvent(e) { const selected = schoolSelect.value; if (isSharedEvent(e)) return true; return !!selected && String(e.school || e.target || e.scope || "").trim() === selected; }
       function rawEventsOn(key) { return events.filter(e => String(e.date || e.startDate || "") === key || (e.startDate && e.endDate && key >= e.startDate && key <= e.endDate)); }
       function eventsOn(key) { return rawEventsOn(key).filter(isVisibleEvent); }
       function isOpeningEvent(e) { return /開校|開室|通常授業あり/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
