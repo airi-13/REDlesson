@@ -24,6 +24,7 @@
     .month-card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}
     .month-title{padding:10px 12px;background:#f0f3f5;font-weight:800;display:flex;justify-content:space-between;align-items:center}
     .month-title small{font-weight:500;color:var(--muted)}
+    .month-title .today-button{padding:6px 10px;font-size:.82rem;white-space:nowrap}
     .month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:8px;gap:3px}
     .weekday{text-align:center;font-size:.72rem;color:#65717a;padding:4px 0;font-weight:700}
     .weekday:first-child{color:#d32f2f}.weekday:last-child{color:#1976d2}
@@ -69,11 +70,10 @@
     <div data-site-header></div>
     <main>
       <h1 class="page-heading">📅 年間カレンダー</h1>
-      <p class="lead">今月の教室予定を表示します。プルダウンから見たい月に切り替えられます。日付を押すと、その日の予定が表示されます。</p>
+      <p class="lead">日付を選択して予定を確認</p>
       <div class="toolbar">
-        <div class="year-controls"><label for="schoolSelect" style="font-weight:700">表示する予定</label><select id="schoolSelect" aria-label="表示する予定" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"><option value="" selected>ー</option><option value="我孫子中">我孫子中</option><option value="湖北台中">湖北台中</option><option value="白山中">白山中</option><option value="その他">その他</option></select></div>
-        <div class="year-controls"><label for="monthSelect" style="font-weight:700">表示する月</label><select id="monthSelect" aria-label="表示する月" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"></select></div>
-        <button id="todayButton" class="today-button" type="button">今日の月へ</button>
+        <div class="year-controls"><label for="schoolSelect" style="font-weight:700">学校</label><select id="schoolSelect" aria-label="表示する予定" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"><option value="" selected>ー</option><option value="我孫子中">我孫子中</option><option value="湖北台中">湖北台中</option><option value="白山中">白山中</option><option value="その他">その他</option></select></div>
+        <div class="year-controls"><label for="monthSelect" style="font-weight:700">月</label><select id="monthSelect" aria-label="表示する月" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"></select></div>
         <div class="legend" aria-label="予定の凡例">
           <span class="legend-item"><i class="swatch" style="background:#ffccd2"></i>休校・休日</span>
           <span class="legend-item"><i class="swatch" style="background:#cfe3ff"></i>授業</span>
@@ -170,7 +170,14 @@
         const days = new Date(year, monthIndex + 1, 0).getDate();
         const card = document.createElement("article");
         card.className = "month-card";
-        card.innerHTML = '<div class="month-title"><span>' + year + '年 ' + month + '月</span><small>日付を選択して予定を確認</small></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
+        card.innerHTML = '<div class="month-title"><span>' + year + '年 ' + month + '月</span><button id="todayButton" class="today-button" type="button">今日に戻る</button></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
+        card.querySelector("#todayButton").addEventListener("click", () => {
+          viewYear = today.getFullYear();
+          viewMonth = today.getMonth();
+          selectedDate = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+          renderCalendar();
+          renderDetail(selectedDate);
+        });
         const monthGrid = card.querySelector(".month-grid");
         for (let i = 0; i < firstDay; i++) {
           const empty = document.createElement("div");
@@ -244,13 +251,6 @@
         viewMonth = parts[1] - 1;
         selectedDate = "";
         renderCalendar();
-      });
-      document.getElementById("todayButton").addEventListener("click", () => {
-        viewYear = today.getFullYear();
-        viewMonth = today.getMonth();
-        selectedDate = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-        renderCalendar();
-        renderDetail(selectedDate);
       });
       renderCalendar();
       renderDetail(dateKey(today.getFullYear(), today.getMonth(), today.getDate()));
