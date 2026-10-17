@@ -34,7 +34,7 @@
     .day.sunday .day-number{color:#d32f2f}.day.saturday .day-number{color:#1976d2}
     .day.today{border-color:var(--red);font-weight:800}
     .day.selected{outline:2px solid var(--red);outline-offset:-2px}
-    .day-number{display:flex;flex:0 0 27px;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto;font-size:.82rem;line-height:1.2;border-radius:50%}.day.closed-day{background:#fff!important}.day.closed-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day.deadline-day{background:#fff0f0!important;color:#263238!important;border-color:#d92d20}.day.deadline-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day .event-title-label{display:block;flex:0 0 auto;align-self:stretch;margin:0;max-width:100%;font-size:.62rem;line-height:1.2;overflow-wrap:anywhere;font-weight:700;text-align:center}.day .event-title-label.exam-title{color:#16803c}.day .event-title-label.deadline-title{color:#fff}.day .event-dot{display:none}.day .range-bar{position:absolute;bottom:7px;height:3px;left:0;right:0;pointer-events:none}.day .range-bar.start{left:65%;right:-2px}.day .range-bar.end{left:-2px;right:65%}.day .range-bar.middle{left:-2px;right:-2px}.day .range-bar + .range-bar{bottom:12px}
+    .day-number{display:flex;flex:0 0 27px;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto;font-size:.82rem;line-height:1.2;border-radius:50%}.day.closed-day{background:#fff!important}.day.closed-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day.deadline-day{background:#fff0f0!important;color:#263238!important;border-color:#d92d20}.day.deadline-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day .event-title-label{display:block;flex:0 0 auto;align-self:stretch;margin:0;max-width:100%;font-size:.62rem;line-height:1.2;overflow-wrap:anywhere;font-weight:700;text-align:center}.day .event-title-label.exam-title{color:#16803c}.day .event-title-label.deadline-title{color:#fff}.day .event-dot{display:none}.day .range-bar{display:block;position:relative;flex:0 0 3px;width:calc(100% + 4px);height:3px;margin:2px -2px;pointer-events:none}.day .range-bar.start{left:auto;right:auto}.day .range-bar.end{left:auto;right:auto}.day .range-bar.middle{left:auto;right:auto}
     .event-dot{display:block;width:5px;height:5px;border-radius:50%;margin:4px auto 0;background:var(--red)}
     .day-type-holiday,.day-type-class,.day-type-event,.day-type-other{background:#fff}
     .day .range-bar{background:#f0b429}
@@ -237,21 +237,19 @@
           btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (hasDeadline ? " deadline-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
           btn.dataset.date = key;
           btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (isClosed ? "、休校日" : "") + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
-          const rangeEvents = dayEvents.filter(e => e.startDate && e.endDate && e.startDate < e.endDate);
           const calendarVisibleEvents = dayEvents.filter(e => !isClosingEvent(e));
-          const visibleRangeEvents = rangeEvents.filter(e => !isClosingEvent(e));
-          const titleLabels = calendarVisibleEvents.filter(e => {
-            const type = String(e.type || e.category || "").trim();
+          const eventItems = calendarVisibleEvents.map(e => {
             const isRange = e.startDate && e.endDate && e.startDate < e.endDate;
-            return isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
-          }).map(e => { const colorClass = calendarEventClass(e); return '<span class="event-title-label ' + colorClass + '-title">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
-          const orderedRangeEvents = events.filter(e => e.startDate && e.endDate && e.startDate < e.endDate && !isClosingEvent(e));
-          const rangeBars = visibleRangeEvents.filter(e => key > e.startDate && key < e.endDate).map(e => {
-            const order = orderedRangeEvents.indexOf(e);
-            const bottom = 7 + Math.max(0, orderedRangeEvents.length - order - 1) * 5;
-            return '<span class="range-bar middle ' + calendarEventClass(e) + '" style="bottom:' + bottom + 'px" aria-hidden="true"></span>';
+            if (isRange && key > e.startDate && key < e.endDate) {
+              return '<span class="range-bar middle ' + calendarEventClass(e) + '" aria-hidden="true"></span>';
+            }
+            const type = String(e.type || e.category || "").trim();
+            const shouldShowTitle = isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
+            if (!shouldShowTitle) return "";
+            const colorClass = calendarEventClass(e);
+            return '<span class="event-title-label ' + colorClass + '-title">' + escapeHtml(e.title || e.name || e.type || "") + '</span>';
           }).join("");
-          btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels + rangeBars;
+          btn.innerHTML = '<span class="day-number">' + d + '</span>' + eventItems;
           btn.addEventListener("click", () => renderDetail(key));
           monthGrid.appendChild(btn);
         }
