@@ -27,13 +27,13 @@
     .month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:8px;gap:3px}
     .weekday{text-align:center;font-size:.72rem;color:#65717a;padding:4px 0;font-weight:700}
     .weekday:first-child{color:#d32f2f}.weekday:last-child{color:#1976d2}
-    .day{position:relative;min-height:43px;border:1px solid transparent;border-radius:7px;background:#fff;padding:4px 2px;text-align:center;cursor:pointer;color:#263238;font:inherit}
+    .day{position:relative;min-height:64px;border:1px solid transparent;border-radius:7px;background:#fff;padding:4px 2px;text-align:center;cursor:pointer;color:#263238;font:inherit;overflow-wrap:anywhere}
     .day:hover{border-color:#b7c1c8;background:#f7f9fa}
     .day.empty{pointer-events:none}
     .day.sunday .day-number{color:#d32f2f}.day.saturday .day-number{color:#1976d2}
     .day.today{border-color:var(--red);font-weight:800}
     .day.selected{outline:2px solid var(--red);outline-offset:-2px}
-    .day-number{display:flex;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto;font-size:.82rem;line-height:1.2;border-radius:50%}.day.closed-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}
+    .day-number{display:flex;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto;font-size:.82rem;line-height:1.2;border-radius:50%}.day.closed-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day.deadline-day{background:#d92d20!important;color:#fff!important;border-color:#d92d20}.day.deadline-day .day-number{background:#d92d20;color:#fff;font-weight:800}.day .event-title-label{display:block;margin:3px auto 0;max-width:100%;font-size:.62rem;line-height:1.2;overflow-wrap:anywhere;font-weight:700}.day .event-title-label.exam-title{color:#16803c}.day .event-title-label.deadline-title{color:#fff}.day .event-dot{display:none}
     .event-dot{display:block;width:5px;height:5px;border-radius:50%;margin:4px auto 0;background:var(--red)}
     .day.has-event{background:#fff9f9}
     .day-type-holiday{background:var(--pink)}.day-type-class{background:var(--blue)}.day-type-event{background:var(--yellow)}.day-type-other{background:var(--green)}
@@ -71,7 +71,7 @@
       <h1 class="page-heading">📅 年間カレンダー</h1>
       <p class="lead">今月の教室予定を表示します。プルダウンから見たい月に切り替えられます。日付を押すと、その日の予定が表示されます。</p>
       <div class="toolbar">
-        <div class="year-controls"><label for="schoolSelect" style="font-weight:700">表示する予定</label><select id="schoolSelect" aria-label="表示する予定" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"><option value="全体共通">全体共通</option><option value="我孫子中">我孫子中</option><option value="我孫子第二中">我孫子第二中</option><option value="我孫子第三中">我孫子第三中</option><option value="白山中">白山中</option><option value="湖北台中">湖北台中</option><option value="湖北中">湖北中</option><option value="その他">その他</option></select></div>
+        <div class="year-controls"><label for="schoolSelect" style="font-weight:700">表示する予定</label><select id="schoolSelect" aria-label="表示する予定" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"><option value="" selected>ー</option><option value="我孫子中">我孫子中</option><option value="我孫子第二中">我孫子第二中</option><option value="我孫子第三中">我孫子第三中</option><option value="白山中">白山中</option><option value="湖北台中">湖北台中</option><option value="湖北中">湖北中</option><option value="その他">その他</option></select></div>
         <div class="year-controls"><label for="monthSelect" style="font-weight:700">表示する月</label><select id="monthSelect" aria-label="表示する月" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"></select></div>
         <button id="todayButton" class="today-button" type="button">今日の月へ</button>
         <div class="legend" aria-label="予定の凡例">
@@ -136,13 +136,13 @@
         if (/講習|テスト|模試|対策/.test(type)) return "event";
         return "other";
       }
-      function isSharedEvent(e) { const scope = String(e.school || e.target || e.scope || "全体共通").trim(); return !scope || scope === "全体共通" || scope === "共通" || scope === "全員"; }
-      function isVisibleEvent(e) { return isSharedEvent(e) || (schoolSelect.value !== "全体共通" && String(e.school || e.target || e.scope || "").trim() === schoolSelect.value); }
+      function isSharedEvent(e) { const scope = String(e.school || e.target || e.scope || "全体").trim(); return !scope || scope === "全体" || scope === "全体共通" || scope === "共通" || scope === "全員"; }
+      function isVisibleEvent(e) { const selected = schoolSelect.value; return !selected || isSharedEvent(e) || String(e.school || e.target || e.scope || "").trim() === selected; }
       function rawEventsOn(key) { return events.filter(e => String(e.date || e.startDate || "") === key || (e.startDate && e.endDate && key >= e.startDate && key <= e.endDate)); }
       function eventsOn(key) { return rawEventsOn(key).filter(isVisibleEvent); }
       function isOpeningEvent(e) { return /開校|開室|通常授業あり/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
       function isClosingEvent(e) { return /休校|休日|休業/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
-      function isClosedOn(key) { const shared = rawEventsOn(key).filter(isSharedEvent); if (shared.some(isOpeningEvent)) return false; if (shared.some(isClosingEvent)) return true; const dow = new Date(key + "T00:00:00").getDay(); return dow === 0 || dow === 1; }
+      function isClosedOn(key) { const applicable = eventsOn(key); if (applicable.some(isOpeningEvent)) return false; if (applicable.some(isClosingEvent)) return true; const dow = new Date(key + "T00:00:00").getDay(); return dow === 0 || dow === 1; }
       function renderDetail(key) {
         selectedDate = key;
         const [y,m,d] = key.split("-").map(Number);
@@ -184,10 +184,10 @@
           const btn = document.createElement("button");
           btn.type = "button";
           const isClosed = isClosedOn(key);
-          btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
+          const hasDeadline = dayEvents.some(e => String(e.type || e.category || "").trim() === "〆切");\n          btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 1 ? " monday" : "") + (date.getDay() === 6 ? " saturday" : "") + (isClosed ? " closed-day" : "") + (hasDeadline ? " deadline-day" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
           btn.dataset.date = key;
           btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (isClosed ? "、休校日" : "") + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
-          btn.innerHTML = '<span class="day-number">' + d + '</span>' + (dayEvents.length ? '<span class="event-dot" aria-hidden="true"></span>' : "");
+          const titleLabels = dayEvents.filter(e => ["模試","検定","テスト","〆切"].includes(String(e.type || e.category || "").trim())).map(e => { const isDeadline = String(e.type || e.category || "").trim() === "〆切"; return '<span class="event-title-label ' + (isDeadline ? "deadline-title" : "exam-title") + '">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");\n          btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels;
           btn.addEventListener("click", () => renderDetail(key));
           monthGrid.appendChild(btn);
         }
@@ -214,7 +214,7 @@
               title: String(e.title || e.name || ""),
               type: String(e.type || e.category || "その他"),
               description: String(e.description || e.content || ""),
-              school: String(e.school || e.target || e.scope || "全体共通")
+              school: String(e.school || e.target || e.scope || "全体")
             })).filter(e => e.date || e.startDate);
             status.hidden = true;
             renderCalendar();
