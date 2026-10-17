@@ -185,8 +185,9 @@
         const days = new Date(year, monthIndex + 1, 0).getDate();
         const card = document.createElement("article");
         card.className = "month-card";
-        card.innerHTML = '<div class="month-title"><span>' + year + '年 ' + month + '月</span><div class="month-actions"><button id="todayButton" class="today-button" type="button">今日に戻る</button><label for="monthSelect">月</label></div></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
+        card.innerHTML = '<div class="month-title"><span>' + year + '年 ' + month + '月</span><div class="month-actions"><button id="todayButton" class="today-button" type="button">今日に戻る</button></div></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
         card.querySelector(".month-actions").appendChild(monthSelect);
+        card.querySelector(".month-actions").insertBefore(monthSelect, card.querySelector("#todayButton"));
         card.querySelector("#todayButton").addEventListener("click", () => {
           viewYear = today.getFullYear();
           viewMonth = today.getMonth();
