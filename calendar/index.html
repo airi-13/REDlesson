@@ -55,7 +55,7 @@
     .detail-date{font-size:1rem;font-weight:800;margin-bottom:10px}
     .event-list{display:grid;gap:9px}
     .event-item{border:1px solid var(--line);border-radius:9px;padding:11px 12px}
-    .event-item .event-type{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.75rem;color:#8a6500;background:#fff0bf;font-weight:800;margin-bottom:7px}.event-item .event-type.test{color:#166534;background:#dcfce7}.event-item .event-type.exam{color:#1d4ed8;background:#dbeafe}.event-item .event-type.deadline{color:#fff;background:#d92d20}.event-item .event-type.other{color:#8a6500;background:#fff0bf}
+    .event-item .event-type{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.75rem;color:#8a6500;background:#fff0bf;font-weight:800;margin-bottom:7px}.event-item .event-type.holiday{color:#b42332;background:#ffe0e3}.event-item .event-type.test{color:#166534;background:#dcfce7}.event-item .event-type.exam{color:#1d4ed8;background:#dbeafe}.event-item .event-type.deadline{color:#fff;background:#d92d20}.event-item .event-type.other{color:#8a6500;background:#fff0bf}
     .event-item .event-title{font-weight:800}
     .event-item .event-description{white-space:pre-wrap;overflow-wrap:anywhere;color:#4c5962;margin-top:5px;font-size:.9rem}
     .empty-detail{color:var(--muted);margin:0}
@@ -182,7 +182,7 @@
         const [y,m,d] = key.split("-").map(Number);
         detailDate.textContent = y + "年" + m + "月" + d + "日（" + weekdays[new Date(y,m-1,d).getDay()] + "）";
         const dayEvents = eventsOn(key);
-        eventList.innerHTML = dayEvents.length ? dayEvents.map(e => '<article class="event-item"><div class="event-type ' + calendarEventClass(e) + '">' + escapeHtml(e.type || e.category || "予定") + '</div><div class="event-title">' + escapeHtml(e.title || e.name || "予定") + '</div>' + (e.description || e.content ? '<div class="event-description">' + escapeHtml(e.description || e.content) + '</div>' : "") + '</article>').join("") : '<p class="empty-detail">この日の登録予定はありません。</p>';
+        eventList.innerHTML = dayEvents.length ? dayEvents.map(e => '<article class="event-item"><div class="event-type ' + (/休校|休日|休業/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")) ? "holiday" : calendarEventClass(e)) + '">' + escapeHtml(e.type || e.category || "予定") + '</div><div class="event-title">' + escapeHtml(e.title || e.name || "予定") + '</div>' + (e.description || e.content ? '<div class="event-description">' + escapeHtml(e.description || e.content) + '</div>' : "") + '</article>').join("") : '<p class="empty-detail">この日の登録予定はありません。</p>';
         grid.querySelectorAll(".day.selected").forEach(el => el.classList.remove("selected"));
         const target = grid.querySelector('[data-date="' + key + '"]');
         if (target) target.classList.add("selected");
