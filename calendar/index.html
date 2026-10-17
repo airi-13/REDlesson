@@ -37,11 +37,19 @@
     .day-number{display:flex;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto;font-size:.82rem;line-height:1.2;border-radius:50%}.day.closed-day{background:#fff!important}.day.closed-day .day-number{background:#ffe0e3;color:#b42332;font-weight:800}.day.deadline-day{background:#d92d20!important;color:#fff!important;border-color:#d92d20}.day.deadline-day .day-number{background:#d92d20;color:#fff;font-weight:800}.day .event-title-label{display:block;margin:3px auto 0;max-width:100%;font-size:.62rem;line-height:1.2;overflow-wrap:anywhere;font-weight:700}.day .event-title-label.exam-title{color:#16803c}.day .event-title-label.deadline-title{color:#fff}.day .event-dot{display:none}.day .range-bar{position:absolute;bottom:7px;height:3px;left:0;right:0;pointer-events:none}.day .range-bar.start{left:25%;right:0}.day .range-bar.end{left:0;right:25%}.day .range-bar.middle{left:-2px;right:-2px}.day .range-bar + .range-bar{bottom:12px}
     .event-dot{display:block;width:5px;height:5px;border-radius:50%;margin:4px auto 0;background:var(--red)}
     .day-type-holiday,.day-type-class,.day-type-event,.day-type-other{background:#fff}
-    .day .range-bar{background:#d92d20}
+    .day .range-bar{background:#f0b429}
     .day .range-bar.holiday{background:#ffccd2}
     .day .range-bar.class{background:#8bbcff}
     .day .range-bar.event{background:#f0b429}
-    .day .range-bar.other{background:#62bd7a}
+    .day .range-bar.test{background:#16803c}
+    .day .range-bar.exam{background:#1976d2}
+    .day .range-bar.deadline{background:#d92d20}
+    .day .range-bar.other{background:#f0b429}
+    .day .event-title-label.test-title{color:#16803c}
+    .day .event-title-label.exam-title{color:#1976d2}
+    .day .event-title-label.deadline-title{color:#d92d20}
+    .day .event-title-label.other-title{color:#b77900}
+    .day.deadline-day .event-title-label.deadline-title{color:#fff}
     .detail-panel{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
     .detail-panel h2{font-size:1.08rem;margin:0 0 12px}
     .detail-date{font-size:1rem;font-weight:800;margin-bottom:10px}
@@ -167,6 +175,13 @@
       function eventsOn(key) { return rawEventsOn(key).filter(isVisibleEvent); }
       function isOpeningEvent(e) { return /開校|開室|通常授業あり/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
       function isClosingEvent(e) { return /休校|休日|休業/.test(String(e.type || e.category || "") + " " + String(e.title || e.name || "")); }
+      function calendarEventClass(e) {
+        const value = String(e.type || e.category || "") + " " + String(e.title || e.name || "");
+        if (/〆切|締切/.test(value)) return "deadline";
+        if (/模試|検定/.test(value)) return "exam";
+        if (/テスト/.test(value)) return "test";
+        return "other";
+      }
       function isClosedOn(key) { const applicable = eventsOn(key); if (applicable.some(isOpeningEvent)) return false; if (applicable.some(isClosingEvent)) return true; const dow = new Date(key + "T00:00:00").getDay(); return dow === 0 || dow === 1; }
       function renderDetail(key) {
         selectedDate = key;
@@ -235,10 +250,10 @@
             const type = String(e.type || e.category || "").trim();
             const isRange = e.startDate && e.endDate && e.startDate < e.endDate;
             return isRange ? (key === e.startDate || key === e.endDate) : ["模試","検定","テスト","〆切"].includes(type);
-          }).map(e => { const isDeadline = String(e.type || e.category || "").trim() === "〆切"; return '<span class="event-title-label ' + (isDeadline ? "deadline-title" : "exam-title") + '">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
+          }).map(e => { const colorClass = calendarEventClass(e); return '<span class="event-title-label ' + colorClass + '-title">' + escapeHtml(e.title || e.name || e.type || "") + '</span>'; }).join("");
           const rangeBars = visibleRangeEvents.map(e => {
             const position = key === e.startDate ? "start" : key === e.endDate ? "end" : "middle";
-            return '<span class="range-bar ' + position + ' ' + eventKind(e) + '" aria-hidden="true"></span>';
+            return '<span class="range-bar ' + position + ' ' + calendarEventClass(e) + '" aria-hidden="true"></span>';
           }).join("");
           btn.innerHTML = '<span class="day-number">' + d + '</span>' + titleLabels + rangeBars;
           btn.addEventListener("click", () => renderDetail(key));
