@@ -247,7 +247,7 @@ function calendarDateKey_(value) {
   }
   const text = String(value == null ? "" : value).trim();
   if (!text) return "";
-  const match = text.match(/^(\\d{4})[\\/-](\\d{1,2})[\\/-](\\d{1,2})$/);
+  const match = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
   if (!match) return "";
   const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
   const date = new Date(year, month - 1, day);
