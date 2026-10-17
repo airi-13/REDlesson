@@ -120,6 +120,18 @@
       }
       const schoolSelect = document.getElementById("schoolSelect");
       const status = document.getElementById("dataStatus");
+      window.addEventListener("error", event => {
+        if (!status) return;
+        status.hidden = false;
+        status.classList.add("error");
+        status.textContent = "カレンダー表示エラー: " + (event.message || "JavaScriptの実行中にエラーが発生しました。");
+      });
+      window.addEventListener("unhandledrejection", event => {
+        if (!status) return;
+        status.hidden = false;
+        status.classList.add("error");
+        status.textContent = "カレンダー処理エラー: " + String(event.reason && event.reason.message || event.reason || "不明なエラー");
+      });
       const detailDate = document.getElementById("detailDate");
       const eventList = document.getElementById("eventList");
       const today = new Date();
@@ -265,8 +277,15 @@
         selectedDate = "";
         renderCalendar();
       });
-      renderCalendar();
-      renderDetail(dateKey(today.getFullYear(), today.getMonth(), today.getDate()));
+      try {
+        renderCalendar();
+        renderDetail(dateKey(today.getFullYear(), today.getMonth(), today.getDate()));
+      } catch (err) {
+        status.hidden = false;
+        status.classList.add("error");
+        status.textContent = "カレンダー描画エラー: " + String(err && err.message || err);
+        grid.innerHTML = '<p class="status error">カレンダーを描画できませんでした。上のエラー表示を確認してください。</p>';
+      }
       loadEvents();
     })();
   </script>
