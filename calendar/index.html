@@ -20,7 +20,7 @@
     .legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.84rem;color:#4d5961}
     .legend-item{display:flex;align-items:center;gap:6px}
     .swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
-    .calendar-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .calendar-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:760px;margin:0 auto}
     .month-card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}
     .month-title{padding:10px 12px;background:#f0f3f5;font-weight:800;display:flex;justify-content:space-between;align-items:center}
     .month-title small{font-weight:500;color:var(--muted)}
@@ -50,8 +50,8 @@
     .status[hidden]{display:none}
     .status.error{background:#ffebee;color:#9b1c28}
     .loading{opacity:.7}
-    @media(max-width:820px){.calendar-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:520px){main{padding:16px 10px 28px}.calendar-grid{grid-template-columns:1fr;gap:11px}.month-grid{padding:8px 10px}.day{min-height:45px}.toolbar{padding:12px}.year-controls{width:100%;justify-content:space-between}#yearLabel{min-width:0}.legend{gap:7px 10px}.detail-panel{padding:14px}}
+    @media(max-width:820px){.calendar-grid{grid-template-columns:minmax(0,1fr)}}
+    @media(max-width:520px){main{padding:16px 10px 28px}.calendar-grid{grid-template-columns:1fr;gap:11px}.month-grid{padding:8px 5px;gap:2px}.day{min-height:48px}.toolbar{padding:12px}.year-controls{width:100%;justify-content:space-between}.year-controls select{flex:1;min-width:0!important;max-width:65%}.legend{gap:7px 10px}.detail-panel{padding:14px}}
   </style>
 </head>
 <body data-site-home="../">
@@ -69,13 +69,9 @@
     <div data-site-header></div>
     <main>
       <h1 class="page-heading">📅 年間カレンダー</h1>
-      <p class="lead">教室の年間予定を確認できます。日付を押すと、その日の予定が表示されます。</p>
+      <p class="lead">今月の教室予定を表示します。プルダウンから見たい月に切り替えられます。日付を押すと、その日の予定が表示されます。</p>
       <div class="toolbar">
-        <div class="year-controls">
-          <button id="prevYear" type="button" aria-label="前の年度">‹ 前年度</button>
-          <div id="yearLabel">2026年度</div>
-          <button id="nextYear" type="button" aria-label="次の年度">次年度 ›</button>
-        </div>
+        <div class="year-controls"><label for="monthSelect" style="font-weight:700">表示する月</label><select id="monthSelect" aria-label="表示する月" style="min-width:190px;padding:10px 12px;border:1px solid #dfe4e8;border-radius:9px;background:#fff;font:inherit"></select></div>
         <button id="todayButton" class="today-button" type="button">今日の月へ</button>
         <div class="legend" aria-label="予定の凡例">
           <span class="legend-item"><i class="swatch" style="background:#ffccd2"></i>休校・休日</span>
@@ -117,12 +113,13 @@
   <script>
     (() => {
       const grid = document.getElementById("calendarGrid");
-      const yearLabel = document.getElementById("yearLabel");
+      const monthSelect = document.getElementById("monthSelect");
       const status = document.getElementById("dataStatus");
       const detailDate = document.getElementById("detailDate");
       const eventList = document.getElementById("eventList");
       const today = new Date();
-      let fiscalYear = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
+      let viewYear = today.getFullYear();
+      let viewMonth = today.getMonth();
       let events = [];
       let selectedDate = "";
       const weekdays = ["日","月","火","水","木","金","土"];
@@ -149,35 +146,49 @@
         if (target) target.classList.add("selected");
       }
       function renderCalendar() {
-        yearLabel.textContent = fiscalYear + "年度";
-        grid.innerHTML = "";
-        for (let offset = 0; offset < 12; offset++) {
-          const monthIndex = (3 + offset) % 12;
-          const year = fiscalYear + (monthIndex < 3 ? 1 : 0);
-          const month = monthIndex + 1;
-          const firstDay = new Date(year, monthIndex, 1).getDay();
-          const days = new Date(year, monthIndex + 1, 0).getDate();
-          const card = document.createElement("article");
-          card.className = "month-card";
-          card.innerHTML = '<div class="month-title"><span>' + year + "年 " + month + "月</span><small>" + ["春","春","春","夏","夏","夏","秋","秋","秋","冬","冬","冬"][(monthIndex + 9) % 12] + '</small></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
-          const monthGrid = card.querySelector(".month-grid");
-          for (let i = 0; i < firstDay; i++) { const empty = document.createElement("div"); empty.className = "day empty"; monthGrid.appendChild(empty); }
-          for (let d = 1; d <= days; d++) {
-            const key = dateKey(year, monthIndex, d);
-            const dayEvents = eventsOn(key);
-            const date = new Date(year, monthIndex, d);
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 6 ? " saturday" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
-            btn.dataset.date = key;
-            btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
-            btn.innerHTML = '<span class="day-number">' + d + '</span>' + (dayEvents.length ? '<span class="event-dot" aria-hidden="true"></span>' : "");
-            btn.addEventListener("click", () => renderDetail(key));
-            monthGrid.appendChild(btn);
-          }
-          grid.appendChild(card);
+        monthSelect.innerHTML = "";
+        for (let offset = -12; offset <= 12; offset++) {
+          const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+          const y = d.getFullYear(), m = d.getMonth();
+          const option = document.createElement("option");
+          option.value = y + "-" + pad(m + 1);
+          option.textContent = y + "年" + (m + 1) + "月";
+          if (y === viewYear && m === viewMonth) option.selected = true;
+          monthSelect.appendChild(option);
         }
-        if (selectedDate) renderDetail(selectedDate);
+        grid.innerHTML = "";
+        const year = viewYear, monthIndex = viewMonth, month = monthIndex + 1;
+        const firstDay = new Date(year, monthIndex, 1).getDay();
+        const days = new Date(year, monthIndex + 1, 0).getDate();
+        const card = document.createElement("article");
+        card.className = "month-card";
+        card.innerHTML = '<div class="month-title"><span>' + year + "年 " + month + "月</span><small>日付を選択して予定を確認</small></div><div class="month-grid">' + weekdays.map(w => '<div class="weekday">' + w + '</div>').join("") + '</div>';
+        const monthGrid = card.querySelector(".month-grid");
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement("div");
+          empty.className = "day empty";
+          monthGrid.appendChild(empty);
+        }
+        for (let d = 1; d <= days; d++) {
+          const key = dateKey(year, monthIndex, d);
+          const dayEvents = eventsOn(key);
+          const date = new Date(year, monthIndex, d);
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "day" + (date.getDay() === 0 ? " sunday" : "") + (date.getDay() === 6 ? " saturday" : "") + (key === dateKey(today.getFullYear(), today.getMonth(), today.getDate()) ? " today" : "") + (dayEvents.length ? " has-event day-type-" + eventKind(dayEvents[0]) : "") + (key === selectedDate ? " selected" : "");
+          btn.dataset.date = key;
+          btn.setAttribute("aria-label", year + "年" + month + "月" + d + "日" + (dayEvents.length ? "、予定" + dayEvents.length + "件" : ""));
+          btn.innerHTML = '<span class="day-number">' + d + '</span>' + (dayEvents.length ? '<span class="event-dot" aria-hidden="true"></span>' : "");
+          btn.addEventListener("click", () => renderDetail(key));
+          monthGrid.appendChild(btn);
+        }
+        grid.appendChild(card);
+        if (selectedDate && selectedDate.slice(0,7) === year + "-" + pad(month)) renderDetail(selectedDate);
+        else {
+          selectedDate = "";
+          detailDate.textContent = year + "年" + month + "月";
+          eventList.innerHTML = '<p class="empty-detail">カレンダーの日付を押すと、予定の詳細がここに表示されます。</p>';
+        }
       }
       function loadEvents() {
         status.hidden = false;
@@ -198,7 +209,7 @@
             status.hidden = true;
             renderCalendar();
             const nowKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-            renderDetail(nowKey);
+            if (viewYear === today.getFullYear() && viewMonth === today.getMonth()) renderDetail(nowKey);
           } catch (err) {
             status.classList.add("error");
             status.textContent = "予定データの形式を確認できませんでした。スプレッドシート連携の設定が必要です。";
@@ -214,11 +225,21 @@
         };
         document.head.appendChild(script);
       }
-      document.getElementById("prevYear").addEventListener("click", () => { fiscalYear--; renderCalendar(); });
-      document.getElementById("nextYear").addEventListener("click", () => { fiscalYear++; renderCalendar(); });
-      document.getElementById("todayButton").addEventListener("click", () => {
-        fiscalYear = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
+      monthSelect.addEventListener("change", () => {
+        const parts = monthSelect.value.split("-").map(Number);
+        viewYear = parts[0];
+        viewMonth = parts[1] - 1;
+        selectedDate = "";
         renderCalendar();
+      });
+      document.getElementById("todayButton").addEventListener("click", () => {
+        viewYear = today.getFullYear();
+        viewMonth = today.getMonth();
+        selectedDate = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+        renderCalendar();
+        renderDetail(selectedDate);
+      });
+      renderCalendar();
         renderDetail(dateKey(today.getFullYear(), today.getMonth(), today.getDate()));
       });
       renderCalendar();
