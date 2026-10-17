@@ -155,7 +155,7 @@
       }
       function renderCalendar() {
         monthSelect.innerHTML = "";
-        for (let offset = -12; offset <= 12; offset++) {
+        for (let offset = -2; offset <= 12; offset++) {
           const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
           const y = d.getFullYear(), m = d.getMonth();
           const option = document.createElement("option");
