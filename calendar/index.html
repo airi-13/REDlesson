@@ -134,13 +134,13 @@
         if (!status) return;
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "カレンダー表示エラー: " + (event.message || "JavaScriptの実行中にエラーが発生しました。");
+        status.textContent = "予定を取得できませんでした。";
       });
       window.addEventListener("unhandledrejection", event => {
         if (!status) return;
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "カレンダー処理エラー: " + String(event.reason && event.reason.message || event.reason || "不明なエラー");
+        status.textContent = "予定を取得できませんでした。";
       });
       const detailDate = document.getElementById("detailDate");
       const eventList = document.getElementById("eventList");
@@ -275,7 +275,7 @@
             if (viewYear === today.getFullYear() && viewMonth === today.getMonth()) renderDetail(nowKey);
           } catch (err) {
             status.classList.add("error");
-            status.textContent = "予定データの形式を確認できませんでした。スプレッドシート連携の設定が必要です。";
+            status.textContent = "予定を取得できませんでした。";
             renderCalendar();
           }
         };
@@ -283,7 +283,7 @@
         script.src = window.RED.GAS_URL + "?action=calendar&callback=" + callbackName + "&_=" + Date.now();
         script.onerror = () => {
           status.classList.add("error");
-          status.textContent = "予定を取得できませんでした。次の手順でGoogleスプレッドシートとGASを接続します。";
+          status.textContent = "予定を取得できませんでした。";
           renderCalendar();
         };
         document.head.appendChild(script);
@@ -305,8 +305,8 @@
       } catch (err) {
         status.hidden = false;
         status.classList.add("error");
-        status.textContent = "カレンダー描画エラー: " + String(err && err.message || err);
-        grid.innerHTML = '<p class="status error">カレンダーを描画できませんでした。上のエラー表示を確認してください。</p>';
+        status.textContent = "予定を取得できませんでした。";
+        grid.innerHTML = '<p class="status error">予定を取得できませんでした。</p>';
       }
       loadEvents();
     })();
