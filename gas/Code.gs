@@ -153,7 +153,8 @@ function doPost(e) {
     requestId = String(data.requestId || "");
     const action = String(data.action || "");
     let result;
-    if (action === "purchase") result = submitPurchaseApplication_(data);
+    if (action === "meeting") result = submitMeetingApplication_(data);
+    else if (action === "purchase") result = submitPurchaseApplication_(data);
     else if (action === "test_range") result = submitTestRangeApplication_(data);
     else if (action === "test_subject") result = submitTestSubjectApplication_(data);
     else if (action === "test_period") result = submitTestPeriodApplication_(data);
@@ -1578,4 +1579,85 @@ function submitExternalExamApplication_(data) {
     emailWarning = "教室への通知メールを送信できませんでした。";
   }
   return {success: true, message: "外部試験の受験登録を受け付けました。", emailWarning: emailWarning};
+}
+
+
+/* =====================================================
+   面談希望フォーム
+===================================================== */
+function submitMeetingApplication_(data) {
+  const studentId = String(data.studentId || "").trim();
+  const studentName = String(data.studentName || "").trim();
+  const email = String(data.email || "").trim();
+  const notes = String(data.notes || "").trim();
+  const preferences = Array.isArray(data.preferences) ? data.preferences : [];
+
+  if (!/^1139\\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+  if (!studentName) throw new Error("生徒氏名を入力してください。");
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+  if (!preferences.length || preferences.length > 3) throw new Error("希望日は第1希望から第3希望まで選択してください。");
+
+  const seenDates = new Set();
+  const validTimes = {
+    "火": ["16:45", "17:25", "18:10", "18:55", "19:40", "20:25"],
+    "水": ["16:40", "17:25", "18:10", "18:55", "19:40"],
+    "木": ["16:45", "17:25", "18:10", "18:55", "19:40", "20:25"],
+    "金": ["16:40", "17:25", "18:10", "18:55", "19:40"],
+    "土": ["15:10", "15:55", "16:40", "17:25", "18:10"]
+  };
+  const normalized = preferences.map(function(item, index) {
+    const date = String(item.date || "").trim();
+    const times = Array.isArray(item.times) ? item.times.map(String) : [];
+    const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(date);
+    if (!match) throw new Error("第" + (index + 1) + "希望の日付を選択してください。");
+    const parsed = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (parsed.getFullYear() !== Number(match[1]) || parsed.getMonth() !== Number(match[2]) - 1 || parsed.getDate() !== Number(match[3])) {
+      throw new Error("希望日の日付が正しくありません。");
+    }
+    const weekday = ["日", "月", "火", "水", "木", "金", "土"][parsed.getDay()];
+    if (!validTimes[weekday]) throw new Error("希望日は火曜日から土曜日を選択してください。");
+    if (seenDates.has(date)) throw new Error("希望日が重複しています。");
+    seenDates.add(date);
+    if (!times.length || !times.every(function(time) { return validTimes[weekday].includes(time); })) {
+      throw new Error("第" + (index + 1) + "希望の時間帯を1つ以上選択してください。");
+    }
+    return { date: date, weekday: weekday, times: times };
+  });
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetName = "面談希望";
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.getRange(1, 1, 1, 8).setValues([["状態", "受付日時", "生徒番号", "生徒氏名", "第1希望", "第2希望", "第3希望", "連絡事項"]]);
+    sheet.setFrozenRows(1);
+  }
+  ensureApplicationStatusColumn_(sheet);
+
+  const formatPreference = function(item) {
+    return item ? item.date.replace(/-/g, "/") + "（" + item.weekday + "） " + item.times.join("、") : "";
+  };
+  const rows = [
+    "未確認", new Date(), studentId, studentName,
+    formatPreference(normalized[0]), formatPreference(normalized[1]), formatPreference(normalized[2]), notes
+  ];
+  sheet.appendRow(rows);
+
+  const detail = normalized.map(function(item, index) {
+    return "第" + (index + 1) + "希望：" + formatPreference(item);
+  }).join("\\n");
+  const body = "面談希望フォームの登録がありました。\\n\\n生徒番号：" + studentId +
+    "\\n生徒氏名：" + studentName + "\\nメールアドレス：" + email +
+    "\\n\\n" + detail + "\\n\\n連絡事項：" + (notes || "なし");
+  sendRedEmail_({to: ADMIN_EMAIL, subject: "【面談希望】" + studentName + "_" + studentId, body: body});
+  try {
+    sendRedEmail_({
+      to: email,
+      subject: "【自立学習RED】面談希望登録完了_" + studentId,
+      body: "面談希望を受け付けました。\\n\\n教室で日程を調整し、決まり次第LINEにてご連絡します。\\n\\n自立学習RED 天王台教室"
+    });
+  } catch (mailError) {
+    console.error("面談希望の確認メール送信に失敗しました: " + mailError);
+  }
+  return {success: true, message: "面談希望を受け付けました。"};
 }
