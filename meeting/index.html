@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="自立学習RED 天王台教室 面談希望フォーム">
+  <title>面談希望フォーム | 自立学習RED 天王台教室</title>
+  <link rel="stylesheet" href="../common.css">
+  <style>
+    .meeting-wrap{max-width:760px;margin:24px auto;padding:0 14px 36px}
+    .meeting-title{font-size:1.45rem;margin:0 0 18px}
+    .meeting-card{background:#fff;border:1px solid #e0e4e8;border-radius:14px;padding:18px;margin:0 0 16px}
+    .meeting-intro{background:#fff7f7;border-left:4px solid #E60012}
+    .meeting-intro p{margin:7px 0}
+    .meeting-intro strong{color:#b9000e}
+    .field{margin:0 0 16px}
+    .field label,.field-label{display:block;font-weight:700;margin-bottom:7px}
+    .field input,.field textarea,.date-select{box-sizing:border-box;width:100%;padding:12px;border:1px solid #cbd2d8;border-radius:8px;font:inherit;background:#fff}
+    .required{font-size:.75rem;color:#E60012;margin-left:5px}
+    .help{font-size:.85rem;color:#5e6870;margin:6px 0 0}
+    .error{color:#c62828;font-size:.88rem;min-height:1em}
+    .preference{margin-top:16px;padding-top:16px;border-top:1px solid #e2e6e9}
+    .preference h3{margin:0 0 10px;font-size:1.05rem}
+    .time-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+    .time-option{display:flex;align-items:center;gap:8px;border:1px solid #d9dee3;border-radius:8px;padding:11px;background:#fafbfc}
+    .time-option input{width:18px;height:18px;accent-color:#E60012;flex-shrink:0}
+    .time-options[hidden]{display:none}
+    .submit-btn{width:100%;border:0;border-radius:10px;padding:15px;background:#E60012;color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
+    .submit-btn:disabled{opacity:.6}
+    .complete{text-align:center;padding:28px 16px}
+    .complete[hidden],#meetingForm[hidden]{display:none}
+    .checkmark{color:#2e9b59;font-size:3rem;line-height:1.2}
+    @media(max-width:480px){.meeting-card{padding:14px}.time-options{grid-template-columns:1fr}.meeting-title{font-size:1.25rem}}
+  </style>
+</head>
+<body data-site-home="../">
+  <div data-site-header></div>
+  <main class="meeting-wrap">
+    <form id="meetingForm">
+      <h1 class="meeting-title">🤝 面談希望フォーム</h1>
+      <section class="meeting-card">
+        <div class="field">
+          <label for="studentId">生徒番号 <span class="required">必須</span></label>
+          <input id="studentId" name="studentId" inputmode="numeric" autocomplete="off" placeholder="1139で始まる9桁の数字（半角数字）" required>
+          <p class="help">※生徒番号は各家庭のLINEグループにて案内されています。</p>
+        </div>
+        <div class="field">
+          <label for="studentName">生徒氏名 <span class="required">必須</span></label>
+          <input id="studentName" name="studentName" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="email">メールアドレス <span class="required">必須</span></label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="受付確認メールを受け取るアドレス" required>
+        </div>
+      </section>
+
+      <section class="meeting-card">
+        <h2 style="font-size:1.1rem;margin:0 0 8px">希望日・時間帯</h2>
+        <div class="meeting-card meeting-intro">
+          <p><strong>所要時間：</strong>10分～15分</p>
+          <p><strong>面談内容：</strong>現在の学習状況について、今後の学習計画について</p>
+          <p>三者面談・二者面談のどちらでも大丈夫です。</p>
+        </div>
+        <p class="help">第1希望から順に日付を選択してください。選択した日付に応じて時間帯が表示されます。各日で複数の時間帯を選択できます。</p>
+        <div id="preferences"></div>
+        <p id="preferenceError" class="error"></p>
+      </section>
+
+      <section class="meeting-card">
+        <div class="field">
+          <label for="notes">連絡事項（任意）</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="ご希望などがあれば入力してください"></textarea>
+        </div>
+      </section>
+      <button id="submitBtn" class="submit-btn" type="submit">面談希望を送信</button>
+      <p id="formError" class="error" role="alert"></p>
+    </form>
+
+    <section id="complete" class="meeting-card complete" hidden>
+      <div class="checkmark" aria-hidden="true">✓</div>
+      <p style="font-weight:800;font-size:1.15rem;margin:12px 0">面談希望を受け付けました</p>
+      <p>教室で日程を調整し、決まり次第LINEにてご連絡します。</p>
+    </section>
+  </main>
+  <script src="../common.js"></script>
+  <script>
+    (() => {
+      const days = {
+        2: {label:"火", times:["16:45","17:25","18:10","18:55","19:40","20:25"]},
+        3: {label:"水", times:["16:40","17:25","18:10","18:55","19:40"]},
+        4: {label:"木", times:["16:45","17:25","18:10","18:55","19:40","20:25"]},
+        5: {label:"金", times:["16:40","17:25","18:10","18:55","19:40"]},
+        6: {label:"土", times:["15:10","15:55","16:40","17:25","18:10"]}
+      };
+      const preferences = document.getElementById("preferences");
+      const form = document.getElementById("meetingForm");
+      const dateFormatter = new Intl.DateTimeFormat("ja-JP",{year:"numeric",month:"2-digit",day:"2-digit",weekday:"short"});
+      function createPreference(index) {
+        const section = document.createElement("section");
+        section.className = "preference";
+        section.innerHTML = '<h3>第'+(index+1)+'希望</h3><label class="field-label" for="date'+index+'">希望日</label><input class="date-select" type="date" id="date'+index+'" min="'+new Date().toISOString().slice(0,10)+'"><div class="help" id="dateHelp'+index+'">火曜日～土曜日から選択してください。</div><div class="time-options" id="times'+index+'" hidden></div>';
+        const dateInput = section.querySelector("input");
+        const timesBox = section.querySelector(".time-options");
+        dateInput.addEventListener("change", () => {
+          timesBox.innerHTML = "";
+          timesBox.hidden = true;
+          const value = dateInput.value;
+          if (!value) return;
+          const date = new Date(value+"T12:00:00");
+          const weekday = date.getDay();
+          if (!days[weekday]) {
+            document.getElementById("dateHelp"+index).textContent = "火曜日～土曜日の日付を選択してください。";
+            dateInput.value = "";
+            return;
+          }
+          const selectedDates = Array.from(preferences.querySelectorAll('input[type="date"]')).filter(el=>el!==dateInput && el.value).map(el=>el.value);
+          if (selectedDates.includes(value)) {
+            document.getElementById("dateHelp"+index).textContent = "同じ日付は複数の希望に登録できません。別の日付を選択してください。";
+            dateInput.value = "";
+            return;
+          }
+          document.getElementById("dateHelp"+index).textContent = dateFormatter.format(date)+" の時間帯を選択してください（複数選択可）。";
+          days[weekday].times.forEach(time => {
+            const label = document.createElement("label");
+            label.className = "time-option";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = time;
+            checkbox.name = "times"+index;
+            const text = document.createElement("span");
+            text.textContent = time;
+            label.append(checkbox,text);
+            timesBox.append(label);
+          });
+          timesBox.hidden = false;
+        });
+        return section;
+      }
+      for (let i=0;i<3;i++) preferences.append(createPreference(i));
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        document.getElementById("formError").textContent = "";
+        document.getElementById("preferenceError").textContent = "";
+        const studentId = document.getElementById("studentId").value.trim();
+        const studentName = document.getElementById("studentName").value.trim();
+        const email = document.getElementById("email").value.trim();
+        if (!/^1139\d{5}$/.test(studentId)) { document.getElementById("formError").textContent = "生徒番号は1139で始まる9桁の半角数字で入力してください。"; return; }
+        const chosen = [];
+        for (let i=0;i<3;i++) {
+          const date = document.getElementById("date"+i).value;
+          const times = Array.from(document.querySelectorAll('input[name="times'+i+'"]:checked')).map(el=>el.value);
+          if (date) {
+            if (!times.length) { document.getElementById("preferenceError").textContent = "第"+(i+1)+"希望の時間帯を1つ以上選択してください。"; return; }
+            chosen.push({date:date,times:times});
+          } else if (times.length) {
+            document.getElementById("preferenceError").textContent = "第"+(i+1)+"希望の日付を選択してください。"; return;
+          }
+        }
+        if (!chosen.length) { document.getElementById("preferenceError").textContent = "希望日を1つ以上選択してください。"; return; }
+        const button = document.getElementById("submitBtn");
+        button.disabled = true;
+        button.textContent = "送信中…";
+        try {
+          await window.RED.submitApplication({
+            action:"meeting",studentId:studentId,studentName:studentName,email:email,
+            preferences:chosen,notes:document.getElementById("notes").value.trim()
+          });
+          form.hidden = true;
+          document.getElementById("complete").hidden = false;
+          window.scrollTo({top:0,behavior:"smooth"});
+        } catch(error) {
+          document.getElementById("formError").textContent = error.message || "送信に失敗しました。時間をおいて再度お試しください。";
+          button.disabled = false;
+          button.textContent = "面談希望を送信";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
