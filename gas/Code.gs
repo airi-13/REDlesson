@@ -1592,7 +1592,7 @@ function submitMeetingApplication_(data) {
   const notes = String(data.notes || "").trim();
   const preferences = Array.isArray(data.preferences) ? data.preferences : [];
 
-  if (!/^1139\\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+  if (!/^1139\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
   if (!studentName) throw new Error("生徒氏名を入力してください。");
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
   if (!preferences.length || preferences.length > 3) throw new Error("希望日は第1希望から第3希望まで選択してください。");
@@ -1608,7 +1608,7 @@ function submitMeetingApplication_(data) {
   const normalized = preferences.map(function(item, index) {
     const date = String(item.date || "").trim();
     const times = Array.isArray(item.times) ? item.times.map(String) : [];
-    const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(date);
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
     if (!match) throw new Error("第" + (index + 1) + "希望の日付を選択してください。");
     const parsed = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
     if (parsed.getFullYear() !== Number(match[1]) || parsed.getMonth() !== Number(match[2]) - 1 || parsed.getDate() !== Number(match[3])) {
@@ -1645,16 +1645,16 @@ function submitMeetingApplication_(data) {
 
   const detail = normalized.map(function(item, index) {
     return "第" + (index + 1) + "希望：" + formatPreference(item);
-  }).join("\\n");
-  const body = "面談希望フォームの登録がありました。\\n\\n生徒番号：" + studentId +
-    "\\n生徒氏名：" + studentName + "\\nメールアドレス：" + email +
-    "\\n\\n" + detail + "\\n\\n連絡事項：" + (notes || "なし");
+  }).join("\n");
+  const body = "面談希望フォームの登録がありました。\n\n生徒番号：" + studentId +
+    "\n生徒氏名：" + studentName + "\nメールアドレス：" + email +
+    "\n\n" + detail + "\n\n連絡事項：" + (notes || "なし");
   sendRedEmail_({to: ADMIN_EMAIL, subject: "【面談希望】" + studentName + "_" + studentId, body: body});
   try {
     sendRedEmail_({
       to: email,
       subject: "【自立学習RED】面談希望登録完了_" + studentId,
-      body: "面談希望を受け付けました。\\n\\n教室で日程を調整し、決まり次第LINEにてご連絡します。\\n\\n自立学習RED 天王台教室"
+      body: "面談希望を受け付けました。\n\n教室で日程を調整し、決まり次第LINEにてご連絡します。\n\n自立学習RED 天王台教室"
     });
   } catch (mailError) {
     console.error("面談希望の確認メール送信に失敗しました: " + mailError);
