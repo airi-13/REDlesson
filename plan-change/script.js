@@ -49,7 +49,7 @@ function buildScheduleTable(days, periods) {
   return table + '</tbody></table>';
 }
 function renderScheduleGrid(containerId, subjectContainerId) {
-  $(containerId).innerHTML = buildScheduleTable(weekdayScheduleDays, [4,5,6,7,8]) + buildScheduleTable(saturdayScheduleDays, [1,2,3,4,5]);
+  $(containerId).innerHTML = buildScheduleTable(weekdayScheduleDays, [3,4,5,6,7,8]) + buildScheduleTable(saturdayScheduleDays, [1,2,3,4,5]);
   refreshScheduleOptions(containerId, subjectContainerId);
 }
 function refreshScheduleOptions(containerId, subjectContainerId) {
