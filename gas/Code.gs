@@ -1595,13 +1595,13 @@ function submitMeetingApplication_(data) {
   if (!/^1139\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
   if (!studentName) throw new Error("生徒氏名を入力してください。");
   if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
-  if (!preferences.length || preferences.length > 3) throw new Error("希望日は第1希望から第3希望まで選択してください。");
+  if (preferences.length < 2 || preferences.length > 3) throw new Error("第1希望と第2希望は必須です。第3希望は任意です。");
 
   const seenDates = new Set();
   const validTimes = {
-    "火": ["16:45", "17:25", "18:10", "18:55", "19:40", "20:25"],
+    "火": ["17:25", "18:10", "18:55", "19:40", "20:25"],
     "水": ["16:40", "17:25", "18:10", "18:55", "19:40"],
-    "木": ["16:45", "17:25", "18:10", "18:55", "19:40", "20:25"],
+    "木": ["17:25", "18:10", "18:55", "19:40", "20:25"],
     "金": ["16:40", "17:25", "18:10", "18:55", "19:40"],
     "土": ["15:10", "15:55", "16:40", "17:25", "18:10"]
   };
