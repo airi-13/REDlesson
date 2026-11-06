@@ -86,9 +86,9 @@
   <script>
     (() => {
       const days = {
-        2: {label:"火", times:["16:45","17:25","18:10","18:55","19:40","20:25"]},
+        2: {label:"火", times:["17:25","18:10","18:55","19:40","20:25"]},
         3: {label:"水", times:["16:40","17:25","18:10","18:55","19:40"]},
-        4: {label:"木", times:["16:45","17:25","18:10","18:55","19:40","20:25"]},
+        4: {label:"木", times:["17:25","18:10","18:55","19:40","20:25"]},
         5: {label:"金", times:["16:40","17:25","18:10","18:55","19:40"]},
         6: {label:"土", times:["15:10","15:55","16:40","17:25","18:10"]}
       };
@@ -98,7 +98,7 @@
       function createPreference(index) {
         const section = document.createElement("section");
         section.className = "preference";
-        section.innerHTML = '<h3>第'+(index+1)+'希望</h3><label class="field-label" for="date'+index+'">希望日</label><input class="date-select" type="date" id="date'+index+'" min="'+new Date().toISOString().slice(0,10)+'"><div class="help" id="dateHelp'+index+'">火曜日～土曜日から選択してください。</div><div class="time-options" id="times'+index+'" hidden></div>';
+        section.innerHTML = '<h3>第'+(index+1)+'希望'+(index < 2 ? ' <span class="required">必須</span>' : '（任意）')+'</h3><label class="field-label" for="date'+index+'">希望日</label><input class="date-select" type="date" id="date'+index+'" '+(index < 2 ? 'required' : '')+' min="'+new Date().toISOString().slice(0,10)+'"><div class="help" id="dateHelp'+index+'">火曜日～土曜日から選択してください。</div><div class="time-options" id="times'+index+'" hidden></div>';
         const dateInput = section.querySelector("input");
         const timesBox = section.querySelector(".time-options");
         dateInput.addEventListener("change", () => {
@@ -150,6 +150,9 @@
         for (let i=0;i<3;i++) {
           const date = document.getElementById("date"+i).value;
           const times = Array.from(document.querySelectorAll('input[name="times'+i+'"]:checked')).map(el=>el.value);
+          if (i < 2 && !date) {
+            document.getElementById("preferenceError").textContent = "第"+(i+1)+"希望の日付を選択してください。"; return;
+          }
           if (date) {
             if (!times.length) { document.getElementById("preferenceError").textContent = "第"+(i+1)+"希望の時間帯を1つ以上選択してください。"; return; }
             chosen.push({date:date,times:times});
@@ -157,7 +160,6 @@
             document.getElementById("preferenceError").textContent = "第"+(i+1)+"希望の日付を選択してください。"; return;
           }
         }
-        if (!chosen.length) { document.getElementById("preferenceError").textContent = "希望日を1つ以上選択してください。"; return; }
         const button = document.getElementById("submitBtn");
         button.disabled = true;
         button.textContent = "送信中…";
