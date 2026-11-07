@@ -1,0 +1,73 @@
+name: Apply Supabase migrations
+
+# supabase/migrations/ に新しいSQLを追加してmainにpushすると、自動でSupabaseに適用する。
+# 週次バックアップと同じ SUPABASE_DB_URL のSecretを使う(新しいSecretは不要)。
+#  - すでに手動で適用済みの古いマイグレーションは再実行しない(BASELINE以降のファイルだけが対象)
+#  - 適用済みのファイルは _applied_migrations テーブルに記録し、二重に実行しない
+#  - 1ファイルずつ単一トランザクションで実行し、途中でエラーになったら全部ロールバックする
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch: {}
+
+concurrency:
+  group: apply-migrations
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Ensure psql is available
+        run: command -v psql >/dev/null || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+
+      - name: Apply pending migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "SUPABASE_DB_URL のSecretが設定されていません。" >&2
+            exit 1
+          fi
+
+          # このファイル名(の先頭の数字)より古いマイグレーションは、手動で適用済みとみなして実行しない。
+          # (定期スケジュールの有効期間のSQLは手動で実行する前提のため、これより後に追加したSQLから自動で反映する)
+          BASELINE=20261019000000
+
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          create table if not exists public._applied_migrations (
+            filename text primary key,
+            applied_at timestamptz not null default now()
+          );
+          alter table public._applied_migrations enable row level security;
+          SQL
+
+          for f in $(ls supabase/migrations/*.sql | sort); do
+            name=$(basename "$f")
+            prefix="${name%%_*}"
+            # ファイル名の先頭の数字を14桁にそろえて比べる(例: 20261101 は 20261101000000 として扱う)
+            prefix=$(printf '%-14s' "$prefix" | tr ' ' '0')
+            if [ "$prefix" -lt "$BASELINE" ]; then
+              continue
+            fi
+            already=$(psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v name="$name" -tA <<'SQL'
+          select 1 from public._applied_migrations where filename = :'name';
+          SQL
+            )
+            if [ -n "$already" ]; then
+              echo "skip (applied): $name"
+              continue
+            fi
+            echo "applying: $name"
+            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
+            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v name="$name" <<'SQL'
+          insert into public._applied_migrations (filename) values (:'name');
+          SQL
+            echo "done: $name"
+          done
