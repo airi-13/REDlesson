@@ -108,6 +108,8 @@ function doGet(e) {
       result = getCalendarEvents_();
     } else if (action === "test_period_config") {
       result = getTestPeriodConfig_();
+    } else if (action === "course_config") {
+      result = getCourseConfig_();
     } else if (e.parameter && e.parameter.data) {
       result = handleAbsenceJsonp_(e);
     } else {
@@ -160,6 +162,7 @@ function doPost(e) {
     else if (action === "test_period") result = submitTestPeriodApplication_(data);
     else if (action === "external_exam") result = submitExternalExamApplication_(data);
     else if (action === "plan_change") result = submitPlanChangeApplication_(data);
+    else if (action === "course") result = submitCourseApplication_(data);
     else result = submitApplication(data);
     saveSubmissionStatus_(requestId, result);
     return jsonResponse_(result);
@@ -1660,4 +1663,129 @@ function submitMeetingApplication_(data) {
     console.error("面談希望の確認メール送信に失敗しました: " + mailError);
   }
   return {success: true, message: "面談希望を受け付けました。"};
+}
+
+
+/* =====================================================
+   講習登録（専用スプレッドシート）
+===================================================== */
+const COURSE_CONFIG_SHEET = "講習設定";
+const COURSE_APPLICATION_SHEET = "講習申請一覧";
+const COURSE_SCRIPT_PROPERTY = "RED_COURSE_SPREADSHEET_ID";
+
+/**
+ * 初回のみApps Scriptから手動実行する。
+ * 講習専用スプレッドシートを作成し、設定・申請一覧の2シートを用意する。
+ */
+function setupCourseSpreadsheet() {
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty(COURSE_SCRIPT_PROPERTY);
+  let ss = null;
+  if (id) {
+    try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; }
+  }
+  if (!ss) {
+    ss = SpreadsheetApp.create("RED天王台教室 講習設定・申請管理");
+    id = ss.getId();
+    props.setProperty(COURSE_SCRIPT_PROPERTY, id);
+  }
+  let config = ss.getSheetByName(COURSE_CONFIG_SHEET);
+  if (!config) config = ss.getSheets()[0].setName(COURSE_CONFIG_SHEET);
+  const headers = ["講習種別","期間開始日","期間終了日","受付状態","料金案内","セット料金","料金補足","合宿1日目","合宿2日目","合宿3日目"];
+  if (config.getLastRow() === 0) config.getRange(1,1,1,headers.length).setValues([headers]);
+  else if (config.getRange(1,1).getDisplayValue() !== "講習種別") config.getRange(1,1,1,headers.length).setValues([headers]);
+  config.setFrozenRows(1);
+  config.getRange("B:C").setNumberFormat("yyyy/mm/dd");
+  config.getRange("H:J").setNumberFormat("yyyy/mm/dd");
+  config.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["春期講習","夏期講習","冬期講習"],true).setAllowInvalid(false).build());
+  config.getRange("D2:D").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["受付中","受付停止"],true).setAllowInvalid(false).build());
+  config.setColumnWidths(1,10,130);
+  let applications = ss.getSheetByName(COURSE_APPLICATION_SHEET);
+  if (!applications) applications = ss.insertSheet(COURSE_APPLICATION_SHEET);
+  const appHeaders = ["状態","受付日時","講習種別","生徒番号","生徒氏名","メールアドレス","受講科目","セット数","必要コマ数","登録コマ詳細","合宿参加日","連絡事項"];
+  if (applications.getLastRow() === 0) applications.getRange(1,1,1,appHeaders.length).setValues([appHeaders]);
+  applications.setFrozenRows(1);
+  applications.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["未確認","処理済","要確認"],true).setAllowInvalid(false).build());
+  applications.setColumnWidths(1,12,140);
+  Logger.log("講習管理スプレッドシート: " + ss.getUrl());
+  return ss.getUrl();
+}
+
+function getCourseConfig_() {
+  const id = PropertiesService.getScriptProperties().getProperty(COURSE_SCRIPT_PROPERTY);
+  if (!id) return {success:true, configured:false, courses:[]};
+  const ss = SpreadsheetApp.openById(id);
+  const sh = ss.getSheetByName(COURSE_CONFIG_SHEET);
+  if (!sh || sh.getLastRow() < 2) return {success:true, configured:true, courses:[]};
+  const values = sh.getRange(2,1,sh.getLastRow()-1,10).getValues();
+  const courses = [];
+  values.forEach(function(r) {
+    const type = String(r[0] || "").trim();
+    const start = calendarDateKey_(r[1]);
+    const end = calendarDateKey_(r[2]);
+    const status = String(r[3] || "").trim();
+    if (!type || !start || !end || start > end || status !== "受付中") return;
+    const dates = [];
+    const cursor = new Date(start + "T00:00:00");
+    const last = new Date(end + "T00:00:00");
+    while (cursor <= last && dates.length < 100) {
+      dates.push(Utilities.formatDate(cursor,TIME_ZONE,"yyyy-MM-dd"));
+      cursor.setDate(cursor.getDate()+1);
+    }
+    courses.push({
+      type:type,startDate:start,endDate:end,dates:dates,
+      priceText:String(r[4] || ""),setPrice:Number(r[5]) || 0,priceNote:String(r[6] || ""),
+      campDates:[r[7],r[8],r[9]].map(calendarDateKey_).filter(Boolean)
+    });
+  });
+  return {success:true,configured:true,courses:courses};
+}
+
+function submitCourseApplication_(data) {
+  const studentId=String(data.studentId||"").trim();
+  const studentName=String(data.studentName||"").trim();
+  const email=String(data.email||"").trim();
+  const courseType=String(data.courseType||"").trim();
+  const subjects=Array.isArray(data.subjects)?data.subjects.map(String):[];
+  const setCount=Number(data.setCount);
+  const slots=Array.isArray(data.slots)?data.slots:[];
+  const campDates=Array.isArray(data.campDates)?data.campDates.map(String):[];
+  const notes=String(data.notes||"").trim();
+  if (!/^1139\d{5}$/.test(studentId)) throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+  if (!studentName) throw new Error("生徒氏名を入力してください。");
+  if (!isValidEmail_(email)) throw new Error("メールアドレスの形式が正しくありません。");
+  if (!["春期講習","夏期講習","冬期講習"].includes(courseType)) throw new Error("講習種別を選択してください。");
+  if (!subjects.length || !subjects.every(s=>["英語","国語","数学","理科","社会"].includes(s)) || new Set(subjects).size!==subjects.length) throw new Error("受講科目を正しく選択してください。");
+  if (!Number.isInteger(setCount) || setCount<1 || setCount>20) throw new Error("セット数を選択してください。");
+  const id=PropertiesService.getScriptProperties().getProperty(COURSE_SCRIPT_PROPERTY);
+  if (!id) throw new Error("講習設定がまだ準備されていません。教室へお問い合わせください。");
+  const ss=SpreadsheetApp.openById(id), config=ss.getSheetByName(COURSE_CONFIG_SHEET);
+  const conf=getCourseConfig_().courses.find(c=>c.type===courseType);
+  if (!conf) throw new Error("この講習は現在受付していません。");
+  const minimum=subjects.length*setCount;
+  const validPairs=["①②","②③","③④","④⑤"];
+  const seen=new Set(), normalized=[];
+  slots.forEach(function(item) {
+    const date=String(item.date||"");
+    const pair=String(item.pair||"");
+    if (!conf.dates.includes(date) || !validPairs.includes(pair)) throw new Error("選択した講習日程・コマを確認してください。");
+    const key=date+"|"+pair;
+    if (seen.has(key)) throw new Error("同じコマが重複しています。");
+    seen.add(key);
+    const nums=pair.split("");
+    const occupied=nums.map(n=>date+"|"+n);
+    if (occupied.some(k=>normalized.some(x=>x.occupied.includes(k)))) throw new Error("同じ時間帯を重複して選択できません。");
+    normalized.push({date:date,pair:pair,occupied:occupied});
+  });
+  if (normalized.length<minimum) throw new Error("必要コマ数が不足しています。選択科目数×セット数の"+minimum+"コマ以上を登録してください。");
+  if (conf.campDates.length && campDates.some(d=>!conf.campDates.includes(d))) throw new Error("合宿参加日の選択内容を確認してください。");
+  const sh=ss.getSheetByName(COURSE_APPLICATION_SHEET);
+  const slotText=normalized.map(x=>x.date+" "+x.pair).join("、");
+  const campText=conf.campDates.length?conf.campDates.map(d=>(campDates.includes(d)?d+" 参加":d+" 不参加")).join("、"):"設定なし";
+  sh.appendRow(["未確認",new Date(),courseType,studentId,studentName,email,subjects.join("、"),setCount,minimum,slotText,campText,notes]);
+  const body="講習登録を受け付けました。\n\n講習："+courseType+"\n生徒番号："+studentId+"\n氏名："+studentName+"\n受講科目："+subjects.join("、")+"\nセット数："+setCount+"\n必要コマ数："+minimum+"\n登録コマ："+slotText+"\n合宿参加："+campText+"\n連絡事項："+(notes||"なし")+"\n\n自立学習RED 天王台教室";
+  let mailSuccess=true;
+  try { sendRedEmail_({to:email,subject:"【自立学習RED】講習登録完了_"+studentId,body:body}); } catch(e) { mailSuccess=false; }
+  try { sendRedEmail_({to:ADMIN_EMAIL,subject:"【講習登録】"+studentName+"_"+studentId,body:body+"\n確認メール送付先："+email}); } catch(e) { mailSuccess=false; }
+  return {success:true,mailSuccess:mailSuccess,message:"講習登録を受け付けました。"};
 }
