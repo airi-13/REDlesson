@@ -24,8 +24,16 @@ function renderCourse(){
  if(current.campDates.length){
    $("campDays").innerHTML=current.campDates.map((date,i)=>"<label class='camp-choice'><input type='checkbox' checked value='"+date+"'><span><strong>"+(i+1)+"日目</strong>　"+fmt(date)+"　13:30～20:10</span></label>").join("");
  }else $("campDays").innerHTML="<p class='muted'>この講習の合宿日程は設定されていません。</p>";
- $("slotDays").addEventListener("change",validate,{once:true});
- $("slotDays").querySelectorAll("input").forEach(x=>x.addEventListener("change",()=>{const chosen=selectedSlots();const occupied=new Set();chosen.forEach(item=>{const pair=pairs.find(p=>p.id===item.pair);pair.slots.forEach(s=>occupied.add(item.date+"|"+s));});$("slotDays").querySelectorAll("input:not(:checked)").forEach(input=>{const p=pairs.find(x=>x.id===input.value);input.disabled=p.slots.some(s=>occupied.has(input.dataset.date+"|"+s));});validate();}));
+ function refreshSlotAvailability(){
+   const chosen=selectedSlots(),occupied=new Set();
+   chosen.forEach(item=>{const pair=pairs.find(p=>p.id===item.pair);pair.slots.forEach(s=>occupied.add(item.date+"|"+s));});
+   $("slotDays").querySelectorAll("input").forEach(input=>{
+     if(input.checked){input.disabled=false;return;}
+     const pair=pairs.find(p=>p.id===input.value);
+     input.disabled=pair.slots.some(s=>occupied.has(input.dataset.date+"|"+s));
+   });
+ }
+ $("slotDays").querySelectorAll("input").forEach(x=>x.addEventListener("change",()=>{refreshSlotAvailability();validate();}));
 }
 function required(){return selectedSubjects().length*Number($("setCount").value||0);}
 function validate(){
