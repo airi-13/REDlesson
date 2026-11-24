@@ -39,7 +39,8 @@ function validate(){
  $("gradeError").textContent=grade?"":"学年区分を選択してください。";
  $("subjectsError").textContent=selectedSubjects().length?"":"受講科目を1つ以上選択してください。";
  $("slotsError").textContent=needed&&chosen<needed?"あと"+(needed-chosen)+"コマ選択してください。":"";
- const ok=!!current&&/^1139\d{5}$/.test(id)&&!!name&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&selectedSubjects().length>0&&needed>0&&chosen>=needed;
+ const price=Number(current&&current.prices&&current.prices[grade]||0);
+ const ok=!!current&&/^1139\d{5}$/.test(id)&&!!name&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)&&!!grade&&price>0&&selectedSubjects().length>0&&needed>0&&chosen>=needed;
  $("confirmButton").disabled=!ok;
  return ok;
 }
