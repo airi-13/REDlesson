@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#E60012">
+<title>講習登録 | RED天王台教室</title>
+<link rel="stylesheet" href="../common.css?v=20261124-1">
+<link rel="stylesheet" href="./style.css?v=20261124-1">
+</head>
+<body data-site-home="../">
+<div data-site-header></div>
+<main class="page">
+  <div class="page-title"><h1>講習登録</h1></div>
+  <div id="loadMessage" class="card">講習情報を読み込んでいます。</div>
+  <form id="courseForm" class="hidden" novalidate>
+    <div data-common-block="student-info"></div>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">1</span><h2>講習種別</h2></div>
+      <div class="field"><label for="courseType">講習種別 <span class="required">必須</span></label><select id="courseType"><option value="">選択してください</option></select><p id="courseTypeError" class="error"></p></div>
+      <div id="coursePeriod" class="info-panel"></div>
+    </section>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">4</span><h2>受講科目</h2></div>
+      <p class="help">受講する科目をすべて選択してください。</p>
+      <div id="subjects" class="subject-grid">
+        <label class="choice"><input type="checkbox" value="英語"><span>英語</span></label><label class="choice"><input type="checkbox" value="国語"><span>国語</span></label><label class="choice"><input type="checkbox" value="数学"><span>数学</span></label><label class="choice"><input type="checkbox" value="理科"><span>理科</span></label><label class="choice"><input type="checkbox" value="社会"><span>社会</span></label>
+      </div>
+      <div class="field"><label for="setCount">セット数 <span class="required">必須</span></label><select id="setCount"><option value="">選択してください</option><option value="1">1セット</option><option value="2">2セット</option><option value="3">3セット</option><option value="4">4セット</option><option value="5">5セット</option><option value="6">6セット</option><option value="7">7セット</option><option value="8">8セット</option><option value="9">9セット</option><option value="10">10セット</option><option value="11">11セット</option><option value="12">12セット</option><option value="13">13セット</option><option value="14">14セット</option><option value="15">15セット</option><option value="16">16セット</option><option value="17">17セット</option><option value="18">18セット</option><option value="19">19セット</option><option value="20">20セット</option></select></div>
+      <p id="minimumCount" class="info-panel">受講科目数×セット数が必要コマ数になります。</p>
+      <p id="subjectsError" class="error"></p>
+    </section>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">5</span><h2>コマ登録</h2></div>
+      <p class="help">講習期間中の全日程を表示します。1コマは連続する40分枠2つ（80分）です。必要コマ数以上を選択してください。</p>
+      <div class="slot-legend">① 15:00～15:40　② 15:45～16:25　③ 16:30～17:10　④ 17:15～17:55　⑤ 18:00～18:40</div>
+      <div id="slotDays" class="slot-days"></div>
+      <p id="slotsCount" class="info-panel">選択：0コマ</p><p id="slotsError" class="error"></p>
+    </section>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">6</span><h2>合宿参加登録</h2></div>
+      <p class="help">合宿時間：13:30～20:10。参加しない日だけチェックを外してください。</p>
+      <div id="campDays" class="camp-days"><p class="muted">合宿日程は設定されていません。</p></div>
+    </section>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">2</span><h2>料金</h2></div>
+      <div id="priceDisplay" class="info-panel">講習を選択すると料金案内が表示されます。</div>
+    </section>
+    <section class="card">
+      <div class="section-heading"><span class="section-number">3</span><h2>注意事項</h2></div>
+      <ul class="notice-list"><li>登録内容を確認のうえ送信してください。</li><li>コマは連続する40分枠2つで1コマ（80分）です。</li><li>選択科目数×セット数が最低必要コマ数です。</li><li>講習日程・料金は教室が設定した内容を表示しています。</li></ul>
+    </section>
+    <div data-common-block="other"></div>
+    <div class="buttons"><button id="confirmButton" class="primary-button" type="submit" disabled>入力内容を確認する</button></div>
+  </form>
+  <section id="confirmation" class="card hidden">
+    <h2 class="section-title">入力内容の確認</h2><div id="confirmationItems" class="confirmation-list"></div>
+    <div class="confirm-actions"><button id="backButton" class="secondary-button" type="button">入力画面に戻る</button><button id="submitButton" class="primary-button" type="button">この内容で申請する</button></div>
+    <p id="loading" class="loading hidden">送信しています。しばらくお待ちください。</p>
+  </section>
+  <section id="success" class="card success-card hidden"><div class="success-mark">✓</div><h2>講習登録を受け付けました</h2><p>入力いただいたメールアドレスに受付確認メールを送信します。</p><a class="primary-button link-button" href="../">RED天王台教室トップへ</a></section>
+  <footer>© RED天王台教室</footer>
+</main>
+<script src="../common.js?v=20261011-1"></script>
+<script src="./script.js?v=20261124-1"></script>
+</body></html>
