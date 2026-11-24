@@ -1798,7 +1798,7 @@ function getCourseConfig_(){
 }
 function submitCourseApplication_(data){
  const id=String(data.studentId||"").trim(),name=String(data.studentName||"").trim(),email=String(data.email||"").trim(),type=String(data.courseType||"").trim(),grade=String(data.grade||"").trim(),subjects=Array.isArray(data.subjects)?data.subjects.map(String):[],sets=Number(data.setCount),slots=Array.isArray(data.slots)?data.slots:[],camp=Array.isArray(data.campDates)?data.campDates.map(String):[],notes=String(data.notes||"").trim();
- if(!/^1139\\d{5}$/.test(id))throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
+ if(!/^1139\d{5}$/.test(id))throw new Error("生徒番号は1139で始まる9桁の半角数字で入力してください。");
  if(!name)throw new Error("生徒氏名を入力してください。");if(!isValidEmail_(email))throw new Error("メールアドレスの形式が正しくありません。");
  if(!["春期講習","夏期講習","冬期講習"].includes(type))throw new Error("講習種別を選択してください。");if(!COURSE_GRADE_KEYS.includes(grade))throw new Error("学年区分を選択してください。");
  if(!subjects.length||!subjects.every(s=>["英語","国語","数学","理科","社会"].includes(s))||new Set(subjects).size!==subjects.length)throw new Error("受講科目を正しく選択してください。");
@@ -1812,7 +1812,7 @@ function submitCourseApplication_(data){
  const sh=getCourseSpreadsheet_().getSheetByName(COURSE_APPLICATION_SHEET);if(!sh)throw new Error("講習申請一覧シートがありません。");
  const slotText=norm.map(x=>x.date+" "+x.pair).join("、"),campText=conf.campDates.length?conf.campDates.map(x=>camp.includes(x)?x+" 参加":x+" 不参加").join("、"):"設定なし",rangeText=conf.ranges.map(x=>x.label+"："+x.startDate+"～"+x.endDate).join("／");
  sh.appendRow(["未確認",new Date(),type,id,name,email,grade,subjects.join("、"),sets,min,slotText,campText,total,notes]);
- const body="講習登録を受け付けました。\\n\\n講習："+type+"\\n日程："+rangeText+"\\n生徒番号："+id+"\\n氏名："+name+"\\n学年区分："+grade+"\\n受講科目："+subjects.join("、")+"\\nセット数："+sets+"セット\\n必要コマ数："+min+"\\n登録コマ："+slotText+"\\n料金："+total.toLocaleString("ja-JP")+"円\\n合宿参加："+campText+"\\n連絡事項："+(notes||"なし")+"\\n\\n自立学習RED 天王台教室";
- let mail=true;try{sendRedEmail_({to:email,subject:"【自立学習RED】講習登録完了_"+id,body});}catch(e){mail=false;}try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【講習登録】"+name+"_"+id,body:body+"\\n確認メール送付先："+email});}catch(e){mail=false;}
+ const body="講習登録を受け付けました。\n\n講習："+type+"\n日程："+rangeText+"\n生徒番号："+id+"\n氏名："+name+"\n学年区分："+grade+"\n受講科目："+subjects.join("、")+"\nセット数："+sets+"セット\n必要コマ数："+min+"\n登録コマ："+slotText+"\n料金："+total.toLocaleString("ja-JP")+"円\n合宿参加："+campText+"\n連絡事項："+(notes||"なし")+"\n\n自立学習RED 天王台教室";
+ let mail=true;try{sendRedEmail_({to:email,subject:"【自立学習RED】講習登録完了_"+id,body});}catch(e){mail=false;}try{sendRedEmail_({to:ADMIN_EMAIL,subject:"【講習登録】"+name+"_"+id,body:body+"\n確認メール送付先："+email});}catch(e){mail=false;}
  return{success:true,mailSuccess:mail,message:"講習登録を受け付けました。"};
 }
