@@ -1677,7 +1677,7 @@ const COURSE_SEASON_CONFIG = [
   {type:"夏期講習", title:"夏期講習 料金設定", titleRow:24, headerRow:25, priceStart:26},
   {type:"冬期講習", title:"冬期講習 料金設定", titleRow:47, headerRow:48, priceStart:49}
 ];
-const COURSE_SET_COUNT = 20;
+const COURSE_SET_COUNT = 6;
 const COURSE_SCHEDULE_TITLE_ROW = 70;
 const COURSE_SCHEDULE_HEADER_ROW = 71;
 const COURSE_SCHEDULE_START_ROW = 72;
