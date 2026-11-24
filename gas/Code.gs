@@ -1682,7 +1682,7 @@ function setupCourseSpreadsheet(){
  if(sh.getLastRow()>0&&!isNew){
   if(!isOld)throw new Error("講習設定シートの見出しが想定と異なるため移行を中止しました。");
   if(!ss.getSheetByName("講習設定_旧形式バックアップ"))sh.copyTo(ss).setName("講習設定_旧形式バックアップ");
-  const old=sh.getRange(2,1,Math.max(sh.getLastRow()-1,0),Math.max(sh.getLastColumn(),10)).getValues();
+  const old=sh.getLastRow()>=2?sh.getRange(2,1,sh.getLastRow()-1,Math.max(sh.getLastColumn(),10)).getValues():[];
   const rows=old.filter(r=>r[0]).map(r=>[r[0],r[1],r[2],"","",r[3],r[4],r[0]==="夏期講習"?"夏期":"春・冬共通",r[5]||"",r[5]||"",r[5]||"",r[5]||"",r[5]||"",r[6]||"",r[7]||"",r[8]||"",r[9]||""]);
   sh.clearContents();sh.getRange(1,1,1,COURSE_CONFIG_HEADERS.length).setValues([COURSE_CONFIG_HEADERS]);
   if(rows.length)sh.getRange(2,1,rows.length,COURSE_CONFIG_HEADERS.length).setValues(rows);
@@ -1695,6 +1695,12 @@ function setupCourseSpreadsheet(){
  let app=ss.getSheetByName(COURSE_APPLICATION_SHEET);if(!app)app=ss.insertSheet(COURSE_APPLICATION_SHEET);
  const heads=["状態","受付日時","講習種別","生徒番号","生徒氏名","メールアドレス","学年区分","受講科目","セット数","必要コマ数","登録コマ詳細","合宿参加日","料金","連絡事項"];
  if(!app.getLastRow())app.getRange(1,1,1,heads.length).setValues([heads]);
+ else {
+  const ah=app.getRange(1,1,1,Math.max(app.getLastColumn(),1)).getDisplayValues()[0];
+  if(ah[0]==="状態"&&ah[6]==="受講科目"&&ah[11]==="連絡事項"){
+   app.insertColumnAfter(6);app.insertColumnBefore(13);app.getRange(1,1,1,heads.length).setValues([heads]);
+  } else if(ah.slice(0,heads.length).join("|")!==heads.join("|")) throw new Error("講習申請一覧シートの見出しが想定と異なります。データ保護のため初期設定を中止しました。");
+ }
  app.setFrozenRows(1);app.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["未確認","処理済","要確認"],true).setAllowInvalid(false).build());app.setColumnWidths(1,heads.length,140);
  return ss.getUrl();
 }
@@ -1713,7 +1719,7 @@ function getCourseConfig_(){
   if(c&&d&&c<=d)ranges.push({label:"後半",startDate:c,endDate:d,dates:courseDates_(c,d)});
   if(!ranges.length)return;
   const prices={};COURSE_GRADE_KEYS.forEach((k,i)=>prices[k]=Number(r[8+i])||0);
-  courses.push({type,ranges,dates:ranges.flatMap(x=>x.dates),priceText:String(r[6]||""),pricingType:String(r[7]||(type==="夏期講習"?"夏期":"春・冬共通")),prices,priceNote:String(r[13]||""),campDates:[r[14],r[15],r[16]].map(calendarDateKey_).filter(Boolean)});
+  courses.push({type,ranges,dates:ranges.flatMap(x=>x.dates),priceText:String(r[6]||""),pricingType:(type==="夏期講習"?"夏期":"春・冬共通"),prices,priceNote:String(r[13]||""),campDates:[r[14],r[15],r[16]].map(calendarDateKey_).filter(Boolean)});
  });
  return{success:true,configured:true,courses};
 }
