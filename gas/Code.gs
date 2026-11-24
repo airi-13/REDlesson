@@ -1671,55 +1671,113 @@ function submitMeetingApplication_(data) {
 ===================================================== */
 const COURSE_CONFIG_SHEET = "講習設定";
 const COURSE_APPLICATION_SHEET = "講習申請一覧";
-const COURSE_CONFIG_HEADERS = ["講習種別","前半開始日","前半終了日","後半開始日","後半終了日","受付状態","料金案内","料金区分","小4以下","小5・6","中1・2","中3・高1","高2・3","料金補足","合宿1日目","合宿2日目","合宿3日目"];
+const COURSE_PRICE_HEADERS = ["料金区分","小4以下","小5・6","中1・2","中3・高1","高2・3"];
+const COURSE_SCHEDULE_HEADERS = ["講習種別","前半開始日","前半終了日","後半開始日","後半終了日","受付状態","料金案内","料金補足","合宿1日目","合宿2日目","合宿3日目"];
 const COURSE_GRADE_KEYS = ["小4以下","小5・6","中1・2","中3・高1","高2・3"];
+
 function getCourseSpreadsheet_(){return SpreadsheetApp.openById(SPREADSHEET_ID);}
+
+/**
+ * 料金表（1～3行）と講習日程表（6行目以降）を初期設定。
+ * 旧形式の場合は必ずバックアップを作成してから移行する。
+ */
 function setupCourseSpreadsheet(){
- const ss=getCourseSpreadsheet_();let sh=ss.getSheetByName(COURSE_CONFIG_SHEET);if(!sh)sh=ss.insertSheet(COURSE_CONFIG_SHEET);
- const oldHead=sh.getLastRow()?sh.getRange(1,1,1,Math.max(sh.getLastColumn(),1)).getDisplayValues()[0]:[];
- const isNew=oldHead.slice(0,COURSE_CONFIG_HEADERS.length).join("|")===COURSE_CONFIG_HEADERS.join("|");
- const isOld=oldHead[0]==="講習種別"&&oldHead[1]==="期間開始日"&&oldHead[2]==="期間終了日";
- if(sh.getLastRow()>0&&!isNew){
-  if(!isOld)throw new Error("講習設定シートの見出しが想定と異なるため移行を中止しました。");
-  if(!ss.getSheetByName("講習設定_旧形式バックアップ"))sh.copyTo(ss).setName("講習設定_旧形式バックアップ");
-  const old=sh.getLastRow()>=2?sh.getRange(2,1,sh.getLastRow()-1,Math.max(sh.getLastColumn(),10)).getValues():[];
-  const rows=old.filter(r=>r[0]).map(r=>[r[0],r[1],r[2],"","",r[3],r[4],r[0]==="夏期講習"?"夏期":"春・冬共通",r[5]||"",r[5]||"",r[5]||"",r[5]||"",r[5]||"",r[6]||"",r[7]||"",r[8]||"",r[9]||""]);
-  sh.clearContents();sh.getRange(1,1,1,COURSE_CONFIG_HEADERS.length).setValues([COURSE_CONFIG_HEADERS]);
-  if(rows.length)sh.getRange(2,1,rows.length,COURSE_CONFIG_HEADERS.length).setValues(rows);
- }else if(!sh.getLastRow())sh.getRange(1,1,1,COURSE_CONFIG_HEADERS.length).setValues([COURSE_CONFIG_HEADERS]);
- sh.setFrozenRows(1);sh.getRange("B:E").setNumberFormat("yyyy/mm/dd");sh.getRange("O:Q").setNumberFormat("yyyy/mm/dd");
- sh.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["春期講習","夏期講習","冬期講習"],true).setAllowInvalid(false).build());
- sh.getRange("F2:F").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["受付中","受付停止"],true).setAllowInvalid(false).build());
- sh.getRange("H2:H").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["春・冬共通","夏期"],true).setAllowInvalid(false).build());
- sh.setColumnWidths(1,COURSE_CONFIG_HEADERS.length,130);
- let app=ss.getSheetByName(COURSE_APPLICATION_SHEET);if(!app)app=ss.insertSheet(COURSE_APPLICATION_SHEET);
+ const ss=getCourseSpreadsheet_();
+ let sh=ss.getSheetByName(COURSE_CONFIG_SHEET);
+ if(!sh)sh=ss.insertSheet(COURSE_CONFIG_SHEET);
+ const first=sh.getRange(1,1,1,Math.max(sh.getLastColumn(),1)).getDisplayValues()[0];
+ const alreadyNew=first[0]==="料金区分"&&sh.getRange(6,1).getDisplayValue()==="講習種別";
+ if(!alreadyNew){
+  const hasData=sh.getLastRow()>0;
+  const backupName="講習設定_移行前バックアップ";
+  if(hasData&&!ss.getSheetByName(backupName))sh.copyTo(ss).setName(backupName);
+  let priceCommon=["春・冬共通","","","","",""],priceSummer=["夏期","","","","",""];
+  const schedule=[];
+  const isCurrent=first[0]==="講習種別"&&first[1]==="前半開始日";
+  const isPrevious=first[0]==="講習種別"&&first[1]==="期間開始日";
+  if(hasData&&!isCurrent&&!isPrevious)throw new Error("講習設定シートの形式を判別できません。バックアップは作成済みです。");
+  if(isCurrent){
+   const old=sh.getLastRow()>=2?sh.getRange(2,1,sh.getLastRow()-1,Math.max(sh.getLastColumn(),17)).getValues():[];
+   let commonSource=null,summerSource=null;
+   old.forEach(r=>{
+    if(!r[0])return;
+    const row=[r[0],r[1],r[2],r[3],r[4],r[5]||"受付停止",r[6]||"",r[13]||"",r[14]||"",r[15]||"",r[16]||""];
+    schedule.push(row);
+    const p=[r[7]||"",r[8]||"",r[9]||"",r[10]||"",r[11]||"",r[12]||""];
+    if(r[0]==="夏期講習"&&!summerSource)summerSource=["夏期",...p.slice(1)];
+    if((r[0]==="春期講習"||r[0]==="冬期講習")&&!commonSource)commonSource=["春・冬共通",...p.slice(1)];
+   });
+   if(commonSource)priceCommon=commonSource;
+   if(summerSource)priceSummer=summerSource;
+  }else if(isPrevious){
+   const old=sh.getLastRow()>=2?sh.getRange(2,1,sh.getLastRow()-1,Math.max(sh.getLastColumn(),10)).getValues():[];
+   old.forEach(r=>{
+    if(!r[0])return;
+    const oldPrice=r[5]||"";
+    const row=[r[0],r[1],r[2],"","",r[3]||"受付停止",r[4]||"",r[6]||"",r[7]||"",r[8]||"",r[9]||""];
+    schedule.push(row);
+    if(r[0]==="夏期講習"&&!priceSummer[1])priceSummer=["夏期",oldPrice,oldPrice,oldPrice,oldPrice,oldPrice];
+    if((r[0]==="春期講習"||r[0]==="冬期講習")&&!priceCommon[1])priceCommon=["春・冬共通",oldPrice,oldPrice,oldPrice,oldPrice,oldPrice];
+   });
+  }
+  sh.clearContents();
+  sh.getRange(1,1,1,6).setValues([COURSE_PRICE_HEADERS]);
+  sh.getRange(2,1,2,6).setValues([priceCommon,priceSummer]);
+  sh.getRange(6,1,1,COURSE_SCHEDULE_HEADERS.length).setValues([COURSE_SCHEDULE_HEADERS]);
+  const defaults=["春期講習","夏期講習","冬期講習"].map(type=>[type,"","","","","受付停止","","","","",""]);
+  const rows=defaults.map(d=>{const old=schedule.find(r=>r[0]===d[0]);return old||d;});
+  sh.getRange(7,1,3,COURSE_SCHEDULE_HEADERS.length).setValues(rows);
+ }
+ sh.setFrozenRows(1);
+ sh.getRange("B2:F3").setNumberFormat("#,##0");
+ sh.getRange("B7:E9").setNumberFormat("yyyy/mm/dd");
+ sh.getRange("I7:K9").setNumberFormat("yyyy/mm/dd");
+ sh.getRange("A2:A3").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["春・冬共通","夏期"],true).setAllowInvalid(false).build());
+ sh.getRange("A7:A9").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["春期講習","夏期講習","冬期講習"],true).setAllowInvalid(false).build());
+ sh.getRange("F7:F9").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["受付中","受付停止"],true).setAllowInvalid(false).build());
+ sh.setColumnWidths(1,COURSE_SCHEDULE_HEADERS.length,130);
+ sh.getRange("A1:F3").setFontWeight("bold");
+ sh.getRange("A6:K6").setFontWeight("bold");
+ let app=ss.getSheetByName(COURSE_APPLICATION_SHEET);
+ if(!app)app=ss.insertSheet(COURSE_APPLICATION_SHEET);
  const heads=["状態","受付日時","講習種別","生徒番号","生徒氏名","メールアドレス","学年区分","受講科目","セット数","必要コマ数","登録コマ詳細","合宿参加日","料金","連絡事項"];
  if(!app.getLastRow())app.getRange(1,1,1,heads.length).setValues([heads]);
  else {
   const ah=app.getRange(1,1,1,Math.max(app.getLastColumn(),1)).getDisplayValues()[0];
   if(ah[0]==="状態"&&ah[6]==="受講科目"&&ah[11]==="連絡事項"){
    app.insertColumnAfter(6);app.insertColumnBefore(13);app.getRange(1,1,1,heads.length).setValues([heads]);
-  } else if(ah.slice(0,heads.length).join("|")!==heads.join("|")) throw new Error("講習申請一覧シートの見出しが想定と異なります。データ保護のため初期設定を中止しました。");
+  }else if(ah.slice(0,heads.length).join("|")!==heads.join("|"))throw new Error("講習申請一覧シートの見出しが想定と異なります。データ保護のため初期設定を中止しました。");
  }
- app.setFrozenRows(1);app.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["未確認","処理済","要確認"],true).setAllowInvalid(false).build());app.setColumnWidths(1,heads.length,140);
+ app.setFrozenRows(1);
+ app.getRange("A2:A").setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(["未確認","処理済","要確認"],true).setAllowInvalid(false).build());
+ app.setColumnWidths(1,heads.length,140);
  return ss.getUrl();
 }
+
 function courseDates_(start,end){
- if(!start||!end||start>end)return[];const out=[],d=new Date(start+"T12:00:00"),last=new Date(end+"T12:00:00");
- while(d<=last&&out.length<100){out.push(Utilities.formatDate(d,TIME_ZONE,"yyyy-MM-dd"));d.setDate(d.getDate()+1);}return out;
+ if(!start||!end||start>end)return[];
+ const out=[],d=new Date(start+"T12:00:00"),last=new Date(end+"T12:00:00");
+ while(d<=last&&out.length<100){out.push(Utilities.formatDate(d,TIME_ZONE,"yyyy-MM-dd"));d.setDate(d.getDate()+1);}
+ return out;
 }
+
 function getCourseConfig_(){
  const sh=getCourseSpreadsheet_().getSheetByName(COURSE_CONFIG_SHEET);
- if(!sh||sh.getLastRow()<2)return{success:true,configured:!!sh,courses:[]};
- const rows=sh.getRange(2,1,sh.getLastRow()-1,COURSE_CONFIG_HEADERS.length).getValues(),courses=[];
+ if(!sh||sh.getLastRow()<7)return{success:true,configured:!!sh,courses:[]};
+ const priceRows=sh.getRange(2,1,2,6).getValues();
+ const priceMap={};
+ priceRows.forEach(r=>{const key=String(r[0]||"").trim();if(key){priceMap[key]={};COURSE_GRADE_KEYS.forEach((g,i)=>priceMap[key][g]=Number(r[i+1])||0);}});
+ const rows=sh.getRange(7,1,Math.max(sh.getLastRow()-6,0),COURSE_SCHEDULE_HEADERS.length).getValues();
+ const courses=[];
  rows.forEach(r=>{
-  const type=String(r[0]||"").trim();if(!type||String(r[5]||"").trim()!=="受付中")return;
+  const type=String(r[0]||"").trim();
+  if(!type||String(r[5]||"").trim()!=="受付中")return;
   const a=calendarDateKey_(r[1]),b=calendarDateKey_(r[2]),c=calendarDateKey_(r[3]),d=calendarDateKey_(r[4]),ranges=[];
   if(a&&b&&a<=b)ranges.push({label:"前半",startDate:a,endDate:b,dates:courseDates_(a,b)});
   if(c&&d&&c<=d)ranges.push({label:"後半",startDate:c,endDate:d,dates:courseDates_(c,d)});
   if(!ranges.length)return;
-  const prices={};COURSE_GRADE_KEYS.forEach((k,i)=>prices[k]=Number(r[8+i])||0);
-  courses.push({type,ranges,dates:ranges.flatMap(x=>x.dates),priceText:String(r[6]||""),pricingType:(type==="夏期講習"?"夏期":"春・冬共通"),prices,priceNote:String(r[13]||""),campDates:[r[14],r[15],r[16]].map(calendarDateKey_).filter(Boolean)});
+  const pricingType=type==="夏期講習"?"夏期":"春・冬共通";
+  courses.push({type,ranges,dates:ranges.flatMap(x=>x.dates),priceText:String(r[6]||""),pricingType,prices:priceMap[pricingType]||{},priceNote:String(r[7]||""),campDates:[r[8],r[9],r[10]].map(calendarDateKey_).filter(Boolean)});
  });
  return{success:true,configured:true,courses};
 }
