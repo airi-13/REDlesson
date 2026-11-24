@@ -1728,6 +1728,8 @@ function setupCourseSpreadsheet(){
   const rows=types.map(type=>schedule.find(r=>r[0]===type)||[type,"","","","", "受付停止","","","","",""]);
   sh.getRange(COURSE_SCHEDULE_START_ROW,1,3,COURSE_SCHEDULE_HEADERS.length).setValues(rows);
  }
+ // 旧レイアウト由来の入力規則を解除してから、新レイアウト用の規則だけを設定する
+ sh.getRange(1,1,sh.getMaxRows(),sh.getMaxColumns()).clearDataValidations();
  sh.setFrozenRows(2);
  COURSE_SEASON_CONFIG.forEach(season=>{
   sh.getRange(season.priceStart,2,COURSE_SET_COUNT,5).setNumberFormat("#,##0");
