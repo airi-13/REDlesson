@@ -8,12 +8,20 @@ const week=["日","月","火","水","木","金","土"];
 const fmt=s=>{const d=new Date(s+"T00:00:00");return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+week[d.getDay()]+"）";};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function jsonp(url){return new Promise((resolve,reject)=>{const cb="courseConfig_"+Date.now();const script=document.createElement("script");const timer=setTimeout(()=>{cleanup();reject(new Error("講習情報を取得できませんでした。"));},12000);function cleanup(){clearTimeout(timer);script.remove();delete window[cb];}window[cb]=v=>{cleanup();resolve(v);};script.onerror=()=>{cleanup();reject(new Error("講習情報を取得できませんでした。"));};script.src=url+"&callback="+cb+"&_="+Date.now();document.head.appendChild(script);});}
+function updatePriceDisplay(){
+ if(!current){$("priceDisplay").textContent="講習を選択すると料金案内が表示されます。";return;}
+ const setCount=Number($("setCount").value||0),price=Number(current.setPrice||0);
+ const total=price&&setCount?price*setCount:0;
+ $("priceDisplay").innerHTML=(current.priceText?esc(current.priceText).replace(/\n/g,"<br>"):"料金は教室にてご案内します。")+
+   (price?"<br>セット料金："+price.toLocaleString("ja-JP")+"円"+(setCount?" × "+setCount+"セット = <strong>"+total.toLocaleString("ja-JP")+"円</strong>":""):"")+
+   (current.priceNote?"<br>"+esc(current.priceNote):"");
+}
 function selectedSubjects(){return [...$("subjects").querySelectorAll("input:checked")].map(x=>x.value);}
 function selectedSlots(){return [...document.querySelectorAll(".pair-choice input:checked")].map(x=>({date:x.dataset.date,pair:x.value}));}
 function renderCourse(){
  const type=$("courseType").value;current=courses.find(c=>c.type===type)||null;
  $("coursePeriod").textContent=current?"講習期間："+fmt(current.startDate)+"～"+fmt(current.endDate):"";
- $("priceDisplay").innerHTML=current?(current.priceText?esc(current.priceText).replace(/\n/g,"<br>"):"料金は教室にてご案内します。")+(current.setPrice?"<br>セット料金："+Number(current.setPrice).toLocaleString("ja-JP")+"円":"")+(current.priceNote?"<br>"+esc(current.priceNote):""):"講習を選択すると料金案内が表示されます。";
+ updatePriceDisplay();
  $("slotDays").innerHTML="";$("campDays").innerHTML="";
  if(!current)return;
  current.dates.forEach(date=>{
@@ -74,7 +82,7 @@ async function init(){
  }catch(e){load.textContent=e.message||"講習情報を取得できませんでした。";}
 }
 $("courseType").addEventListener("change",()=>{renderCourse();validate();});
-$("subjects").addEventListener("change",validate);$("setCount").addEventListener("change",validate);
+$("subjects").addEventListener("change",validate);$("setCount").addEventListener("change",()=>{updatePriceDisplay();validate();});
 form.addEventListener("input",validate);form.addEventListener("change",validate);
 form.addEventListener("submit",e=>{e.preventDefault();if(validate())showConfirm();});
 $("backButton").addEventListener("click",()=>{$("confirmation").classList.add("hidden");form.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});});
