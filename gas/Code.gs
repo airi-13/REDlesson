@@ -102,6 +102,8 @@ function doGet(e) {
       result = cached ? JSON.parse(cached) : { success: false, pending: true };
     } else if (action === "purchase") {
       result = handlePurchaseJsonp_(e);
+    } else if (action === "meeting_slots") {
+      result = getMeetingAvailability_();
     } else if (action === "announcements") {
       result = getAnnouncements_();
     } else if (action === "calendar") {
@@ -1586,6 +1588,92 @@ function submitExternalExamApplication_(data) {
 
 
 /* =====================================================
+   面談枠管理
+   シート「面談枠」: A 日付 / B 曜日 / C 時間帯 / D 予約者
+   D列に名前を入力すると、その枠はフォームで選択不可になる。
+===================================================== */
+const MEETING_SLOT_SHEET_NAME = "面談枠";
+const MEETING_DATE_MIN = "2026-12-01";
+const MEETING_DATE_MAX = "2026-12-18";
+
+function getMeetingSlotTimes_(weekday) {
+  const times = {
+    "火": ["17:25", "18:10", "18:55", "19:40", "20:25"],
+    "水": ["16:40", "17:25", "18:10", "18:55", "19:40"],
+    "木": ["17:25", "18:10", "18:55", "19:40", "20:25"],
+    "金": ["16:40", "17:25", "18:10", "18:55", "19:40"],
+    "土": ["15:10", "15:55", "16:40", "17:25", "18:10"]
+  };
+  return times[weekday] || [];
+}
+
+function meetingDateKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
+  }
+  const text = String(value == null ? "" : value).trim();
+  const m = /^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})$/.exec(text);
+  if (!m) return "";
+  return m[1] + "-" + String(m[2]).padStart(2, "0") + "-" + String(m[3]).padStart(2, "0");
+}
+
+function getMeetingSlotSheet_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(MEETING_SLOT_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(MEETING_SLOT_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, 4).setValues([["日付", "曜日", "時間帯", "予約者"]]);
+    sheet.setFrozenRows(1);
+    sheet.getRange("A:A").setNumberFormat("yyyy/mm/dd");
+    sheet.setColumnWidth(1, 110);
+    sheet.setColumnWidth(2, 65);
+    sheet.setColumnWidth(3, 90);
+    sheet.setColumnWidth(4, 160);
+  }
+
+  const existing = new Set();
+  if (sheet.getLastRow() >= 2) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues().forEach(row => {
+      const key = meetingDateKey_(row[0]) + "|" + String(row[2] || "").trim();
+      if (key !== "|" ) existing.add(key);
+    });
+  }
+
+  const additions = [];
+  for (let day = 1; day <= 18; day++) {
+    const date = new Date(2026, 11, day, 12, 0, 0);
+    const weekday = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+    const dateKey = Utilities.formatDate(date, TIME_ZONE, "yyyy-MM-dd");
+    if (dateKey < MEETING_DATE_MIN || dateKey > MEETING_DATE_MAX) continue;
+    getMeetingSlotTimes_(weekday).forEach(time => {
+      if (!existing.has(dateKey + "|" + time)) additions.push([date, weekday, time, ""]);
+    });
+  }
+  if (additions.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, additions.length, 4).setValues(additions);
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).setNumberFormat("yyyy/mm/dd");
+  }
+  return sheet;
+}
+
+function getMeetingAvailability_() {
+  const sheet = getMeetingSlotSheet_();
+  const lastRow = sheet.getLastRow();
+  const slots = [];
+  if (lastRow >= 2) {
+    sheet.getRange(2, 1, lastRow - 1, 4).getValues().forEach(row => {
+      const date = meetingDateKey_(row[0]);
+      const weekday = String(row[1] || "").trim();
+      const time = String(row[2] || "").trim();
+      if (!date || !time) return;
+      slots.push({date: date, weekday: weekday, time: time, booked: String(row[3] || "").trim() !== ""});
+    });
+  }
+  return {success: true, slots: slots};
+}
+
+/* =====================================================
    面談希望フォーム
 ===================================================== */
 function submitMeetingApplication_(data) {
@@ -1619,12 +1707,23 @@ function submitMeetingApplication_(data) {
     }
     const weekday = ["日", "月", "火", "水", "木", "金", "土"][parsed.getDay()];
     if (!validTimes[weekday]) throw new Error("希望日は火曜日から土曜日を選択してください。");
+    if (date < MEETING_DATE_MIN || date > MEETING_DATE_MAX) throw new Error("面談希望日は2026年12月1日から12月18日まで選択してください。");
     if (seenDates.has(date)) throw new Error("希望日が重複しています。");
     seenDates.add(date);
     if (!times.length || !times.every(function(time) { return validTimes[weekday].includes(time); })) {
       throw new Error("第" + (index + 1) + "希望の時間帯を1つ以上選択してください。");
     }
     return { date: date, weekday: weekday, times: times };
+  });
+
+  const availability = getMeetingAvailability_().slots;
+  const bookedKeys = new Set(availability.filter(slot => slot.booked).map(slot => slot.date + "|" + slot.time));
+  normalized.forEach(function(item, index) {
+    item.times.forEach(function(time) {
+      if (bookedKeys.has(item.date + "|" + time)) {
+        throw new Error("第" + (index + 1) + "希望の" + time + "は予約済みになりました。空いている時間帯を選び直してください。");
+      }
+    });
   });
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
