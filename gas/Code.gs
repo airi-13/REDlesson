@@ -1607,12 +1607,12 @@ function getMeetingSlotTimes_(weekday) {
   return times[weekday] || [];
 }
 
-function meetingDateKey_(value) {
+function meetingDateKey_(value, displayValue) {
   if (value instanceof Date && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, TIME_ZONE, "yyyy-MM-dd");
   }
-  const text = String(value == null ? "" : value).trim();
-  const m = /^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})$/.exec(text);
+  const text = String(displayValue || value || "").trim();
+  const m = text.match(/(\\d{4})\\s*[年\\/-]\\s*(\\d{1,2})\\s*[月\\/-]\\s*(\\d{1,2})/);
   if (!m) return "";
   return m[1] + "-" + String(m[2]).padStart(2, "0") + "-" + String(m[3]).padStart(2, "0");
 }
@@ -1625,35 +1625,51 @@ function getMeetingSlotSheet_() {
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, 4).setValues([["日付", "曜日", "時間帯", "予約者"]]);
     sheet.setFrozenRows(1);
-    sheet.getRange("A:A").setNumberFormat("yyyy/mm/dd");
-    sheet.setColumnWidth(1, 110);
-    sheet.setColumnWidth(2, 65);
-    sheet.setColumnWidth(3, 90);
-    sheet.setColumnWidth(4, 160);
   }
 
-  const existing = new Set();
-  if (sheet.getLastRow() >= 2) {
-    sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues().forEach(row => {
-      const key = meetingDateKey_(row[0]) + "|" + String(row[2] || "").trim();
-      if (key !== "|" ) existing.add(key);
+  // 既存データを日付・時間帯で読み取り、予約者名を保持したまま重複を整理する。
+  const bookedByKey = new Map();
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    const values = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+    const displays = sheet.getRange(2, 1, lastRow - 1, 4).getDisplayValues();
+    values.forEach((row, i) => {
+      const dateKey = meetingDateKey_(row[0], displays[i][0]);
+      const time = String(displays[i][2] || row[2] || "").trim().replace(/：/g, ":");
+      if (!dateKey || !time) return;
+      const key = dateKey + "|" + time;
+      const name = String(displays[i][3] || row[3] || "").trim();
+      if (!bookedByKey.has(key) || (!bookedByKey.get(key) && name)) {
+        bookedByKey.set(key, name);
+      }
     });
   }
 
-  const additions = [];
+  const rows = [];
   for (let day = 1; day <= 18; day++) {
     const date = new Date(2026, 11, day, 12, 0, 0);
     const weekday = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
     const dateKey = Utilities.formatDate(date, TIME_ZONE, "yyyy-MM-dd");
     if (dateKey < MEETING_DATE_MIN || dateKey > MEETING_DATE_MAX) continue;
     getMeetingSlotTimes_(weekday).forEach(time => {
-      if (!existing.has(dateKey + "|" + time)) additions.push([date, weekday, time, ""]);
+      rows.push([date, weekday, time, bookedByKey.get(dateKey + "|" + time) || ""]);
     });
   }
-  if (additions.length) {
-    sheet.getRange(sheet.getLastRow() + 1, 1, additions.length, 4).setValues(additions);
-    sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).setNumberFormat("yyyy/mm/dd");
+
+  // 既存の重複行や末尾に追加された古い行を除き、12/1～12/18を正しい順番で再構成。
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).clearContent();
   }
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, 4).setValues(rows);
+    sheet.getRange(2, 1, rows.length, 1).setNumberFormat("yyyy/mm/dd");
+  }
+  sheet.getRange("A:A").setNumberFormat("yyyy/mm/dd");
+  sheet.setFrozenRows(1);
+  sheet.setColumnWidth(1, 110);
+  sheet.setColumnWidth(2, 65);
+  sheet.setColumnWidth(3, 90);
+  sheet.setColumnWidth(4, 160);
   return sheet;
 }
 
