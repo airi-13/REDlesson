@@ -57,7 +57,7 @@
           <p><strong>面談内容：</strong>現在の学習状況について、今後の学習計画について</p>
           <p>三者面談・二者面談のどちらでも大丈夫です。</p>
         </div>
-        <p class="help">第1希望から順に日付を選択してください。選択した日付に応じて空いている時間帯が表示されます。各日で複数の時間帯を選択できます。予約者が入力されている枠は選択できません。</p><p id="availabilityStatus" class="help">空き状況を読み込んでいます...</p>
+        <p class="help">第1希望から順に日付を選択してください。各日で複数の時間帯を選択できます。</p>
         <div id="preferences"></div>
         <p id="preferenceError" class="error"></p>
       </section>
@@ -178,9 +178,8 @@
         availabilityReady = true;
         document.querySelectorAll(".date-select").forEach(input => { input.disabled = false; });
         submitButton.disabled = false;
-        document.getElementById("availabilityStatus").textContent = "空き状況を反映しました。予約済みの時間帯は選択できません。";
       }).catch(error => {
-        document.getElementById("availabilityStatus").textContent = error.message + " ページを再読み込みしてください。";
+        document.getElementById("formError").textContent = "空き状況を取得できませんでした。ページを再読み込みしてください。";
         submitButton.disabled = true;
       });
 
