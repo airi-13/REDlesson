@@ -1673,17 +1673,31 @@ function getMeetingSlotSheet_() {
   return sheet;
 }
 
+function meetingTimeKey_(value, displayValue) {
+  let text = String(displayValue || "").trim();
+  if (!text && value instanceof Date && !isNaN(value.getTime())) {
+    text = Utilities.formatDate(value, TIME_ZONE, "HH:mm");
+  }
+  if (!text) text = String(value == null ? "" : value).trim();
+  const match = text.match(/^(\\d{1,2}):(\\d{2})(?::\\d{2})?$/);
+  if (!match) return text.replace(/：/g, ":");
+  return String(match[1]).padStart(2, "0") + ":" + match[2];
+}
+
 function getMeetingAvailability_() {
   const sheet = getMeetingSlotSheet_();
   const lastRow = sheet.getLastRow();
   const slots = [];
   if (lastRow >= 2) {
-    sheet.getRange(2, 1, lastRow - 1, 4).getValues().forEach(row => {
-      const date = meetingDateKey_(row[0]);
-      const weekday = String(row[1] || "").trim();
-      const time = String(row[2] || "").trim();
+    const values = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+    const displays = sheet.getRange(2, 1, lastRow - 1, 4).getDisplayValues();
+    values.forEach((row, i) => {
+      const date = meetingDateKey_(row[0], displays[i][0]);
+      const weekday = String(displays[i][1] || row[1] || "").trim();
+      const time = meetingTimeKey_(row[2], displays[i][2]);
+      const bookedName = String(displays[i][3] || row[3] || "").trim();
       if (!date || !time) return;
-      slots.push({date: date, weekday: weekday, time: time, booked: String(row[3] || "").trim() !== ""});
+      slots.push({date: date, weekday: weekday, time: time, booked: bookedName !== ""});
     });
   }
   return {success: true, slots: slots};
